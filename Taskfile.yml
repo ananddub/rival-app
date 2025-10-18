@@ -1,0 +1,60 @@
+version: '3'
+
+vars:
+  CONFIG_FILE: env.yml
+
+tasks:
+  sqlc-generate:
+    desc: Generate sqlc code for all services
+    cmds:
+      - task: sqlc-auth
+      # Add more services here as needed
+      # - task: sqlc-user
+      # - task: sqlc-orders
+
+  sqlc-auth:
+    desc: Generate sqlc code for auth service
+    dir: internal/auth
+    cmds:
+      - ~/go/bin/sqlc generate
+
+  goose-up:
+    desc: Run database migrations
+    dir: internal/auth/db/schema
+    cmds:
+      - |
+        DB_HOST=$(~/go/bin/yq '.database.host' ../../../../{{.CONFIG_FILE}})
+        DB_PORT=$(~/go/bin/yq '.database.port' ../../../../{{.CONFIG_FILE}})
+        DB_USER=$(~/go/bin/yq '.database.user' ../../../../{{.CONFIG_FILE}})
+        DB_PASSWORD=$(~/go/bin/yq '.database.password' ../../../../{{.CONFIG_FILE}})
+        DB_NAME=$(~/go/bin/yq '.database.dbname' ../../../../{{.CONFIG_FILE}})
+        DB_SSL_MODE=$(~/go/bin/yq '.database.sslmode' ../../../../{{.CONFIG_FILE}})
+        go run github.com/pressly/goose/v3/cmd/goose@latest postgres "host=$DB_HOST port=$DB_PORT user=$DB_USER password=$DB_PASSWORD dbname=$DB_NAME sslmode=$DB_SSL_MODE" up
+
+  goose-down:
+    desc: Rollback database migrations
+    dir: internal/auth/db/schema
+    cmds:
+      - |
+        DB_HOST=$(~/go/bin/yq '.database.host' ../../../../{{.CONFIG_FILE}})
+        DB_PORT=$(~/go/bin/yq '.database.port' ../../../../{{.CONFIG_FILE}})
+        DB_USER=$(~/go/bin/yq '.database.user' ../../../../{{.CONFIG_FILE}})
+        DB_PASSWORD=$(~/go/bin/yq '.database.password' ../../../../{{.CONFIG_FILE}})
+        DB_NAME=$(~/go/bin/yq '.database.dbname' ../../../../{{.CONFIG_FILE}})
+        DB_SSL_MODE=$(~/go/bin/yq '.database.sslmode' ../../../../{{.CONFIG_FILE}})
+        go run github.com/pressly/goose/v3/cmd/goose@latest postgres "host=$DB_HOST port=$DB_PORT user=$DB_USER password=$DB_PASSWORD dbname=$DB_NAME sslmode=$DB_SSL_MODE" down
+
+  dev:
+    desc: Run development server
+    cmds:
+      - encore run
+
+  build:
+    desc: Build the application
+    cmds:
+      - go build -o bin/rival ./...
+
+  run:
+    desc: Run the application
+    cmds:
+      - encore run --listen=0.0.0.0:4000

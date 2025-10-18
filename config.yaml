@@ -1,0 +1,20 @@
+database:
+  host: 192.168.92.128
+  port: 5432
+  user: admin
+  password: root
+  dbname: rivl
+  sslmode: disable
+
+redis:
+  host: 192.168.92.128
+  PORT: 6379
+  db: 0
+
+jwt:
+  secret: your-super-secret-jwt-key
+  expiry_hour: 24
+
+server:
+  port: 8080
+  host: localhost

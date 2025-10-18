@@ -1,0 +1,100 @@
+78[0J[1000D[2K[36m  ⠋ Building Encore application graph... [0m
+8[0J[1000D[2K[36m  ⠙ Building Encore application graph... [0m
+[1000D[2K[36m  ⠋ Analyzing service topology... [0m
+8[0J[1000D[2K[36m  ⠚ Building Encore application graph... [0m
+[1000D[2K[36m  ⠙ Analyzing service topology... [0m
+8[0J[1000D[2K[36m  ⠒ Building Encore application graph... [0m
+[1000D[2K[36m  ⠚ Analyzing service topology... [0m
+8[0J[1000D[2K[36m  ⠂ Building Encore application graph... [0m
+[1000D[2K[36m  ⠒ Analyzing service topology... [0m
+[1000D[2K[36m  ⠋ Starting PubSub daemon... [0m
+8[0J[1000D[2K[36m  ⠂ Building Encore application graph... [0m
+[1000D[2K[36m  ⠂ Analyzing service topology... [0m
+[1000D[2K[36m  ⠙ Starting PubSub daemon... [0m
+[1000D[2K[36m  ⠋ Fetching application secrets... [0m
+8[0J[1000D[2K[36m  ⠒ Building Encore application graph... [0m
+[1000D[2K[36m  ⠂ Analyzing service topology... [0m
+[1000D[2K[36m  ⠚ Starting PubSub daemon... [0m
+[1000D[2K[36m  ⠙ Fetching application secrets... [0m
+[1000D[2K[36m  ⠋ Generating boilerplate code... [0m
+8[0J[1000D[2K[36m  ⠲ Building Encore application graph... [0m
+[1000D[2K[36m  ⠒ Analyzing service topology... [0m
+[1000D[2K[36m  ⠒ Starting PubSub daemon... [0m
+[1000D[2K[36m  ⠚ Fetching application secrets... [0m
+[1000D[2K[36m  ⠙ Generating boilerplate code... [0m
+8[0J[1000D[2K[36m  ⠴ Building Encore application graph... [0m
+[1000D[2K[36m  ⠲ Analyzing service topology... [0m
+[1000D[2K[36m  ⠂ Starting PubSub daemon... [0m
+[1000D[2K[36m  ⠒ Fetching application secrets... [0m
+[1000D[2K[36m  ⠚ Generating boilerplate code... [0m
+8[0J[1000D[2K[36m  ⠦ Building Encore application graph... [0m
+[1000D[2K[36m  ⠴ Analyzing service topology... [0m
+[1000D[2K[36m  ⠂ Starting PubSub daemon... [0m
+[1000D[2K[36m  ⠂ Fetching application secrets... [0m
+[1000D[2K[36m  ⠒ Generating boilerplate code... [0m
+[1000D[2K[36m  ⠋ Compiling application source code... [0m
+8[0J[1000D[2K[36m  ⠖ Building Encore application graph... [0m
+[1000D[2K[36m  ⠦ Analyzing service topology... [0m
+[1000D[2K[36m  ⠒ Starting PubSub daemon... [0m
+[1000D[2K[36m  ⠂ Fetching application secrets... [0m
+[1000D[2K[36m  ⠂ Generating boilerplate code... [0m
+[1000D[2K[36m  ⠙ Compiling application source code... [0m
+8[0J[1000D[2K[36m  ⠒ Building Encore application graph... [0m
+[1000D[2K[36m  ⠖ Analyzing service topology... [0m
+[1000D[2K[36m  ⠲ Starting PubSub daemon... [0m
+[1000D[2K[36m  ⠒ Fetching application secrets... [0m
+[1000D[2K[36m  ⠂ Generating boilerplate code... [0m
+[1000D[2K[36m  ⠚ Compiling application source code... [0m
+8[0J[1000D[2K[36m  ⠐ Building Encore application graph... [0m
+[1000D[2K[36m  ⠒ Analyzing service topology... [0m
+[1000D[2K[32m  ✔ Starting PubSub daemon... Done![0m
+[1000D[2K[32m  ✔ Fetching application secrets... Done![0m
+[1000D[2K[36m  ⠒ Generating boilerplate code... [0m
+[1000D[2K[36m  ⠒ Compiling application source code... [0m
+8[0J[1000D[2K[36m  ⠐ Building Encore application graph... [0m
+[1000D[2K[32m  ✔ Analyzing service topology... Done![0m
+[1000D[2K[32m  ✔ Starting PubSub daemon... Done![0m
+[1000D[2K[32m  ✔ Fetching application secrets... Done![0m
+[1000D[2K[36m  ⠲ Generating boilerplate code... [0m
+[1000D[2K[36m  ⠂ Compiling application source code... [0m
+8[0J[1000D[2K[36m  ⠒ Building Encore application graph... [0m
+[1000D[2K[32m  ✔ Analyzing service topology... Done![0m
+[1000D[2K[32m  ✔ Starting PubSub daemon... Done![0m
+[1000D[2K[32m  ✔ Fetching application secrets... Done![0m
+[1000D[2K[36m  ⠴ Generating boilerplate code... [0m
+[1000D[2K[36m  ⠂ Compiling application source code... [0m
+8[0J[1000D[2K[36m  ⠓ Building Encore application graph... [0m
+[1000D[2K[32m  ✔ Analyzing service topology... Done![0m
+[1000D[2K[32m  ✔ Starting PubSub daemon... Done![0m
+[1000D[2K[32m  ✔ Fetching application secrets... Done![0m
+[1000D[2K[36m  ⠦ Generating boilerplate code... [0m
+[1000D[2K[36m  ⠒ Compiling application source code... [0m
+8[0J[1000D[2K[36m  ⠋ Building Encore application graph... [0m
+[1000D[2K[32m  ✔ Analyzing service topology... Done![0m
+[1000D[2K[32m  ✔ Starting PubSub daemon... Done![0m
+[1000D[2K[32m  ✔ Fetching application secrets... Done![0m
+[1000D[2K[36m  ⠖ Generating boilerplate code... [0m
+[1000D[2K[36m  ⠲ Compiling application source code... [0m
+[1000D[2K[36m  ⠋ Starting Encore application... [0m
+8[0J[1000D[2K[36m  ⠋ Building Encore application graph... [0m
+[1000D[2K[32m  ✔ Analyzing service topology... Done![0m
+[1000D[2K[32m  ✔ Starting PubSub daemon... Done![0m
+[1000D[2K[32m  ✔ Fetching application secrets... Done![0m
+[1000D[2K[36m  ⠒ Generating boilerplate code... [0m
+[1000D[2K[36m  ⠴ Compiling application source code... [0m
+[1000D[2K[36m  ⠙ Starting Encore application... [0m
+8[0J[1000D[2K[32m  ✔ Building Encore application graph... Done![0m
+[1000D[2K[32m  ✔ Analyzing service topology... Done![0m
+[1000D[2K[32m  ✔ Starting PubSub daemon... Done![0m
+[1000D[2K[32m  ✔ Fetching application secrets... Done![0m
+[1000D[2K[32m  ✔ Generating boilerplate code... Done![0m
+[1000D[2K[32m  ✔ Compiling application source code... Done![0m
+[1000D[2K[32m  ✔ Starting Encore application... Done![0m
+
+  Encore development server running!
+
+  Your API is running at:     [36mhttp://127.0.0.1:4000[0m
+  Development Dashboard URL:  [36mhttp://127.0.0.1:9400/rival-n3t2[0m
+  MCP SSE URL:                [36mhttp://127.0.0.1:9900/sse?appID=rival-n3t2[0m
+
+2025/10/13 06:07:20 Error reading config file: open config.yaml: no such file or directory
