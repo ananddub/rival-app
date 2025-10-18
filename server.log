@@ -1,3 +1,4 @@
+task: [run] encore run --listen=0.0.0.0:4000
 78[0J[1000D[2K[36m  ⠋ Building Encore application graph... [0m
 8[0J[1000D[2K[36m  ⠙ Building Encore application graph... [0m
 [1000D[2K[36m  ⠋ Analyzing service topology... [0m
@@ -93,8 +94,20 @@
 
   Encore development server running!
 
-  Your API is running at:     [36mhttp://127.0.0.1:4000[0m
+  Your API is running at:     [36mhttp://0.0.0.0:4000[0m
   Development Dashboard URL:  [36mhttp://127.0.0.1:9400/rival-n3t2[0m
   MCP SSE URL:                [36mhttp://127.0.0.1:9900/sse?appID=rival-n3t2[0m
-
-2025/10/13 06:07:20 Error reading config file: open config.yaml: no such file or directory
+[2m
+  New Encore release available: v1.50.6 (you have v1.50.4)
+  Update with: encore version update
+[0m
+9:41AM INF registered subscription service=queue subscription=send-password-reset topic=forgot
+9:41AM INF registered subscription service=queue subscription=send-otp topic=signups
+9:41AM INF registered 18 API endpoints
+9:41AM INF listening for incoming HTTP requests
+9:41AM INF starting request endpoint=GetUserWallet service=walletHandler trace_id=em4prj7ct9jomaa1mpsuer2q2c
+9:41AM INF request completed code=ok duration=38.1835 endpoint=GetUserWallet service=walletHandler trace_id=em4prj7ct9jomaa1mpsuer2q2c
+9:41AM INF starting request endpoint=GetUserNotifications service=notificationHandler trace_id=njv703uf61st0ln0gmbg23ffos
+9:41AM INF request completed code=ok duration=4.4016 endpoint=GetUserNotifications service=notificationHandler trace_id=njv703uf61st0ln0gmbg23ffos
+9:41AM INF starting request endpoint=GetUserActivities service=activityHandler trace_id=rrtrmksiaor33pc6doccfa743c
+9:41AM INF request completed code=ok duration=3.3757 endpoint=GetUserActivities service=activityHandler trace_id=rrtrmksiaor33pc6doccfa743c

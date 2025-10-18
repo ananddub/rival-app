@@ -27,7 +27,7 @@ func GetUserByEmail(ctx context.Context, email string) (*User, error) {
 	if err != nil {
 		return nil, err
 	}
-	
+
 	queries := auth_gen.New(db)
 
 	user, err := queries.GetUserByEmail(ctx, email)
@@ -55,7 +55,7 @@ func CreateUser(ctx context.Context, name, email, phone, hashedPassword string) 
 	if err != nil {
 		return nil, err
 	}
-	
+
 	queries := auth_gen.New(db)
 
 	user, err := queries.CreateUser(ctx, auth_gen.CreateUserParams{
@@ -63,8 +63,6 @@ func CreateUser(ctx context.Context, name, email, phone, hashedPassword string) 
 		Email:        email,
 		PhoneNumber:  pgtype.Text{String: phone, Valid: true},
 		PasswordHash: pgtype.Text{String: hashedPassword, Valid: true},
-		SignType:     auth_gen.SignTypeEmail,
-		Role:         auth_gen.RoleTypeUser,
 	})
 	if err != nil {
 		return nil, err
@@ -87,7 +85,7 @@ func UpdateUserPassword(ctx context.Context, email, hashedPassword string) error
 	if err != nil {
 		return err
 	}
-	
+
 	queries := auth_gen.New(db)
 
 	// First get user by email to get ID
@@ -100,7 +98,7 @@ func UpdateUserPassword(ctx context.Context, email, hashedPassword string) error
 		ID:           user.ID,
 		PasswordHash: pgtype.Text{String: hashedPassword, Valid: true},
 	})
-	
+
 	return err
 }
 
@@ -110,19 +108,19 @@ func UpdateEmailVerification(ctx context.Context, userID string, verified bool) 
 	if err != nil {
 		return err
 	}
-	
+
 	queries := auth_gen.New(db)
-	
+
 	id, err := strconv.ParseInt(userID, 10, 64)
 	if err != nil {
 		return err
 	}
 
 	_, err = queries.UpdateEmailVerification(ctx, auth_gen.UpdateEmailVerificationParams{
-		ID:               id,
-		IsEmailVerified:  pgtype.Bool{Bool: verified, Valid: true},
+		ID:              id,
+		IsEmailVerified: pgtype.Bool{Bool: verified, Valid: true},
 	})
-	
+
 	return err
 }
 
@@ -132,18 +130,18 @@ func UpdatePhoneVerification(ctx context.Context, userID string, verified bool) 
 	if err != nil {
 		return err
 	}
-	
+
 	queries := auth_gen.New(db)
-	
+
 	id, err := strconv.ParseInt(userID, 10, 64)
 	if err != nil {
 		return err
 	}
 
 	_, err = queries.UpdatePhoneVerification(ctx, auth_gen.UpdatePhoneVerificationParams{
-		ID:               id,
-		IsPhoneVerified:  pgtype.Bool{Bool: verified, Valid: true},
+		ID:              id,
+		IsPhoneVerified: pgtype.Bool{Bool: verified, Valid: true},
 	})
-	
+
 	return err
 }

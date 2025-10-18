@@ -5,96 +5,8 @@
 package auth_gen
 
 import (
-	"database/sql/driver"
-	"fmt"
-
 	"github.com/jackc/pgx/v5/pgtype"
 )
-
-type RoleType string
-
-const (
-	RoleTypeUser  RoleType = "user"
-	RoleTypeAdmin RoleType = "admin"
-)
-
-func (e *RoleType) Scan(src interface{}) error {
-	switch s := src.(type) {
-	case []byte:
-		*e = RoleType(s)
-	case string:
-		*e = RoleType(s)
-	default:
-		return fmt.Errorf("unsupported scan type for RoleType: %T", src)
-	}
-	return nil
-}
-
-type NullRoleType struct {
-	RoleType RoleType `json:"role_type"`
-	Valid    bool     `json:"valid"` // Valid is true if RoleType is not NULL
-}
-
-// Scan implements the Scanner interface.
-func (ns *NullRoleType) Scan(value interface{}) error {
-	if value == nil {
-		ns.RoleType, ns.Valid = "", false
-		return nil
-	}
-	ns.Valid = true
-	return ns.RoleType.Scan(value)
-}
-
-// Value implements the driver Valuer interface.
-func (ns NullRoleType) Value() (driver.Value, error) {
-	if !ns.Valid {
-		return nil, nil
-	}
-	return string(ns.RoleType), nil
-}
-
-type SignType string
-
-const (
-	SignTypeEmail  SignType = "email"
-	SignTypeGoogle SignType = "google"
-	SignTypeGithub SignType = "github"
-)
-
-func (e *SignType) Scan(src interface{}) error {
-	switch s := src.(type) {
-	case []byte:
-		*e = SignType(s)
-	case string:
-		*e = SignType(s)
-	default:
-		return fmt.Errorf("unsupported scan type for SignType: %T", src)
-	}
-	return nil
-}
-
-type NullSignType struct {
-	SignType SignType `json:"sign_type"`
-	Valid    bool     `json:"valid"` // Valid is true if SignType is not NULL
-}
-
-// Scan implements the Scanner interface.
-func (ns *NullSignType) Scan(value interface{}) error {
-	if value == nil {
-		ns.SignType, ns.Valid = "", false
-		return nil
-	}
-	ns.Valid = true
-	return ns.SignType.Scan(value)
-}
-
-// Value implements the driver Valuer interface.
-func (ns NullSignType) Value() (driver.Value, error) {
-	if !ns.Valid {
-		return nil, nil
-	}
-	return string(ns.SignType), nil
-}
 
 type JwtToken struct {
 	ID        int64            `json:"id"`
@@ -108,13 +20,13 @@ type User struct {
 	ID              int64            `json:"id"`
 	FullName        string           `json:"full_name"`
 	Email           string           `json:"email"`
+	PhoneNumber     pgtype.Text      `json:"phone_number"`
 	PasswordHash    pgtype.Text      `json:"password_hash"`
 	Dob             pgtype.Timestamp `json:"dob"`
-	PhoneNumber     pgtype.Text      `json:"phone_number"`
 	IsPhoneVerified pgtype.Bool      `json:"is_phone_verified"`
 	IsEmailVerified pgtype.Bool      `json:"is_email_verified"`
-	SignType        SignType         `json:"sign_type"`
-	Role            RoleType         `json:"role"`
+	SignType        string           `json:"sign_type"`
+	Role            string           `json:"role"`
 	CreatedAt       pgtype.Timestamp `json:"created_at"`
 	UpdatedAt       pgtype.Timestamp `json:"updated_at"`
 }

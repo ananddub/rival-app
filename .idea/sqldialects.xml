@@ -1,7 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<project version="4">
-  <component name="SqlDialectMappings">
-    <file url="file://$PROJECT_DIR$/internal/auth/db/schema/001_users.sql" dialect="PostgreSQL" />
-    <file url="file://$PROJECT_DIR$/internal/auth/db/schema/002_jwt_tokens.sql" dialect="PostgreSQL" />
-  </component>
-</project>

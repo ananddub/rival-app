@@ -1,16 +1,16 @@
 version: '3'
 
 vars:
-  CONFIG_FILE: env.yml
+  CONFIG_FILE: config.yaml
 
 tasks:
   sqlc-generate:
     desc: Generate sqlc code for all services
     cmds:
       - task: sqlc-auth
-      # Add more services here as needed
-      # - task: sqlc-user
-      # - task: sqlc-orders
+      - task: sqlc-activity
+      - task: sqlc-notification
+      - task: sqlc-wallet
 
   sqlc-auth:
     desc: Generate sqlc code for auth service
@@ -18,30 +18,307 @@ tasks:
     cmds:
       - ~/go/bin/sqlc generate
 
-  goose-up:
-    desc: Run database migrations
+  sqlc-activity:
+    desc: Generate sqlc code for activity service
+    dir: internal/activity
+    cmds:
+      - ~/go/bin/sqlc generate
+
+  sqlc-notification:
+    desc: Generate sqlc code for notification service
+    dir: internal/notification
+    cmds:
+      - ~/go/bin/sqlc generate
+
+  sqlc-wallet:
+    desc: Generate sqlc code for wallet service
+    dir: internal/wallet
+    cmds:
+      - ~/go/bin/sqlc generate
+
+  insert-dummy-data:
+    desc: Insert dummy data for testing
+    cmds:
+      - |
+        export DB_HOST=$(~/go/bin/yq '.database.host' {{.CONFIG_FILE}})
+        export DB_PORT=$(~/go/bin/yq '.database.port' {{.CONFIG_FILE}})
+        export DB_USER=$(~/go/bin/yq '.database.user' {{.CONFIG_FILE}})
+        export DB_PASSWORD=$(~/go/bin/yq '.database.password' {{.CONFIG_FILE}})
+        export DB_NAME=$(~/go/bin/yq '.database.dbname' {{.CONFIG_FILE}})
+        PGPASSWORD=$DB_PASSWORD psql -h $DB_HOST -p $DB_PORT -U $DB_USER -d $DB_NAME -f insert_dummy_data.sql
+
+  check-data:
+    desc: Check database data counts
+    cmds:
+      - |
+        export DB_HOST=$(~/go/bin/yq '.database.host' {{.CONFIG_FILE}})
+        export DB_PORT=$(~/go/bin/yq '.database.port' {{.CONFIG_FILE}})
+        export DB_USER=$(~/go/bin/yq '.database.user' {{.CONFIG_FILE}})
+        export DB_PASSWORD=$(~/go/bin/yq '.database.password' {{.CONFIG_FILE}})
+        export DB_NAME=$(~/go/bin/yq '.database.dbname' {{.CONFIG_FILE}})
+        PGPASSWORD=$DB_PASSWORD psql -h $DB_HOST -p $DB_PORT -U $DB_USER -d $DB_NAME -c "
+        SELECT 'users' as table_name, COUNT(*) as count FROM users
+        UNION ALL SELECT 'wallets', COUNT(*) FROM wallets  
+        UNION ALL SELECT 'transactions', COUNT(*) FROM transactions
+        UNION ALL SELECT 'activities', COUNT(*) FROM activities
+        UNION ALL SELECT 'notifications', COUNT(*) FROM notifications
+        UNION ALL SELECT 'jwt_tokens', COUNT(*) FROM jwt_tokens;"
+
+  fresh-migrate:
+    desc: Drop all tables and run fresh migrations
+    cmds:
+      - task: drop-all-tables
+      - task: goose-up
+
+  drop-all-tables:
+    desc: Drop all tables and reset goose version
     dir: internal/auth/db/schema
     cmds:
       - |
-        DB_HOST=$(~/go/bin/yq '.database.host' ../../../../{{.CONFIG_FILE}})
-        DB_PORT=$(~/go/bin/yq '.database.port' ../../../../{{.CONFIG_FILE}})
-        DB_USER=$(~/go/bin/yq '.database.user' ../../../../{{.CONFIG_FILE}})
-        DB_PASSWORD=$(~/go/bin/yq '.database.password' ../../../../{{.CONFIG_FILE}})
-        DB_NAME=$(~/go/bin/yq '.database.dbname' ../../../../{{.CONFIG_FILE}})
-        DB_SSL_MODE=$(~/go/bin/yq '.database.sslmode' ../../../../{{.CONFIG_FILE}})
-        go run github.com/pressly/goose/v3/cmd/goose@latest postgres "host=$DB_HOST port=$DB_PORT user=$DB_USER password=$DB_PASSWORD dbname=$DB_NAME sslmode=$DB_SSL_MODE" up
+        export DB_HOST=$(~/go/bin/yq '.database.host' ../../../../{{.CONFIG_FILE}})
+        export DB_PORT=$(~/go/bin/yq '.database.port' ../../../../{{.CONFIG_FILE}})
+        export DB_USER=$(~/go/bin/yq '.database.user' ../../../../{{.CONFIG_FILE}})
+        export DB_PASSWORD=$(~/go/bin/yq '.database.password' ../../../../{{.CONFIG_FILE}})
+        export DB_NAME=$(~/go/bin/yq '.database.dbname' ../../../../{{.CONFIG_FILE}})
+        export DB_SSL_MODE=$(~/go/bin/yq '.database.sslmode' ../../../../{{.CONFIG_FILE}})
+        echo "DROP TABLE IF EXISTS public.transactions CASCADE; DROP TABLE IF EXISTS public.wallets CASCADE; DROP TABLE IF EXISTS public.notifications CASCADE; DROP TABLE IF EXISTS public.activities CASCADE; DROP TABLE IF EXISTS public.jwt_tokens CASCADE; DROP TABLE IF EXISTS public.users CASCADE; DROP TABLE IF EXISTS public.goose_db_version CASCADE;" | go run github.com/pressly/goose/v3/cmd/goose@latest postgres "host=$DB_HOST port=$DB_PORT user=$DB_USER password=$DB_PASSWORD dbname=$DB_NAME sslmode=$DB_SSL_MODE" fix
+
+  goose-status:
+    desc: Check migration status for all modules
+    cmds:
+      - echo "=== Auth Migration Status ==="
+      - task: goose-auth-status
+      - echo "=== Activity Migration Status ==="
+      - task: goose-activity-status
+      - echo "=== Notification Migration Status ==="
+      - task: goose-notification-status
+      - echo "=== Wallet Migration Status ==="
+      - task: goose-wallet-status
+
+  goose-auth-status:
+    desc: Check auth migration status
+    dir: internal/auth/db/schema
+    cmds:
+      - |
+        export DB_HOST=$(~/go/bin/yq '.database.host' ../../../../{{.CONFIG_FILE}})
+        export DB_PORT=$(~/go/bin/yq '.database.port' ../../../../{{.CONFIG_FILE}})
+        export DB_USER=$(~/go/bin/yq '.database.user' ../../../../{{.CONFIG_FILE}})
+        export DB_PASSWORD=$(~/go/bin/yq '.database.password' ../../../../{{.CONFIG_FILE}})
+        export DB_NAME=$(~/go/bin/yq '.database.dbname' ../../../../{{.CONFIG_FILE}})
+        export DB_SSL_MODE=$(~/go/bin/yq '.database.sslmode' ../../../../{{.CONFIG_FILE}})
+        go run github.com/pressly/goose/v3/cmd/goose@latest postgres "host=$DB_HOST port=$DB_PORT user=$DB_USER password=$DB_PASSWORD dbname=$DB_NAME sslmode=$DB_SSL_MODE" status
+
+  goose-activity-status:
+    desc: Check activity migration status
+    dir: internal/activity/db/schema
+    cmds:
+      - |
+        export DB_HOST=$(~/go/bin/yq '.database.host' ../../../../{{.CONFIG_FILE}})
+        export DB_PORT=$(~/go/bin/yq '.database.port' ../../../../{{.CONFIG_FILE}})
+        export DB_USER=$(~/go/bin/yq '.database.user' ../../../../{{.CONFIG_FILE}})
+        export DB_PASSWORD=$(~/go/bin/yq '.database.password' ../../../../{{.CONFIG_FILE}})
+        export DB_NAME=$(~/go/bin/yq '.database.dbname' ../../../../{{.CONFIG_FILE}})
+        export DB_SSL_MODE=$(~/go/bin/yq '.database.sslmode' ../../../../{{.CONFIG_FILE}})
+        go run github.com/pressly/goose/v3/cmd/goose@latest postgres "host=$DB_HOST port=$DB_PORT user=$DB_USER password=$DB_PASSWORD dbname=$DB_NAME sslmode=$DB_SSL_MODE" status
+
+  goose-notification-status:
+    desc: Check notification migration status
+    dir: internal/notification/db/schema
+    cmds:
+      - |
+        export DB_HOST=$(~/go/bin/yq '.database.host' ../../../../{{.CONFIG_FILE}})
+        export DB_PORT=$(~/go/bin/yq '.database.port' ../../../../{{.CONFIG_FILE}})
+        export DB_USER=$(~/go/bin/yq '.database.user' ../../../../{{.CONFIG_FILE}})
+        export DB_PASSWORD=$(~/go/bin/yq '.database.password' ../../../../{{.CONFIG_FILE}})
+        export DB_NAME=$(~/go/bin/yq '.database.dbname' ../../../../{{.CONFIG_FILE}})
+        export DB_SSL_MODE=$(~/go/bin/yq '.database.sslmode' ../../../../{{.CONFIG_FILE}})
+        go run github.com/pressly/goose/v3/cmd/goose@latest postgres "host=$DB_HOST port=$DB_PORT user=$DB_USER password=$DB_PASSWORD dbname=$DB_NAME sslmode=$DB_SSL_MODE" status
+
+  goose-wallet-status:
+    desc: Check wallet migration status
+    dir: internal/wallet/db/schema
+    cmds:
+      - |
+        export DB_HOST=$(~/go/bin/yq '.database.host' ../../../../{{.CONFIG_FILE}})
+        export DB_PORT=$(~/go/bin/yq '.database.port' ../../../../{{.CONFIG_FILE}})
+        export DB_USER=$(~/go/bin/yq '.database.user' ../../../../{{.CONFIG_FILE}})
+        export DB_PASSWORD=$(~/go/bin/yq '.database.password' ../../../../{{.CONFIG_FILE}})
+        export DB_NAME=$(~/go/bin/yq '.database.dbname' ../../../../{{.CONFIG_FILE}})
+        export DB_SSL_MODE=$(~/go/bin/yq '.database.sslmode' ../../../../{{.CONFIG_FILE}})
+        go run github.com/pressly/goose/v3/cmd/goose@latest postgres "host=$DB_HOST port=$DB_PORT user=$DB_USER password=$DB_PASSWORD dbname=$DB_NAME sslmode=$DB_SSL_MODE" status
+
+  goose-setup:
+    desc: Setup goose migrations for all modules
+    cmds:
+      - task: goose-create-migrations
+      - task: goose-up
+
+  goose-create-migrations:
+    desc: Create migration files for all modules
+    cmds:
+      - task: goose-create-auth
+      - task: goose-create-activity  
+      - task: goose-create-notification
+      - task: goose-create-wallet
+
+  goose-create-auth:
+    desc: Create auth migration files
+    dir: internal/auth/db/schema
+    cmds:
+      - |
+        if [ ! -f "20241018000001_users.sql" ]; then
+          cp 001_users.sql 20241018000001_users.sql
+        fi
+      - |
+        if [ ! -f "20241018000002_jwt_tokens.sql" ]; then
+          cp 002_jwt_tokens.sql 20241018000002_jwt_tokens.sql
+        fi
+
+  goose-create-activity:
+    desc: Create activity migration files
+    dir: internal/activity/db/schema
+    cmds:
+      - |
+        if [ ! -f "20241018000003_activities.sql" ]; then
+          cp 001_activities.sql 20241018000003_activities.sql
+        fi
+
+  goose-create-notification:
+    desc: Create notification migration files
+    dir: internal/notification/db/schema
+    cmds:
+      - |
+        if [ ! -f "20241018000004_notifications.sql" ]; then
+          cp 001_notifications.sql 20241018000004_notifications.sql
+        fi
+
+  goose-create-wallet:
+    desc: Create wallet migration files
+    dir: internal/wallet/db/schema
+    cmds:
+      - |
+        if [ ! -f "20241018000005_wallets.sql" ]; then
+          cp 001_wallets.sql 20241018000005_wallets.sql
+        fi
+
+  goose-up:
+    desc: Run database migrations for all modules
+    cmds:
+      - task: goose-auth-up
+      - task: goose-activity-up
+      - task: goose-notification-up
+      - task: goose-wallet-up
 
   goose-down:
-    desc: Rollback database migrations
+    desc: Rollback database migrations for all modules
+    cmds:
+      - task: goose-wallet-down
+      - task: goose-notification-down
+      - task: goose-activity-down
+      - task: goose-auth-down
+
+  goose-auth-up:
+    desc: Run auth migrations
     dir: internal/auth/db/schema
     cmds:
       - |
-        DB_HOST=$(~/go/bin/yq '.database.host' ../../../../{{.CONFIG_FILE}})
-        DB_PORT=$(~/go/bin/yq '.database.port' ../../../../{{.CONFIG_FILE}})
-        DB_USER=$(~/go/bin/yq '.database.user' ../../../../{{.CONFIG_FILE}})
-        DB_PASSWORD=$(~/go/bin/yq '.database.password' ../../../../{{.CONFIG_FILE}})
-        DB_NAME=$(~/go/bin/yq '.database.dbname' ../../../../{{.CONFIG_FILE}})
-        DB_SSL_MODE=$(~/go/bin/yq '.database.sslmode' ../../../../{{.CONFIG_FILE}})
+        export DB_HOST=$(~/go/bin/yq '.database.host' ../../../../{{.CONFIG_FILE}})
+        export DB_PORT=$(~/go/bin/yq '.database.port' ../../../../{{.CONFIG_FILE}})
+        export DB_USER=$(~/go/bin/yq '.database.user' ../../../../{{.CONFIG_FILE}})
+        export DB_PASSWORD=$(~/go/bin/yq '.database.password' ../../../../{{.CONFIG_FILE}})
+        export DB_NAME=$(~/go/bin/yq '.database.dbname' ../../../../{{.CONFIG_FILE}})
+        export DB_SSL_MODE=$(~/go/bin/yq '.database.sslmode' ../../../../{{.CONFIG_FILE}})
+        go run github.com/pressly/goose/v3/cmd/goose@latest postgres "host=$DB_HOST port=$DB_PORT user=$DB_USER password=$DB_PASSWORD dbname=$DB_NAME sslmode=$DB_SSL_MODE" up
+
+  goose-activity-up:
+    desc: Run activity migrations
+    dir: internal/activity/db/schema
+    cmds:
+      - |
+        export DB_HOST=$(~/go/bin/yq '.database.host' ../../../../{{.CONFIG_FILE}})
+        export DB_PORT=$(~/go/bin/yq '.database.port' ../../../../{{.CONFIG_FILE}})
+        export DB_USER=$(~/go/bin/yq '.database.user' ../../../../{{.CONFIG_FILE}})
+        export DB_PASSWORD=$(~/go/bin/yq '.database.password' ../../../../{{.CONFIG_FILE}})
+        export DB_NAME=$(~/go/bin/yq '.database.dbname' ../../../../{{.CONFIG_FILE}})
+        export DB_SSL_MODE=$(~/go/bin/yq '.database.sslmode' ../../../../{{.CONFIG_FILE}})
+        go run github.com/pressly/goose/v3/cmd/goose@latest postgres "host=$DB_HOST port=$DB_PORT user=$DB_USER password=$DB_PASSWORD dbname=$DB_NAME sslmode=$DB_SSL_MODE" up
+
+  goose-notification-up:
+    desc: Run notification migrations
+    dir: internal/notification/db/schema
+    cmds:
+      - |
+        export DB_HOST=$(~/go/bin/yq '.database.host' ../../../../{{.CONFIG_FILE}})
+        export DB_PORT=$(~/go/bin/yq '.database.port' ../../../../{{.CONFIG_FILE}})
+        export DB_USER=$(~/go/bin/yq '.database.user' ../../../../{{.CONFIG_FILE}})
+        export DB_PASSWORD=$(~/go/bin/yq '.database.password' ../../../../{{.CONFIG_FILE}})
+        export DB_NAME=$(~/go/bin/yq '.database.dbname' ../../../../{{.CONFIG_FILE}})
+        export DB_SSL_MODE=$(~/go/bin/yq '.database.sslmode' ../../../../{{.CONFIG_FILE}})
+        go run github.com/pressly/goose/v3/cmd/goose@latest postgres "host=$DB_HOST port=$DB_PORT user=$DB_USER password=$DB_PASSWORD dbname=$DB_NAME sslmode=$DB_SSL_MODE" up
+
+  goose-wallet-up:
+    desc: Run wallet migrations
+    dir: internal/wallet/db/schema
+    cmds:
+      - |
+        export DB_HOST=$(~/go/bin/yq '.database.host' ../../../../{{.CONFIG_FILE}})
+        export DB_PORT=$(~/go/bin/yq '.database.port' ../../../../{{.CONFIG_FILE}})
+        export DB_USER=$(~/go/bin/yq '.database.user' ../../../../{{.CONFIG_FILE}})
+        export DB_PASSWORD=$(~/go/bin/yq '.database.password' ../../../../{{.CONFIG_FILE}})
+        export DB_NAME=$(~/go/bin/yq '.database.dbname' ../../../../{{.CONFIG_FILE}})
+        export DB_SSL_MODE=$(~/go/bin/yq '.database.sslmode' ../../../../{{.CONFIG_FILE}})
+        go run github.com/pressly/goose/v3/cmd/goose@latest postgres "host=$DB_HOST port=$DB_PORT user=$DB_USER password=$DB_PASSWORD dbname=$DB_NAME sslmode=$DB_SSL_MODE" up
+
+  goose-auth-down:
+    desc: Rollback auth migrations
+    dir: internal/auth/db/schema
+    cmds:
+      - |
+        export DB_HOST=$(~/go/bin/yq '.database.host' ../../../../{{.CONFIG_FILE}})
+        export DB_PORT=$(~/go/bin/yq '.database.port' ../../../../{{.CONFIG_FILE}})
+        export DB_USER=$(~/go/bin/yq '.database.user' ../../../../{{.CONFIG_FILE}})
+        export DB_PASSWORD=$(~/go/bin/yq '.database.password' ../../../../{{.CONFIG_FILE}})
+        export DB_NAME=$(~/go/bin/yq '.database.dbname' ../../../../{{.CONFIG_FILE}})
+        export DB_SSL_MODE=$(~/go/bin/yq '.database.sslmode' ../../../../{{.CONFIG_FILE}})
+        go run github.com/pressly/goose/v3/cmd/goose@latest postgres "host=$DB_HOST port=$DB_PORT user=$DB_USER password=$DB_PASSWORD dbname=$DB_NAME sslmode=$DB_SSL_MODE" down
+
+  goose-activity-down:
+    desc: Rollback activity migrations
+    dir: internal/activity/db/schema
+    cmds:
+      - |
+        export DB_HOST=$(~/go/bin/yq '.database.host' ../../../../{{.CONFIG_FILE}})
+        export DB_PORT=$(~/go/bin/yq '.database.port' ../../../../{{.CONFIG_FILE}})
+        export DB_USER=$(~/go/bin/yq '.database.user' ../../../../{{.CONFIG_FILE}})
+        export DB_PASSWORD=$(~/go/bin/yq '.database.password' ../../../../{{.CONFIG_FILE}})
+        export DB_NAME=$(~/go/bin/yq '.database.dbname' ../../../../{{.CONFIG_FILE}})
+        export DB_SSL_MODE=$(~/go/bin/yq '.database.sslmode' ../../../../{{.CONFIG_FILE}})
+        go run github.com/pressly/goose/v3/cmd/goose@latest postgres "host=$DB_HOST port=$DB_PORT user=$DB_USER password=$DB_PASSWORD dbname=$DB_NAME sslmode=$DB_SSL_MODE" down
+
+  goose-notification-down:
+    desc: Rollback notification migrations
+    dir: internal/notification/db/schema
+    cmds:
+      - |
+        export DB_HOST=$(~/go/bin/yq '.database.host' ../../../../{{.CONFIG_FILE}})
+        export DB_PORT=$(~/go/bin/yq '.database.port' ../../../../{{.CONFIG_FILE}})
+        export DB_USER=$(~/go/bin/yq '.database.user' ../../../../{{.CONFIG_FILE}})
+        export DB_PASSWORD=$(~/go/bin/yq '.database.password' ../../../../{{.CONFIG_FILE}})
+        export DB_NAME=$(~/go/bin/yq '.database.dbname' ../../../../{{.CONFIG_FILE}})
+        export DB_SSL_MODE=$(~/go/bin/yq '.database.sslmode' ../../../../{{.CONFIG_FILE}})
+        go run github.com/pressly/goose/v3/cmd/goose@latest postgres "host=$DB_HOST port=$DB_PORT user=$DB_USER password=$DB_PASSWORD dbname=$DB_NAME sslmode=$DB_SSL_MODE" down
+
+  goose-wallet-down:
+    desc: Rollback wallet migrations
+    dir: internal/wallet/db/schema
+    cmds:
+      - |
+        export DB_HOST=$(~/go/bin/yq '.database.host' ../../../../{{.CONFIG_FILE}})
+        export DB_PORT=$(~/go/bin/yq '.database.port' ../../../../{{.CONFIG_FILE}})
+        export DB_USER=$(~/go/bin/yq '.database.user' ../../../../{{.CONFIG_FILE}})
+        export DB_PASSWORD=$(~/go/bin/yq '.database.password' ../../../../{{.CONFIG_FILE}})
+        export DB_NAME=$(~/go/bin/yq '.database.dbname' ../../../../{{.CONFIG_FILE}})
+        export DB_SSL_MODE=$(~/go/bin/yq '.database.sslmode' ../../../../{{.CONFIG_FILE}})
         go run github.com/pressly/goose/v3/cmd/goose@latest postgres "host=$DB_HOST port=$DB_PORT user=$DB_USER password=$DB_PASSWORD dbname=$DB_NAME sslmode=$DB_SSL_MODE" down
 
   dev:

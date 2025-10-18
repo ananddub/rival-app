@@ -14,7 +14,7 @@ import (
 const createUser = `-- name: CreateUser :one
 INSERT INTO users (full_name, email, phone_number, password_hash, sign_type, role)
 VALUES ($1, $2, $3, $4, $5, $6)
-RETURNING id, full_name, email, password_hash, dob, phone_number, is_phone_verified, is_email_verified, sign_type, role, created_at, updated_at
+RETURNING id, full_name, email, phone_number, password_hash, dob, is_phone_verified, is_email_verified, sign_type, role, created_at, updated_at
 `
 
 type CreateUserParams struct {
@@ -22,8 +22,8 @@ type CreateUserParams struct {
 	Email        string      `json:"email"`
 	PhoneNumber  pgtype.Text `json:"phone_number"`
 	PasswordHash pgtype.Text `json:"password_hash"`
-	SignType     SignType    `json:"sign_type"`
-	Role         RoleType    `json:"role"`
+	SignType     string      `json:"sign_type"`
+	Role         string      `json:"role"`
 }
 
 func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (User, error) {
@@ -40,9 +40,9 @@ func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (User, e
 		&i.ID,
 		&i.FullName,
 		&i.Email,
+		&i.PhoneNumber,
 		&i.PasswordHash,
 		&i.Dob,
-		&i.PhoneNumber,
 		&i.IsPhoneVerified,
 		&i.IsEmailVerified,
 		&i.SignType,
@@ -54,7 +54,7 @@ func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (User, e
 }
 
 const getUserByEmail = `-- name: GetUserByEmail :one
-SELECT id, full_name, email, password_hash, dob, phone_number, is_phone_verified, is_email_verified, sign_type, role, created_at, updated_at FROM users WHERE email = $1
+SELECT id, full_name, email, phone_number, password_hash, dob, is_phone_verified, is_email_verified, sign_type, role, created_at, updated_at FROM users WHERE email = $1
 `
 
 func (q *Queries) GetUserByEmail(ctx context.Context, email string) (User, error) {
@@ -64,9 +64,9 @@ func (q *Queries) GetUserByEmail(ctx context.Context, email string) (User, error
 		&i.ID,
 		&i.FullName,
 		&i.Email,
+		&i.PhoneNumber,
 		&i.PasswordHash,
 		&i.Dob,
-		&i.PhoneNumber,
 		&i.IsPhoneVerified,
 		&i.IsEmailVerified,
 		&i.SignType,
@@ -78,7 +78,7 @@ func (q *Queries) GetUserByEmail(ctx context.Context, email string) (User, error
 }
 
 const getUserByID = `-- name: GetUserByID :one
-SELECT id, full_name, email, password_hash, dob, phone_number, is_phone_verified, is_email_verified, sign_type, role, created_at, updated_at FROM users WHERE id = $1
+SELECT id, full_name, email, phone_number, password_hash, dob, is_phone_verified, is_email_verified, sign_type, role, created_at, updated_at FROM users WHERE id = $1
 `
 
 func (q *Queries) GetUserByID(ctx context.Context, id int64) (User, error) {
@@ -88,9 +88,9 @@ func (q *Queries) GetUserByID(ctx context.Context, id int64) (User, error) {
 		&i.ID,
 		&i.FullName,
 		&i.Email,
+		&i.PhoneNumber,
 		&i.PasswordHash,
 		&i.Dob,
-		&i.PhoneNumber,
 		&i.IsPhoneVerified,
 		&i.IsEmailVerified,
 		&i.SignType,
@@ -102,7 +102,7 @@ func (q *Queries) GetUserByID(ctx context.Context, id int64) (User, error) {
 }
 
 const updateEmailVerification = `-- name: UpdateEmailVerification :one
-UPDATE users SET is_email_verified = $2, updated_at = now() WHERE id = $1 RETURNING id, full_name, email, password_hash, dob, phone_number, is_phone_verified, is_email_verified, sign_type, role, created_at, updated_at
+UPDATE users SET is_email_verified = $2, updated_at = now() WHERE id = $1 RETURNING id, full_name, email, phone_number, password_hash, dob, is_phone_verified, is_email_verified, sign_type, role, created_at, updated_at
 `
 
 type UpdateEmailVerificationParams struct {
@@ -117,9 +117,9 @@ func (q *Queries) UpdateEmailVerification(ctx context.Context, arg UpdateEmailVe
 		&i.ID,
 		&i.FullName,
 		&i.Email,
+		&i.PhoneNumber,
 		&i.PasswordHash,
 		&i.Dob,
-		&i.PhoneNumber,
 		&i.IsPhoneVerified,
 		&i.IsEmailVerified,
 		&i.SignType,
@@ -134,7 +134,7 @@ const updatePassword = `-- name: UpdatePassword :one
 UPDATE users
 SET password_hash = $2, updated_at = now()
 WHERE id = $1
-RETURNING id, full_name, email, password_hash, dob, phone_number, is_phone_verified, is_email_verified, sign_type, role, created_at, updated_at
+RETURNING id, full_name, email, phone_number, password_hash, dob, is_phone_verified, is_email_verified, sign_type, role, created_at, updated_at
 `
 
 type UpdatePasswordParams struct {
@@ -149,9 +149,9 @@ func (q *Queries) UpdatePassword(ctx context.Context, arg UpdatePasswordParams) 
 		&i.ID,
 		&i.FullName,
 		&i.Email,
+		&i.PhoneNumber,
 		&i.PasswordHash,
 		&i.Dob,
-		&i.PhoneNumber,
 		&i.IsPhoneVerified,
 		&i.IsEmailVerified,
 		&i.SignType,
@@ -163,7 +163,7 @@ func (q *Queries) UpdatePassword(ctx context.Context, arg UpdatePasswordParams) 
 }
 
 const updatePhoneVerification = `-- name: UpdatePhoneVerification :one
-UPDATE users SET is_phone_verified = $2, updated_at = now() WHERE id = $1 RETURNING id, full_name, email, password_hash, dob, phone_number, is_phone_verified, is_email_verified, sign_type, role, created_at, updated_at
+UPDATE users SET is_phone_verified = $2, updated_at = now() WHERE id = $1 RETURNING id, full_name, email, phone_number, password_hash, dob, is_phone_verified, is_email_verified, sign_type, role, created_at, updated_at
 `
 
 type UpdatePhoneVerificationParams struct {
@@ -178,9 +178,9 @@ func (q *Queries) UpdatePhoneVerification(ctx context.Context, arg UpdatePhoneVe
 		&i.ID,
 		&i.FullName,
 		&i.Email,
+		&i.PhoneNumber,
 		&i.PasswordHash,
 		&i.Dob,
-		&i.PhoneNumber,
 		&i.IsPhoneVerified,
 		&i.IsEmailVerified,
 		&i.SignType,
@@ -195,7 +195,7 @@ const updateUser = `-- name: UpdateUser :one
 UPDATE users 
 SET full_name = $2, email = $3, phone_number = $4, updated_at = now()
 WHERE id = $1
-RETURNING id, full_name, email, password_hash, dob, phone_number, is_phone_verified, is_email_verified, sign_type, role, created_at, updated_at
+RETURNING id, full_name, email, phone_number, password_hash, dob, is_phone_verified, is_email_verified, sign_type, role, created_at, updated_at
 `
 
 type UpdateUserParams struct {
@@ -217,9 +217,9 @@ func (q *Queries) UpdateUser(ctx context.Context, arg UpdateUserParams) (User, e
 		&i.ID,
 		&i.FullName,
 		&i.Email,
+		&i.PhoneNumber,
 		&i.PasswordHash,
 		&i.Dob,
-		&i.PhoneNumber,
 		&i.IsPhoneVerified,
 		&i.IsEmailVerified,
 		&i.SignType,
