@@ -36,7 +36,7 @@ func CreateWallet(ctx context.Context, userID int64, balance float64, coins int6
 	}
 
 	queries := wallet_gen.New(db)
-	
+
 	wallet, err := queries.CreateWallet(ctx, wallet_gen.CreateWalletParams{
 		UserID:   userID,
 		Balance:  pgtype.Numeric{Int: nil, Exp: 0, NaN: false, InfinityModifier: 0, Valid: true},
@@ -64,7 +64,7 @@ func GetWalletByUserID(ctx context.Context, userID int64) (*Wallet, error) {
 	}
 
 	queries := wallet_gen.New(db)
-	
+
 	wallet, err := queries.GetWalletByUserID(ctx, userID)
 	if err != nil {
 		return nil, err
@@ -87,7 +87,7 @@ func CreateTransaction(ctx context.Context, userID, walletID int64, title, descr
 	}
 
 	queries := wallet_gen.New(db)
-	
+
 	transaction, err := queries.CreateTransaction(ctx, wallet_gen.CreateTransactionParams{
 		UserID:      userID,
 		WalletID:    walletID,
@@ -121,7 +121,7 @@ func GetTransactionsByUserID(ctx context.Context, userID int64) ([]*Transaction,
 	}
 
 	queries := wallet_gen.New(db)
-	
+
 	transactions, err := queries.GetTransactionsByUserID(ctx, userID)
 	if err != nil {
 		return nil, err
@@ -135,7 +135,7 @@ func GetTransactionsByUserID(ctx context.Context, userID int64) ([]*Transaction,
 			WalletID:    transaction.WalletID,
 			Title:       transaction.Title,
 			Description: transaction.Description.String,
-			Amount:      0.0,
+			Amount:      float64(transaction.Amount.Int.Int64()),
 			Type:        transaction.Type,
 			Icon:        transaction.Icon.String,
 		})

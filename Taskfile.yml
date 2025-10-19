@@ -11,6 +11,180 @@ tasks:
       - task: sqlc-activity
       - task: sqlc-notification
       - task: sqlc-wallet
+      - task: sqlc-reward
+
+  sqlc-auth:
+    desc: Generate sqlc code for auth service
+    dir: internal/auth
+    cmds:
+      - sqlc generate
+
+  sqlc-activity:
+    desc: Generate sqlc code for activity service
+    dir: internal/activity
+    cmds:
+      - sqlc generate
+
+  sqlc-notification:
+    desc: Generate sqlc code for notification service
+    dir: internal/notification
+    cmds:
+      - sqlc generate
+
+  sqlc-wallet:
+    desc: Generate sqlc code for wallet service
+    dir: internal/wallet
+    cmds:
+      - sqlc generate
+
+  sqlc-reward:
+    desc: Generate sqlc code for reward service
+    dir: internal/reward
+    cmds:
+      - sqlc generate
+
+  migrate:
+    desc: Run database migrations for all services
+    cmds:
+      - task: migrate-auth
+      - task: migrate-activity
+      - task: migrate-notification
+      - task: migrate-wallet
+      - task: migrate-reward
+
+  migrate-auth:
+    desc: Run auth database migrations
+    cmds:
+      - goose -dir internal/auth/db postgres "user=postgres password=postgres dbname=rival_db sslmode=disable" up
+
+  migrate-activity:
+    desc: Run activity database migrations
+    cmds:
+      - goose -dir internal/activity/db postgres "user=postgres password=postgres dbname=rival_db sslmode=disable" up
+
+  migrate-notification:
+    desc: Run notification database migrations
+    cmds:
+      - goose -dir internal/notification/db postgres "user=postgres password=postgres dbname=rival_db sslmode=disable" up
+
+  migrate-wallet:
+    desc: Run wallet database migrations
+    cmds:
+      - goose -dir internal/wallet/db postgres "user=postgres password=postgres dbname=rival_db sslmode=disable" up
+
+  migrate-reward:
+    desc: Run reward database migrations
+    cmds:
+      - goose -dir internal/reward/db postgres "user=postgres password=postgres dbname=rival_db sslmode=disable" up
+
+  migrate-down:
+    desc: Rollback all database migrations
+    cmds:
+      - goose -dir internal/auth/db postgres "user=postgres password=postgres dbname=rival_db sslmode=disable" down
+      - goose -dir internal/activity/db postgres "user=postgres password=postgres dbname=rival_db sslmode=disable" down
+      - goose -dir internal/notification/db postgres "user=postgres password=postgres dbname=rival_db sslmode=disable" down
+      - goose -dir internal/wallet/db postgres "user=postgres password=postgres dbname=rival_db sslmode=disable" down
+      - goose -dir internal/reward/db postgres "user=postgres password=postgres dbname=rival_db sslmode=disable" down
+
+  dev:
+    desc: Run development server with migrations and SQLC generation
+    cmds:
+      - task: migrate
+      - task: sqlc-generate
+      - encore run
+
+  build:
+    desc: Build the application
+    cmds:
+      - encore build
+
+  test:
+    desc: Run tests
+    cmds:
+      - encore test ./...
+
+  clean:
+    desc: Clean generated files
+    cmds:
+      - rm -rf internal/auth/gen/*
+      - rm -rf internal/activity/gen/*
+      - rm -rf internal/notification/gen/*
+      - rm -rf internal/wallet/gen/*
+      - rm -rf internal/reward/gen/*
+
+  reset-db:
+    desc: Reset database (drop and recreate)
+    cmds:
+      - task: migrate-down
+      - task: migrate
+      - task: sqlc-generate
+
+  dummy-data:
+    desc: Insert dummy data for testing
+    cmds:
+      - |
+        psql "user=postgres password=postgres dbname=rival_db sslmode=disable" << 'EOF'
+        -- Insert dummy users
+        INSERT INTO users (name, email, phone, password, is_email_verified, is_phone_verified) VALUES
+        ('John Doe', 'john@example.com', '+1234567890', '$2a$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', true, false),
+        ('Jane Smith', 'jane@example.com', '+1234567891', '$2a$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', true, true),
+        ('Bob Johnson', 'bob@example.com', '+1234567892', '$2a$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', false, false);
+
+        -- Insert dummy wallets
+        INSERT INTO wallets (user_id, balance, coins, currency) VALUES
+        (1, 1000.50, 250, 'USD'),
+        (2, 750.25, 180, 'USD'),
+        (3, 500.00, 120, 'USD');
+
+        -- Insert dummy transactions
+        INSERT INTO transactions (user_id, wallet_id, title, description, amount, type, icon) VALUES
+        (1, 1, 'Daily Login Bonus', 'Reward for daily login', 50.00, 'credit', 'gift'),
+        (1, 1, 'Purchase Coffee', 'Coffee shop payment', -4.50, 'debit', 'coffee'),
+        (2, 2, 'Referral Bonus', 'Friend referral reward', 25.00, 'credit', 'users'),
+        (3, 3, 'Welcome Bonus', 'New user welcome bonus', 100.00, 'credit', 'star');
+
+        -- Insert dummy activities
+        INSERT INTO activities (user_id, action, details, category, icon) VALUES
+        (1, 'Login', 'User logged in successfully', 'authentication', 'login'),
+        (1, 'Purchase', 'Bought coffee for $4.50', 'transaction', 'shopping'),
+        (2, 'Signup', 'New user registration', 'authentication', 'user-plus'),
+        (3, 'Profile Update', 'Updated profile information', 'profile', 'edit');
+
+        -- Insert dummy notifications
+        INSERT INTO notifications (user_id, title, message, type, is_read) VALUES
+        (1, 'Welcome!', 'Welcome to our platform', 'welcome', false),
+        (1, 'Transaction Alert', 'Your purchase was successful', 'transaction', true),
+        (2, 'Bonus Earned', 'You earned a referral bonus!', 'reward', false),
+        (3, 'Profile Incomplete', 'Please complete your profile', 'reminder', false);
+
+        -- Insert dummy rewards
+        INSERT INTO rewards (user_id, title, description, points, type, status) VALUES
+        (1, 'Daily Login', 'Login for 7 consecutive days', 100, 'daily', 'available'),
+        (1, 'First Purchase', 'Make your first purchase', 50, 'milestone', 'claimed'),
+        (2, 'Referral Master', 'Refer 5 friends', 200, 'referral', 'available'),
+        (3, 'Profile Complete', 'Complete your profile 100%', 75, 'profile', 'available');
+        EOF
+
+  status:
+    desc: Show database status
+    cmds:
+      - |
+        psql "user=postgres password=postgres dbname=rival_db sslmode=disable" -c "
+        SELECT 'users' as table_name, count(*) as count FROM users
+        UNION ALL
+        SELECT 'wallets', count(*) FROM wallets
+        UNION ALL
+        SELECT 'transactions', count(*) FROM transactions
+        UNION ALL
+        SELECT 'activities', count(*) FROM activities
+        UNION ALL
+        SELECT 'notifications', count(*) FROM notifications
+        UNION ALL
+        SELECT 'rewards', count(*) FROM rewards;
+        "
+      - task: sqlc-activity
+      - task: sqlc-notification
+      - task: sqlc-wallet
 
   sqlc-auth:
     desc: Generate sqlc code for auth service
@@ -208,6 +382,7 @@ tasks:
       - task: goose-activity-up
       - task: goose-notification-up
       - task: goose-wallet-up
+      - task: goose-reward-up
 
   goose-down:
     desc: Rollback database migrations for all modules
@@ -259,6 +434,19 @@ tasks:
   goose-wallet-up:
     desc: Run wallet migrations
     dir: internal/wallet/db/schema
+    cmds:
+      - |
+        export DB_HOST=$(~/go/bin/yq '.database.host' ../../../../{{.CONFIG_FILE}})
+        export DB_PORT=$(~/go/bin/yq '.database.port' ../../../../{{.CONFIG_FILE}})
+        export DB_USER=$(~/go/bin/yq '.database.user' ../../../../{{.CONFIG_FILE}})
+        export DB_PASSWORD=$(~/go/bin/yq '.database.password' ../../../../{{.CONFIG_FILE}})
+        export DB_NAME=$(~/go/bin/yq '.database.dbname' ../../../../{{.CONFIG_FILE}})
+        export DB_SSL_MODE=$(~/go/bin/yq '.database.sslmode' ../../../../{{.CONFIG_FILE}})
+        go run github.com/pressly/goose/v3/cmd/goose@latest postgres "host=$DB_HOST port=$DB_PORT user=$DB_USER password=$DB_PASSWORD dbname=$DB_NAME sslmode=$DB_SSL_MODE" up
+
+  goose-reward-up:
+    desc: Run reward migrations
+    dir: internal/reward/db/schema
     cmds:
       - |
         export DB_HOST=$(~/go/bin/yq '.database.host' ../../../../{{.CONFIG_FILE}})

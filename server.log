@@ -115,3 +115,4 @@ task: [run] encore run --listen=0.0.0.0:4000
 9:43AM INF request completed code=ok duration=2.5213 endpoint=GetUserTransactions service=walletHandler trace_id=mdp5s7nmsv9fh4rbrakcv0fius
 9:43AM INF starting request endpoint=GetUserWallet service=walletHandler trace_id=n307utnqufm9botm67e4rjbgdk
 9:43AM INF request completed code=ok duration=1.9695 endpoint=GetUserWallet service=walletHandler trace_id=n307utnqufm9botm67e4rjbgdk
+task: Signal received: "interrupt"
