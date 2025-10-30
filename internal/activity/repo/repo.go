@@ -9,12 +9,13 @@ import (
 )
 
 type Activity struct {
-	ID       int64
-	UserID   int64
-	Action   string
-	Details  string
-	Category string
-	Icon     string
+	ID        int64
+	UserID    int64
+	Action    string
+	Details   string
+	Category  string
+	Icon      string
+	CreatedAt string
 }
 
 func CreateActivity(ctx context.Context, userID int64, action, details, category, icon string) (*Activity, error) {
@@ -25,7 +26,7 @@ func CreateActivity(ctx context.Context, userID int64, action, details, category
 	}
 
 	queries := activity_gen.New(db)
-	
+
 	activity, err := queries.CreateActivity(ctx, activity_gen.CreateActivityParams{
 		UserID:   userID,
 		Action:   action,
@@ -38,12 +39,13 @@ func CreateActivity(ctx context.Context, userID int64, action, details, category
 	}
 
 	return &Activity{
-		ID:       activity.ID,
-		UserID:   activity.UserID,
-		Action:   activity.Action,
-		Details:  activity.Details,
-		Category: activity.Category,
-		Icon:     activity.Icon,
+		ID:        activity.ID,
+		UserID:    activity.UserID,
+		Action:    activity.Action,
+		Details:   activity.Details,
+		Category:  activity.Category,
+		Icon:      activity.Icon,
+		CreatedAt: activity.CreatedAt.Time.String(),
 	}, nil
 }
 
@@ -55,7 +57,7 @@ func GetActivitiesByUserID(ctx context.Context, userID int64) ([]*Activity, erro
 	}
 
 	queries := activity_gen.New(db)
-	
+
 	activities, err := queries.GetActivitiesByUserID(ctx, userID)
 	if err != nil {
 		return nil, err
@@ -64,12 +66,13 @@ func GetActivitiesByUserID(ctx context.Context, userID int64) ([]*Activity, erro
 	var result []*Activity
 	for _, activity := range activities {
 		result = append(result, &Activity{
-			ID:       activity.ID,
-			UserID:   activity.UserID,
-			Action:   activity.Action,
-			Details:  activity.Details,
-			Category: activity.Category,
-			Icon:     activity.Icon,
+			ID:        activity.ID,
+			UserID:    activity.UserID,
+			Action:    activity.Action,
+			Details:   activity.Details,
+			Category:  activity.Category,
+			Icon:      activity.Icon,
+			CreatedAt: activity.CreatedAt.Time.String(),
 		})
 	}
 

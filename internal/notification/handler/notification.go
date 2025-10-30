@@ -4,7 +4,7 @@ import (
 	"context"
 	"strconv"
 
-	"encore.app/internal/notification/repo"
+	notificationRepo "encore.app/internal/notification/repo"
 )
 
 type CreateNotificationRequest struct {
@@ -15,12 +15,13 @@ type CreateNotificationRequest struct {
 }
 
 type NotificationResponse struct {
-	ID      string `json:"id"`
-	UserID  string `json:"user_id"`
-	Title   string `json:"title"`
-	Message string `json:"message"`
-	Type    string `json:"type"`
-	IsRead  bool   `json:"is_read"`
+	ID        string `json:"id"`
+	UserID    string `json:"user_id"`
+	Title     string `json:"title"`
+	Message   string `json:"message"`
+	Type      string `json:"type"`
+	IsRead    bool   `json:"is_read"`
+	CreatedAt string `json:"created_at"`
 }
 
 type GetNotificationsResponse struct {
@@ -30,26 +31,27 @@ type GetNotificationsResponse struct {
 //encore:api public method=POST path=/notification
 func CreateNotification(ctx context.Context, req *CreateNotificationRequest) (*NotificationResponse, error) {
 	userID, _ := strconv.ParseInt(req.UserID, 10, 64)
-	
+
 	notification, err := notificationRepo.CreateNotification(ctx, userID, req.Title, req.Message, req.Type)
 	if err != nil {
 		return nil, err
 	}
 
 	return &NotificationResponse{
-		ID:      strconv.FormatInt(notification.ID, 10),
-		UserID:  strconv.FormatInt(notification.UserID, 10),
-		Title:   notification.Title,
-		Message: notification.Message,
-		Type:    notification.Type,
-		IsRead:  notification.IsRead,
+		ID:        strconv.FormatInt(notification.ID, 10),
+		UserID:    strconv.FormatInt(notification.UserID, 10),
+		Title:     notification.Title,
+		Message:   notification.Message,
+		Type:      notification.Type,
+		IsRead:    notification.IsRead,
+		CreatedAt: notification.CreatedAt,
 	}, nil
 }
 
 //encore:api public method=GET path=/notification/user/:userID
 func GetUserNotifications(ctx context.Context, userID string) (*GetNotificationsResponse, error) {
 	uid, _ := strconv.ParseInt(userID, 10, 64)
-	
+
 	notifications, err := notificationRepo.GetNotificationsByUserID(ctx, uid)
 	if err != nil {
 		return nil, err
@@ -73,7 +75,7 @@ func GetUserNotifications(ctx context.Context, userID string) (*GetNotifications
 //encore:api public method=PUT path=/notification/:id/read
 func MarkAsRead(ctx context.Context, id string) (*NotificationResponse, error) {
 	notificationID, _ := strconv.ParseInt(id, 10, 64)
-	
+
 	notification, err := notificationRepo.MarkAsRead(ctx, notificationID)
 	if err != nil {
 		return nil, err

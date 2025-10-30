@@ -48,3 +48,12 @@ INSERT INTO public.jwt_tokens (user_id, token_hash, expires_at) VALUES
 (1, 'abc123def456ghi789jkl012mno345pqr678stu901vwx234yz', '2025-10-26 01:36:44'),
 (2, 'def456ghi789jkl012mno345pqr678stu901vwx234yz567abc', '2025-10-25 15:30:00'),
 (3, 'ghi789jkl012mno345pqr678stu901vwx234yz567abc123def', '2025-10-27 09:15:30');
+
+
+-- Insert dummy rewards
+INSERT INTO rewards (user_id, title, description, points, type, status) VALUES
+                                                                            (1, 'Daily Login', 'Login for 7 consecutive days', 100, 'daily', 'available'),
+                                                                            (1, 'First Purchase', 'Make your first purchase', 50, 'milestone', 'claimed'),
+                                                                            (2, 'Referral Master', 'Refer 5 friends', 200, 'referral', 'available'),
+                                                                            (3, 'Profile Complete', 'Complete your profile 100%', 75, 'profile', 'available');
+
