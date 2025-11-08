@@ -2,209 +2,87 @@ package rewardHandler
 
 import (
 	"context"
-	"fmt"
-	"strconv"
 
 	"encore.app/internal/reward/repo"
 	"encore.app/internal/reward/service"
 )
 
+var (
+	rewardRepo    = repo.New()
+	rewardService = service.New(rewardRepo)
+)
+
 type CreateRewardRequest struct {
-	UserID      string `json:"user_id"`
+	UserID      int64  `json:"user_id"`
 	Title       string `json:"title"`
 	Description string `json:"description"`
-	Points      int32  `json:"points"`
 	Type        string `json:"type"`
+	Points      int    `json:"points"`
 }
 
-type ClaimRewardRequest struct {
-	UserID string `json:"user_id"`
+type CreateRewardResponse struct {
+	Message string `json:"message"`
 }
 
-type RewardResponse struct {
-	ID          string `json:"id"`
-	UserID      string `json:"user_id"`
+//encore:api public method=POST path=/rewards/create
+func CreateReward(ctx context.Context, req *CreateRewardRequest) (*CreateRewardResponse, error) {
+	if err := rewardService.CreateReward(ctx, req.UserID, req.Title, req.Description, req.Type, req.Points); err != nil {
+		return nil, err
+	}
+	return &CreateRewardResponse{Message: "Reward created successfully"}, nil
+}
+
+type Reward struct {
+	ID          int64  `json:"id"`
 	Title       string `json:"title"`
 	Description string `json:"description"`
-	Points      int32  `json:"points"`
+	Points      int    `json:"points"`
 	Type        string `json:"type"`
 	Status      string `json:"status"`
-	ClaimedAt   string `json:"claimed_at,omitempty"`
 }
 
 type GetRewardsResponse struct {
-	Rewards []*RewardResponse `json:"rewards"`
+	Rewards []Reward `json:"rewards"`
 }
 
-type UserPointsResponse struct {
-	UserID      string `json:"user_id"`
-	TotalPoints int32  `json:"total_points"`
-}
-
-//encore:api public method=POST path=/reward
-func CreateReward(ctx context.Context, req *CreateRewardRequest) (*RewardResponse, error) {
-	userID, _ := strconv.ParseInt(req.UserID, 10, 64)
-
-	reward, err := rewardRepo.CreateReward(ctx, userID, req.Title, req.Description, req.Points, req.Type, "available")
+//encore:api public method=GET path=/rewards/:userID
+func GetRewards(ctx context.Context, userID int64) (*GetRewardsResponse, error) {
+	rewards, err := rewardService.GetAvailableRewards(ctx, userID)
 	if err != nil {
 		return nil, err
 	}
 
-	return &RewardResponse{
-		ID:          strconv.FormatInt(reward.ID, 10),
-		UserID:      strconv.FormatInt(reward.UserID, 10),
-		Title:       reward.Title,
-		Description: *reward.Description,
-		Points:      reward.Points,
-		Type:        reward.Type,
-		Status:      reward.Status,
-	}, nil
-}
-
-//encore:api public method=GET path=/reward/user/:userID
-func GetUserRewards(ctx context.Context, userID string) (*GetRewardsResponse, error) {
-	uid, _ := strconv.ParseInt(userID, 10, 64)
-
-	rewards, err := rewardRepo.GetRewardsByUserID(ctx, uid)
-	if err != nil {
-		return nil, err
-	}
-
-	var result []*RewardResponse
-	for _, reward := range rewards {
-		claimedAt := ""
-		if reward.ClaimedAt != nil {
-			claimedAt = reward.ClaimedAt.Format("2006-01-02T15:04:05Z")
+	result := make([]Reward, len(rewards))
+	for i, r := range rewards {
+		desc := ""
+		if r.Description != nil {
+			desc = *r.Description
 		}
-
-		result = append(result, &RewardResponse{
-			ID:          strconv.FormatInt(reward.ID, 10),
-			UserID:      strconv.FormatInt(reward.UserID, 10),
-			Title:       reward.Title,
-			Description: *reward.Description,
-			Points:      reward.Points,
-			Type:        reward.Type,
-			Status:      reward.Status,
-			ClaimedAt:   claimedAt,
-		})
+		result[i] = Reward{
+			ID:          r.ID,
+			Title:       r.Title,
+			Description: desc,
+			Points:      r.Points,
+			Type:        r.Type,
+			Status:      r.Status,
+		}
 	}
-
 	return &GetRewardsResponse{Rewards: result}, nil
 }
 
-//encore:api public method=GET path=/reward/available
-func GetAvailableRewards(ctx context.Context) (*GetRewardsResponse, error) {
-	rewards, err := rewardRepo.GetAvailableRewards(ctx)
-	if err != nil {
-		return nil, err
-	}
-
-	var result []*RewardResponse
-	for _, reward := range rewards {
-		result = append(result, &RewardResponse{
-			ID:          strconv.FormatInt(reward.ID, 10),
-			UserID:      strconv.FormatInt(reward.UserID, 10),
-			Title:       reward.Title,
-			Description: *reward.Description,
-			Points:      reward.Points,
-			Type:        reward.Type,
-			Status:      reward.Status,
-		})
-	}
-
-	return &GetRewardsResponse{Rewards: result}, nil
+type ClaimRewardRequest struct {
+	UserID   int64 `json:"user_id"`
+	RewardID int64 `json:"reward_id"`
 }
 
-//encore:api public method=POST path=/reward/:id/claim
-func ClaimReward(ctx context.Context, id string, req *ClaimRewardRequest) (*RewardResponse, error) {
-	rewardID, _ := strconv.ParseInt(id, 10, 64)
-	userID, _ := strconv.ParseInt(req.UserID, 10, 64)
-
-	// Use service layer for business logic
-	err := rewardService.ClaimUserReward(ctx, rewardID, userID)
-	if err != nil {
-		return nil, err
-	}
-
-	// Get updated reward
-	reward, err := rewardRepo.GetRewardByID(ctx, rewardID)
-	if err != nil {
-		return nil, err
-	}
-
-	claimedAt := ""
-	if reward.ClaimedAt != nil {
-		claimedAt = reward.ClaimedAt.Format("2006-01-02T15:04:05Z")
-	}
-
-	return &RewardResponse{
-		ID:          strconv.FormatInt(reward.ID, 10),
-		UserID:      strconv.FormatInt(reward.UserID, 10),
-		Title:       reward.Title,
-		Description: *reward.Description,
-		Points:      reward.Points,
-		Type:        reward.Type,
-		Status:      reward.Status,
-		ClaimedAt:   claimedAt,
-	}, nil
+type ClaimRewardResponse struct {
+	Message string `json:"message"`
 }
 
-//encore:api public method=POST path=/reward/:userID/daily
-func CreateDailyReward(ctx context.Context, userID string) (*RewardResponse, error) {
-	uid, _ := strconv.ParseInt(userID, 10, 64)
-
-	// Check eligibility first
-	eligible, err := rewardService.CheckDailyRewardEligibility(ctx, uid)
-	if err != nil {
+//encore:api public method=POST path=/rewards/claim
+func ClaimReward(ctx context.Context, req *ClaimRewardRequest) (*ClaimRewardResponse, error) {
+	if err := rewardService.ClaimReward(ctx, req.UserID, req.RewardID); err != nil {
 		return nil, err
 	}
-
-	if !eligible {
-		return nil, fmt.Errorf("daily reward already claimed today")
-	}
-
-	// Create daily reward using service
-	err = rewardService.CreateDailyReward(ctx, uid)
-	if err != nil {
-		return nil, err
-	}
-
-	// Get the created reward
-	rewards, err := rewardRepo.GetRewardsByUserID(ctx, uid)
-	if err != nil {
-		return nil, err
-	}
-
-	// Return the latest daily reward
-	for i := len(rewards) - 1; i >= 0; i-- {
-		if rewards[i].Type == "daily" {
-			reward := rewards[i]
-			return &RewardResponse{
-				ID:          strconv.FormatInt(reward.ID, 10),
-				UserID:      strconv.FormatInt(reward.UserID, 10),
-				Title:       reward.Title,
-				Description: *reward.Description,
-				Points:      reward.Points,
-				Type:        reward.Type,
-				Status:      reward.Status,
-			}, nil
-		}
-	}
-
-	return nil, fmt.Errorf("failed to create daily reward")
-}
-
-//encore:api public method=GET path=/reward/points/:userID
-func GetUserPoints(ctx context.Context, userID string) (*UserPointsResponse, error) {
-	uid, _ := strconv.ParseInt(userID, 10, 64)
-
-	totalPoints, err := rewardService.GetUserTotalPoints(ctx, uid)
-	if err != nil {
-		return nil, err
-	}
-
-	return &UserPointsResponse{
-		UserID:      userID,
-		TotalPoints: totalPoints,
-	}, nil
+	return &ClaimRewardResponse{Message: "Reward claimed successfully"}, nil
 }

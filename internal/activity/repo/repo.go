@@ -1,80 +1,111 @@
-package activityRepo
+package repo
 
 import (
 	"context"
 
 	"encore.app/config"
 	"encore.app/connection"
-	activity_gen "encore.app/internal/activity/gen"
+	db "encore.app/gen"
+	activityInterface "encore.app/internal/interface/activity"
 )
 
-type Activity struct {
-	ID        int64
-	UserID    int64
-	Action    string
-	Details   string
-	Category  string
-	Icon      string
-	CreatedAt string
+type ActivityRepo struct{}
+
+func New() activityInterface.Repository {
+	return &ActivityRepo{}
 }
 
-func CreateActivity(ctx context.Context, userID int64, action, details, category, icon string) (*Activity, error) {
+func (r *ActivityRepo) CreateActivity(ctx context.Context, activity *activityInterface.Activity) error {
 	cfg := config.GetConfig()
-	db, err := connection.GetPgConnection(&cfg.Database)
+	conn, err := connection.GetPgConnection(&cfg.Database)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
-	queries := activity_gen.New(db)
-
-	activity, err := queries.CreateActivity(ctx, activity_gen.CreateActivityParams{
-		UserID:   userID,
-		Action:   action,
-		Details:  details,
-		Category: category,
-		Icon:     icon,
+	queries := db.New(conn)
+	_, err = queries.CreateActivity(ctx, db.CreateActivityParams{
+		UserID:   activity.UserID,
+		Action:   activity.Action,
+		Details:  activity.Details,
+		Category: activity.Category,
+		Icon:     activity.Icon,
 	})
-	if err != nil {
-		return nil, err
-	}
-
-	return &Activity{
-		ID:        activity.ID,
-		UserID:    activity.UserID,
-		Action:    activity.Action,
-		Details:   activity.Details,
-		Category:  activity.Category,
-		Icon:      activity.Icon,
-		CreatedAt: activity.CreatedAt.Time.String(),
-	}, nil
+	return err
 }
 
-func GetActivitiesByUserID(ctx context.Context, userID int64) ([]*Activity, error) {
+func (r *ActivityRepo) GetActivities(ctx context.Context, userID int64, limit, offset int) ([]*activityInterface.Activity, error) {
 	cfg := config.GetConfig()
-	db, err := connection.GetPgConnection(&cfg.Database)
+	conn, err := connection.GetPgConnection(&cfg.Database)
 	if err != nil {
 		return nil, err
 	}
 
-	queries := activity_gen.New(db)
-
+	queries := db.New(conn)
 	activities, err := queries.GetActivitiesByUserID(ctx, userID)
 	if err != nil {
 		return nil, err
 	}
 
-	var result []*Activity
-	for _, activity := range activities {
-		result = append(result, &Activity{
-			ID:        activity.ID,
-			UserID:    activity.UserID,
-			Action:    activity.Action,
-			Details:   activity.Details,
-			Category:  activity.Category,
-			Icon:      activity.Icon,
-			CreatedAt: activity.CreatedAt.Time.String(),
+	end := offset + limit
+	if end > len(activities) {
+		end = len(activities)
+	}
+	if offset >= len(activities) {
+		return []*activityInterface.Activity{}, nil
+	}
+
+	result := make([]*activityInterface.Activity, 0)
+	for i := offset; i < end; i++ {
+		a := activities[i]
+		result = append(result, &activityInterface.Activity{
+			ID:        a.ID,
+			UserID:    a.UserID,
+			Action:    a.Action,
+			Details:   a.Details,
+			Category:  a.Category,
+			Icon:      a.Icon,
+			CreatedAt: a.CreatedAt.Time,
+		})
+	}
+	return result, nil
+}
+
+func (r *ActivityRepo) GetActivitiesByCategory(ctx context.Context, userID int64, category string, limit, offset int) ([]*activityInterface.Activity, error) {
+	cfg := config.GetConfig()
+	conn, err := connection.GetPgConnection(&cfg.Database)
+	if err != nil {
+		return nil, err
+	}
+
+	queries := db.New(conn)
+	activities, err := queries.GetActivitiesByCategory(ctx, category)
+	if err != nil {
+		return nil, err
+	}
+
+	result := make([]*activityInterface.Activity, 0)
+	for _, a := range activities {
+		if a.UserID != userID {
+			continue
+		}
+		result = append(result, &activityInterface.Activity{
+			ID:        a.ID,
+			UserID:    a.UserID,
+			Action:    a.Action,
+			Details:   a.Details,
+			Category:  a.Category,
+			Icon:      a.Icon,
+			CreatedAt: a.CreatedAt.Time,
 		})
 	}
 
-	return result, nil
+	end := offset + limit
+	if end > len(result) {
+		end = len(result)
+	}
+	if offset >= len(result) {
+		return []*activityInterface.Activity{}, nil
+	}
+
+	return result[offset:end], nil
 }

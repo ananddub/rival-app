@@ -1,74 +1,113 @@
-package authService
+package service
 
 import (
 	"context"
-	"crypto/rand"
-	"fmt"
-	"math/big"
+	"errors"
 	"time"
 
-	"encore.app/config"
-	"encore.app/connection"
-	"github.com/golang-jwt/jwt/v5"
-	"github.com/redis/go-redis/v9"
-	"golang.org/x/crypto/bcrypt"
+	authInterface "encore.app/internal/interface/auth"
+	"encore.app/internal/auth/utils"
 )
 
-var rdb *redis.Client
-var jwtSecret = []byte("your-secret-key") // TODO: Move to config
-
-func init() {
-	cfg := config.GetConfig()
-	rdb = connection.GetRedisClient(&cfg.Redis)
+type AuthService struct {
+	repo authInterface.Repository
 }
 
-func GenerateOTP() string {
-	otp, _ := rand.Int(rand.Reader, big.NewInt(900000))
-	return fmt.Sprintf("%06d", otp.Int64()+100000)
+func New(repo authInterface.Repository) authInterface.Service {
+	return &AuthService{repo: repo}
 }
 
-func StoreOTP(ctx context.Context, email, otp string) error {
-	key := fmt.Sprintf("otp:%s", email)
-	return rdb.Set(ctx, key, otp, 5*time.Minute).Err()
-}
+func (s *AuthService) Signup(ctx context.Context, fullName, email, password string) (string, error) {
+	if err := utils.ValidateEmail(email); err != nil {
+		return "", err
+	}
+	if err := utils.ValidatePassword(password); err != nil {
+		return "", err
+	}
 
-func VerifyOTP(ctx context.Context, email, otp string) bool {
-	key := fmt.Sprintf("otp:%s", email)
-	storedOtp, err := rdb.Get(ctx, key).Result()
+	existing, err := s.repo.GetUserByEmail(ctx, email)
 	if err != nil {
-		return false
+		return "", err
 	}
-	if storedOtp == otp {
-		rdb.Del(ctx, key)
-		return true
+	if existing != nil {
+		return "", errors.New("user already exists")
 	}
-	return false
+
+	hashedPassword, err := utils.HashPassword(password)
+	if err != nil {
+		return "", err
+	}
+
+	user := &authInterface.User{
+		FullName:     fullName,
+		Email:        email,
+		PasswordHash: hashedPassword,
+		SignType:     "email",
+		Role:         "user",
+	}
+
+	userID, err := s.repo.CreateUser(ctx, user)
+	if err != nil {
+		return "", err
+	}
+
+	return s.generateToken(ctx, userID, email)
 }
 
-func HashPassword(password string) (string, error) {
-	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
-	return string(hashedPassword), err
-}
-
-func GenerateAccessToken(userID, email string) (string, error) {
-	claims := jwt.MapClaims{
-		"user_id": userID,
-		"email":   email,
-		"exp":     time.Now().Add(time.Hour * 24).Unix(), // 24 hours
-		"iat":     time.Now().Unix(),
+func (s *AuthService) Login(ctx context.Context, email, password string) (string, error) {
+	user, err := s.repo.GetUserByEmail(ctx, email)
+	if err != nil {
+		return "", err
+	}
+	if user == nil {
+		return "", errors.New("invalid credentials")
 	}
 
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-	return token.SignedString(jwtSecret)
-}
-
-func GenerateRefreshToken(userID string) (string, error) {
-	claims := jwt.MapClaims{
-		"user_id": userID,
-		"exp":     time.Now().Add(time.Hour * 24 * 7).Unix(), // 7 days
-		"iat":     time.Now().Unix(),
+	if err := utils.VerifyPassword(user.PasswordHash, password); err != nil {
+		return "", errors.New("invalid credentials")
 	}
 
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-	return token.SignedString(jwtSecret)
+	return s.generateToken(ctx, user.ID, user.Email)
+}
+
+func (s *AuthService) VerifyToken(ctx context.Context, tokenString string) (*authInterface.User, error) {
+	userID, _, err := utils.ValidateToken(tokenString)
+	if err != nil {
+		return nil, err
+	}
+	return s.repo.GetUserByID(ctx, userID)
+}
+
+func (s *AuthService) Logout(ctx context.Context, token string) error {
+	tokenHash := utils.HashToken(token)
+	return s.repo.DeleteToken(ctx, tokenHash)
+}
+
+func (s *AuthService) ForgotPassword(ctx context.Context, email string) error {
+	user, err := s.repo.GetUserByEmail(ctx, email)
+	if err != nil || user == nil {
+		return errors.New("user not found")
+	}
+	// TODO: Send email with reset link
+	return nil
+}
+
+func (s *AuthService) generateToken(ctx context.Context, userID int64, email string) (string, error) {
+	tokenString, err := utils.GenerateToken(userID, email)
+	if err != nil {
+		return "", err
+	}
+
+	tokenHash := utils.HashToken(tokenString)
+	jwtToken := &authInterface.JWTToken{
+		UserID:    userID,
+		TokenHash: tokenHash,
+		ExpiresAt: time.Now().Add(24 * time.Hour),
+	}
+
+	if err := s.repo.CreateToken(ctx, jwtToken); err != nil {
+		return "", err
+	}
+
+	return tokenString, nil
 }

@@ -1,103 +1,116 @@
-package notificationRepo
+package repo
 
 import (
 	"context"
 
 	"encore.app/config"
 	"encore.app/connection"
-	notification_gen "encore.app/internal/notification/gen"
+	db "encore.app/gen"
+	notificationInterface "encore.app/internal/interface/notification"
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
-type Notification struct {
-	ID        int64
-	UserID    int64
-	Title     string
-	Message   string
-	Type      string
-	IsRead    bool
-	CreatedAt string
+type NotificationRepo struct{}
+
+func New() notificationInterface.Repository {
+	return &NotificationRepo{}
 }
 
-func CreateNotification(ctx context.Context, userID int64, title, message, notificationType string) (*Notification, error) {
+func (r *NotificationRepo) CreateNotification(ctx context.Context, notification *notificationInterface.Notification) error {
 	cfg := config.GetConfig()
-	db, err := connection.GetPgConnection(&cfg.Database)
+	conn, err := connection.GetPgConnection(&cfg.Database)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
-	queries := notification_gen.New(db)
-
-	notification, err := queries.CreateNotification(ctx, notification_gen.CreateNotificationParams{
-		UserID:  userID,
-		Title:   title,
-		Message: message,
-		Type:    pgtype.Text{String: notificationType, Valid: true},
+	queries := db.New(conn)
+	_, err = queries.CreateNotification(ctx, db.CreateNotificationParams{
+		UserID:  notification.UserID,
+		Title:   notification.Title,
+		Message: notification.Message,
+		Type:    pgtype.Text{String: notification.Type, Valid: true},
 	})
-	if err != nil {
-		return nil, err
-	}
-
-	return &Notification{
-		ID:        notification.ID,
-		UserID:    notification.UserID,
-		Title:     notification.Title,
-		Message:   notification.Message,
-		Type:      notification.Type.String,
-		IsRead:    notification.IsRead.Bool,
-		CreatedAt: notification.CreatedAt.Time.String(),
-	}, nil
+	return err
 }
 
-func GetNotificationsByUserID(ctx context.Context, userID int64) ([]*Notification, error) {
+func (r *NotificationRepo) GetNotifications(ctx context.Context, userID int64, limit, offset int) ([]*notificationInterface.Notification, error) {
 	cfg := config.GetConfig()
-	db, err := connection.GetPgConnection(&cfg.Database)
+	conn, err := connection.GetPgConnection(&cfg.Database)
 	if err != nil {
 		return nil, err
 	}
 
-	queries := notification_gen.New(db)
-
+	queries := db.New(conn)
 	notifications, err := queries.GetNotificationsByUserID(ctx, userID)
 	if err != nil {
 		return nil, err
 	}
 
-	var result []*Notification
-	for _, notification := range notifications {
-		result = append(result, &Notification{
-			ID:      notification.ID,
-			UserID:  notification.UserID,
-			Title:   notification.Title,
-			Message: notification.Message,
-			Type:    notification.Type.String,
-			IsRead:  notification.IsRead.Bool,
-		})
+	end := offset + limit
+	if end > len(notifications) {
+		end = len(notifications)
+	}
+	if offset >= len(notifications) {
+		return []*notificationInterface.Notification{}, nil
 	}
 
+	result := make([]*notificationInterface.Notification, 0)
+	for i := offset; i < end; i++ {
+		n := notifications[i]
+		result = append(result, &notificationInterface.Notification{
+			ID:        n.ID,
+			UserID:    n.UserID,
+			Title:     n.Title,
+			Message:   n.Message,
+			Type:      n.Type.String,
+			IsRead:    n.IsRead.Bool,
+			CreatedAt: n.CreatedAt.Time,
+		})
+	}
 	return result, nil
 }
 
-func MarkAsRead(ctx context.Context, notificationID int64) (*Notification, error) {
+func (r *NotificationRepo) GetUnreadCount(ctx context.Context, userID int64) (int, error) {
 	cfg := config.GetConfig()
-	db, err := connection.GetPgConnection(&cfg.Database)
+	conn, err := connection.GetPgConnection(&cfg.Database)
 	if err != nil {
-		return nil, err
+		return 0, err
 	}
 
-	queries := notification_gen.New(db)
+	queries := db.New(conn)
+	notifications, err := queries.GetUnreadNotifications(ctx, userID)
+	return len(notifications), err
+}
 
-	notification, err := queries.MarkAsRead(ctx, notificationID)
+func (r *NotificationRepo) MarkAsRead(ctx context.Context, id int64) error {
+	cfg := config.GetConfig()
+	conn, err := connection.GetPgConnection(&cfg.Database)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
-	return &Notification{
-		ID:      notification.ID,
-		UserID:  notification.UserID,
-		Title:   notification.Title,
-		Message: notification.Message,
-		Type:    notification.Type.String,
-		IsRead:  notification.IsRead.Bool,
-	}, nil
+	queries := db.New(conn)
+	_, err = queries.MarkAsRead(ctx, id)
+	return err
+}
+
+func (r *NotificationRepo) MarkAllAsRead(ctx context.Context, userID int64) error {
+	cfg := config.GetConfig()
+	conn, err := connection.GetPgConnection(&cfg.Database)
+	if err != nil {
+		return err
+	}
+
+	queries := db.New(conn)
+	notifications, err := queries.GetUnreadNotifications(ctx, userID)
+	if err != nil {
+		return err
+	}
+
+	for _, n := range notifications {
+		if _, err := queries.MarkAsRead(ctx, n.ID); err != nil {
+			return err
+		}
+	}
+	return nil
 }

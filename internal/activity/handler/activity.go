@@ -2,22 +2,38 @@ package activityHandler
 
 import (
 	"context"
-	"strconv"
 
-	activityRepo "encore.app/internal/activity/repo"
+	"encore.app/internal/activity/repo"
+	"encore.app/internal/activity/service"
 )
 
-type CreateActivityRequest struct {
-	UserID   string `json:"user_id"`
+var (
+	activityRepo    = repo.New()
+	activityService = service.New(activityRepo)
+)
+
+type LogActivityRequest struct {
+	UserID   int64  `json:"user_id"`
 	Action   string `json:"action"`
 	Details  string `json:"details"`
 	Category string `json:"category"`
 	Icon     string `json:"icon"`
 }
 
-type ActivityResponse struct {
-	ID        string `json:"id"`
-	UserID    string `json:"user_id"`
+type LogActivityResponse struct {
+	Message string `json:"message"`
+}
+
+//encore:api public method=POST path=/activities/log
+func LogActivity(ctx context.Context, req *LogActivityRequest) (*LogActivityResponse, error) {
+	if err := activityService.LogActivity(ctx, req.UserID, req.Action, req.Details, req.Category, req.Icon); err != nil {
+		return nil, err
+	}
+	return &LogActivityResponse{Message: "Activity logged successfully"}, nil
+}
+
+type Activity struct {
+	ID        int64  `json:"id"`
 	Action    string `json:"action"`
 	Details   string `json:"details"`
 	Category  string `json:"category"`
@@ -26,49 +42,26 @@ type ActivityResponse struct {
 }
 
 type GetActivitiesResponse struct {
-	Activities []*ActivityResponse `json:"activities"`
+	Activities []Activity `json:"activities"`
 }
 
-//encore:api public method=POST path=/activity
-func CreateActivity(ctx context.Context, req *CreateActivityRequest) (*ActivityResponse, error) {
-	userID, _ := strconv.ParseInt(req.UserID, 10, 64)
-
-	activity, err := activityRepo.CreateActivity(ctx, userID, req.Action, req.Details, req.Category, req.Icon)
+//encore:api public method=GET path=/activities/:userID/:page
+func GetActivities(ctx context.Context, userID int64, page int) (*GetActivitiesResponse, error) {
+	activities, err := activityService.GetUserActivities(ctx, userID, page)
 	if err != nil {
 		return nil, err
 	}
 
-	return &ActivityResponse{
-		ID:        strconv.FormatInt(activity.ID, 10),
-		UserID:    strconv.FormatInt(activity.UserID, 10),
-		Action:    activity.Action,
-		Details:   activity.Details,
-		Category:  activity.Category,
-		Icon:      activity.Icon,
-		CreatedAt: activity.CreatedAt,
-	}, nil
-}
-
-//encore:api public method=GET path=/activity/user/:userID
-func GetUserActivities(ctx context.Context, userID string) (*GetActivitiesResponse, error) {
-	uid, _ := strconv.ParseInt(userID, 10, 64)
-
-	activities, err := activityRepo.GetActivitiesByUserID(ctx, uid)
-	if err != nil {
-		return nil, err
+	result := make([]Activity, len(activities))
+	for i, a := range activities {
+		result[i] = Activity{
+			ID:        a.ID,
+			Action:    a.Action,
+			Details:   a.Details,
+			Category:  a.Category,
+			Icon:      a.Icon,
+			CreatedAt: a.CreatedAt.Format("2006-01-02 15:04:05"),
+		}
 	}
-
-	var result []*ActivityResponse
-	for _, activity := range activities {
-		result = append(result, &ActivityResponse{
-			ID:       strconv.FormatInt(activity.ID, 10),
-			UserID:   strconv.FormatInt(activity.UserID, 10),
-			Action:   activity.Action,
-			Details:  activity.Details,
-			Category: activity.Category,
-			Icon:     activity.Icon,
-		})
-	}
-
 	return &GetActivitiesResponse{Activities: result}, nil
 }

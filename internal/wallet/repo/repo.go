@@ -1,145 +1,148 @@
-package walletRepo
+package repo
 
 import (
 	"context"
+	"math/big"
 
 	"encore.app/config"
 	"encore.app/connection"
-	wallet_gen "encore.app/internal/wallet/gen"
+	db "encore.app/gen"
+	walletInterface "encore.app/internal/interface/wallet"
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
-type Wallet struct {
-	ID       int64
-	UserID   int64
-	Balance  float64
-	Coins    int64
-	Currency string
+type WalletRepo struct{}
+
+func New() walletInterface.Repository {
+	return &WalletRepo{}
 }
 
-type Transaction struct {
-	ID          int64
-	UserID      int64
-	WalletID    int64
-	Title       string
-	Description string
-	Amount      float64
-	Type        string
-	Icon        string
-}
-
-func CreateWallet(ctx context.Context, userID int64, balance float64, coins int64, currency string) (*Wallet, error) {
+func (r *WalletRepo) GetWallet(ctx context.Context, userID int64) (*walletInterface.Wallet, error) {
 	cfg := config.GetConfig()
-	db, err := connection.GetPgConnection(&cfg.Database)
+	conn, err := connection.GetPgConnection(&cfg.Database)
 	if err != nil {
 		return nil, err
 	}
 
-	queries := wallet_gen.New(db)
-
-	wallet, err := queries.CreateWallet(ctx, wallet_gen.CreateWalletParams{
-		UserID:   userID,
-		Balance:  pgtype.Numeric{Int: nil, Exp: 0, NaN: false, InfinityModifier: 0, Valid: true},
-		Coins:    pgtype.Int8{Int64: coins, Valid: true},
-		Currency: pgtype.Text{String: currency, Valid: true},
-	})
-	if err != nil {
-		return nil, err
-	}
-
-	return &Wallet{
-		ID:       wallet.ID,
-		UserID:   wallet.UserID,
-		Balance:  balance,
-		Coins:    wallet.Coins.Int64,
-		Currency: wallet.Currency.String,
-	}, nil
-}
-
-func GetWalletByUserID(ctx context.Context, userID int64) (*Wallet, error) {
-	cfg := config.GetConfig()
-	db, err := connection.GetPgConnection(&cfg.Database)
-	if err != nil {
-		return nil, err
-	}
-
-	queries := wallet_gen.New(db)
-
+	queries := db.New(conn)
 	wallet, err := queries.GetWalletByUserID(ctx, userID)
 	if err != nil {
 		return nil, err
 	}
 
-	return &Wallet{
-		ID:       wallet.ID,
-		UserID:   wallet.UserID,
-		Balance:  0.0,
-		Coins:    wallet.Coins.Int64,
-		Currency: wallet.Currency.String,
+	balance, _ := wallet.Balance.Float64Value()
+	return &walletInterface.Wallet{
+		ID:        wallet.ID,
+		UserID:    wallet.UserID,
+		Balance:   balance.Float64,
+		Coins:     wallet.Coins.Int64,
+		Currency:  wallet.Currency.String,
+		CreatedAt: wallet.CreatedAt.Time,
+		UpdatedAt: wallet.UpdatedAt.Time,
 	}, nil
 }
 
-func CreateTransaction(ctx context.Context, userID, walletID int64, title, description string, amount float64, transactionType, icon string) (*Transaction, error) {
+func (r *WalletRepo) CreateWallet(ctx context.Context, userID int64) error {
 	cfg := config.GetConfig()
-	db, err := connection.GetPgConnection(&cfg.Database)
+	conn, err := connection.GetPgConnection(&cfg.Database)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
-	queries := wallet_gen.New(db)
-
-	transaction, err := queries.CreateTransaction(ctx, wallet_gen.CreateTransactionParams{
-		UserID:      userID,
-		WalletID:    walletID,
-		Title:       title,
-		Description: pgtype.Text{String: description, Valid: true},
-		Amount:      pgtype.Numeric{Int: nil, Exp: 0, NaN: false, InfinityModifier: 0, Valid: true},
-		Type:        transactionType,
-		Icon:        pgtype.Text{String: icon, Valid: true},
+	queries := db.New(conn)
+	_, err = queries.CreateWallet(ctx, db.CreateWalletParams{
+		UserID:   userID,
+		Balance:  pgtype.Numeric{Int: big.NewInt(0), Valid: true},
+		Coins:    pgtype.Int8{Int64: 0, Valid: true},
+		Currency: pgtype.Text{String: "INR", Valid: true},
 	})
-	if err != nil {
-		return nil, err
-	}
-
-	return &Transaction{
-		ID:          transaction.ID,
-		UserID:      transaction.UserID,
-		WalletID:    transaction.WalletID,
-		Title:       transaction.Title,
-		Description: transaction.Description.String,
-		Amount:      amount,
-		Type:        transaction.Type,
-		Icon:        transaction.Icon.String,
-	}, nil
+	return err
 }
 
-func GetTransactionsByUserID(ctx context.Context, userID int64) ([]*Transaction, error) {
+func (r *WalletRepo) UpdateBalance(ctx context.Context, userID int64, amount float64) error {
 	cfg := config.GetConfig()
-	db, err := connection.GetPgConnection(&cfg.Database)
+	conn, err := connection.GetPgConnection(&cfg.Database)
+	if err != nil {
+		return err
+	}
+
+	wallet, err := r.GetWallet(ctx, userID)
+	if err != nil {
+		return err
+	}
+
+	newBalance := wallet.Balance + amount
+	queries := db.New(conn)
+	_, err = queries.UpdateBalance(ctx, db.UpdateBalanceParams{
+		UserID:  userID,
+		Balance: pgtype.Numeric{Int: big.NewInt(int64(newBalance * 100)), Valid: true},
+	})
+	return err
+}
+
+func (r *WalletRepo) CreateTransaction(ctx context.Context, tx *walletInterface.Transaction) error {
+	cfg := config.GetConfig()
+	conn, err := connection.GetPgConnection(&cfg.Database)
+	if err != nil {
+		return err
+	}
+
+	queries := db.New(conn)
+	_, err = queries.CreateTransaction(ctx, db.CreateTransactionParams{
+		UserID:      tx.UserID,
+		WalletID:    tx.WalletID,
+		Title:       tx.Title,
+		Description: pgtype.Text{String: *tx.Description, Valid: tx.Description != nil},
+		Amount:      pgtype.Numeric{Int: big.NewInt(int64(tx.Amount * 100)), Valid: true},
+		Type:        tx.Type,
+		Icon:        pgtype.Text{String: *tx.Icon, Valid: tx.Icon != nil},
+	})
+	return err
+}
+
+func (r *WalletRepo) GetTransactions(ctx context.Context, userID int64, limit, offset int) ([]*walletInterface.Transaction, error) {
+	cfg := config.GetConfig()
+	conn, err := connection.GetPgConnection(&cfg.Database)
 	if err != nil {
 		return nil, err
 	}
 
-	queries := wallet_gen.New(db)
-
-	transactions, err := queries.GetTransactionsByUserID(ctx, userID)
+	queries := db.New(conn)
+	txs, err := queries.GetTransactionsByUserID(ctx, userID)
 	if err != nil {
 		return nil, err
 	}
 
-	var result []*Transaction
-	for _, transaction := range transactions {
-		result = append(result, &Transaction{
-			ID:          transaction.ID,
-			UserID:      transaction.UserID,
-			WalletID:    transaction.WalletID,
-			Title:       transaction.Title,
-			Description: transaction.Description.String,
-			Amount:      float64(transaction.Amount.Int.Int64()),
-			Type:        transaction.Type,
-			Icon:        transaction.Icon.String,
+	end := offset + limit
+	if end > len(txs) {
+		end = len(txs)
+	}
+	if offset >= len(txs) {
+		return []*walletInterface.Transaction{}, nil
+	}
+
+	result := make([]*walletInterface.Transaction, 0)
+	for i := offset; i < end; i++ {
+		tx := txs[i]
+		var desc, icon *string
+		if tx.Description.Valid {
+			desc = &tx.Description.String
+		}
+		if tx.Icon.Valid {
+			icon = &tx.Icon.String
+		}
+		amount, _ := tx.Amount.Float64Value()
+		result = append(result, &walletInterface.Transaction{
+			ID:          tx.ID,
+			UserID:      tx.UserID,
+			WalletID:    tx.WalletID,
+			Title:       tx.Title,
+			Description: desc,
+			Amount:      amount.Float64,
+			Type:        tx.Type,
+			Icon:        icon,
+			CreatedAt:   tx.CreatedAt.Time,
 		})
 	}
-
 	return result, nil
 }

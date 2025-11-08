@@ -1,147 +1,188 @@
-package authRepo
+package repo
 
 import (
 	"context"
 	"database/sql"
-	"strconv"
 
 	"encore.app/config"
 	"encore.app/connection"
-	auth_gen "encore.app/internal/auth/gen"
+	db "encore.app/gen"
+	authInterface "encore.app/internal/interface/auth"
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
-type User struct {
-	ID              string
-	Name            string
-	Email           string
-	Phone           string
-	Password        string
-	IsEmailVerified bool
-	IsPhoneVerified bool
+type AuthRepo struct{}
+
+func New() authInterface.Repository {
+	return &AuthRepo{}
 }
 
-func GetUserByEmail(ctx context.Context, email string) (*User, error) {
+func (r *AuthRepo) CreateUser(ctx context.Context, user *authInterface.User) (int64, error) {
 	cfg := config.GetConfig()
-	db, err := connection.GetPgConnection(&cfg.Database)
+	conn, err := connection.GetPgConnection(&cfg.Database)
+	if err != nil {
+		return 0, err
+	}
+
+	queries := db.New(conn)
+	result, err := queries.CreateUser(ctx, db.CreateUserParams{
+		FullName:     user.FullName,
+		Email:        user.Email,
+		PhoneNumber:  pgtype.Text{String: *user.PhoneNumber, Valid: user.PhoneNumber != nil},
+		PasswordHash: pgtype.Text{String: user.PasswordHash, Valid: true},
+		SignType:     user.SignType,
+		Role:         user.Role,
+	})
+	if err != nil {
+		return 0, err
+	}
+	return result.ID, nil
+}
+
+func (r *AuthRepo) GetUserByEmail(ctx context.Context, email string) (*authInterface.User, error) {
+	cfg := config.GetConfig()
+	conn, err := connection.GetPgConnection(&cfg.Database)
 	if err != nil {
 		return nil, err
 	}
 
-	queries := auth_gen.New(db)
-
+	queries := db.New(conn)
 	user, err := queries.GetUserByEmail(ctx, email)
 	if err != nil {
 		if err == sql.ErrNoRows {
-			return nil, err
+			return nil, nil
 		}
 		return nil, err
 	}
 
-	return &User{
-		ID:              strconv.FormatInt(user.ID, 10),
-		Name:            user.FullName,
+	var phone *string
+	if user.PhoneNumber.Valid {
+		phone = &user.PhoneNumber.String
+	}
+
+	return &authInterface.User{
+		ID:              user.ID,
+		FullName:        user.FullName,
 		Email:           user.Email,
-		Phone:           user.PhoneNumber.String,
-		Password:        user.PasswordHash.String,
+		PhoneNumber:     phone,
+		PasswordHash:    user.PasswordHash.String,
 		IsEmailVerified: user.IsEmailVerified.Bool,
 		IsPhoneVerified: user.IsPhoneVerified.Bool,
+		SignType:        user.SignType,
+		Role:            user.Role,
+		CreatedAt:       user.CreatedAt.Time,
+		UpdatedAt:       user.UpdatedAt.Time,
 	}, nil
 }
 
-func CreateUser(ctx context.Context, name, email, phone, hashedPassword string) (*User, error) {
+func (r *AuthRepo) GetUserByID(ctx context.Context, id int64) (*authInterface.User, error) {
 	cfg := config.GetConfig()
-	db, err := connection.GetPgConnection(&cfg.Database)
+	conn, err := connection.GetPgConnection(&cfg.Database)
 	if err != nil {
 		return nil, err
 	}
 
-	queries := auth_gen.New(db)
-
-	user, err := queries.CreateUser(ctx, auth_gen.CreateUserParams{
-		FullName:     name,
-		Email:        email,
-		PhoneNumber:  pgtype.Text{String: phone, Valid: true},
-		PasswordHash: pgtype.Text{String: hashedPassword, Valid: true},
-	})
+	queries := db.New(conn)
+	user, err := queries.GetUserByID(ctx, id)
 	if err != nil {
 		return nil, err
 	}
 
-	return &User{
-		ID:              strconv.FormatInt(user.ID, 10),
-		Name:            user.FullName,
+	var phone *string
+	if user.PhoneNumber.Valid {
+		phone = &user.PhoneNumber.String
+	}
+
+	return &authInterface.User{
+		ID:              user.ID,
+		FullName:        user.FullName,
 		Email:           user.Email,
-		Phone:           user.PhoneNumber.String,
-		Password:        user.PasswordHash.String,
+		PhoneNumber:     phone,
+		PasswordHash:    user.PasswordHash.String,
 		IsEmailVerified: user.IsEmailVerified.Bool,
 		IsPhoneVerified: user.IsPhoneVerified.Bool,
+		SignType:        user.SignType,
+		Role:            user.Role,
+		CreatedAt:       user.CreatedAt.Time,
+		UpdatedAt:       user.UpdatedAt.Time,
 	}, nil
 }
 
-func UpdateUserPassword(ctx context.Context, email, hashedPassword string) error {
+func (r *AuthRepo) UpdatePassword(ctx context.Context, userID int64, passwordHash string) error {
 	cfg := config.GetConfig()
-	db, err := connection.GetPgConnection(&cfg.Database)
+	conn, err := connection.GetPgConnection(&cfg.Database)
 	if err != nil {
 		return err
 	}
 
-	queries := auth_gen.New(db)
-
-	// First get user by email to get ID
-	user, err := queries.GetUserByEmail(ctx, email)
-	if err != nil {
-		return err
-	}
-
-	_, err = queries.UpdatePassword(ctx, auth_gen.UpdatePasswordParams{
-		ID:           user.ID,
-		PasswordHash: pgtype.Text{String: hashedPassword, Valid: true},
+	queries := db.New(conn)
+	_, err = queries.UpdatePassword(ctx, db.UpdatePasswordParams{
+		ID:           userID,
+		PasswordHash: pgtype.Text{String: passwordHash, Valid: true},
 	})
-
 	return err
 }
 
-func UpdateEmailVerification(ctx context.Context, userID string, verified bool) error {
+func (r *AuthRepo) VerifyEmail(ctx context.Context, userID int64) error {
 	cfg := config.GetConfig()
-	db, err := connection.GetPgConnection(&cfg.Database)
+	conn, err := connection.GetPgConnection(&cfg.Database)
 	if err != nil {
 		return err
 	}
 
-	queries := auth_gen.New(db)
-
-	id, err := strconv.ParseInt(userID, 10, 64)
-	if err != nil {
-		return err
-	}
-
-	_, err = queries.UpdateEmailVerification(ctx, auth_gen.UpdateEmailVerificationParams{
-		ID:              id,
-		IsEmailVerified: pgtype.Bool{Bool: verified, Valid: true},
+	queries := db.New(conn)
+	_, err = queries.UpdateEmailVerification(ctx, db.UpdateEmailVerificationParams{
+		ID:              userID,
+		IsEmailVerified: pgtype.Bool{Bool: true, Valid: true},
 	})
-
 	return err
 }
 
-func UpdatePhoneVerification(ctx context.Context, userID string, verified bool) error {
+func (r *AuthRepo) CreateToken(ctx context.Context, token *authInterface.JWTToken) error {
 	cfg := config.GetConfig()
-	db, err := connection.GetPgConnection(&cfg.Database)
+	conn, err := connection.GetPgConnection(&cfg.Database)
 	if err != nil {
 		return err
 	}
 
-	queries := auth_gen.New(db)
-
-	id, err := strconv.ParseInt(userID, 10, 64)
-	if err != nil {
-		return err
-	}
-
-	_, err = queries.UpdatePhoneVerification(ctx, auth_gen.UpdatePhoneVerificationParams{
-		ID:              id,
-		IsPhoneVerified: pgtype.Bool{Bool: verified, Valid: true},
+	queries := db.New(conn)
+	_, err = queries.CreateJWTToken(ctx, db.CreateJWTTokenParams{
+		UserID:    token.UserID,
+		TokenHash: token.TokenHash,
+		ExpiresAt: pgtype.Timestamp{Time: token.ExpiresAt, Valid: true},
 	})
-
 	return err
+}
+
+func (r *AuthRepo) GetTokenByHash(ctx context.Context, tokenHash string) (*authInterface.JWTToken, error) {
+	cfg := config.GetConfig()
+	conn, err := connection.GetPgConnection(&cfg.Database)
+	if err != nil {
+		return nil, err
+	}
+
+	queries := db.New(conn)
+	token, err := queries.GetJWTToken(ctx, tokenHash)
+	if err != nil {
+		return nil, err
+	}
+
+	return &authInterface.JWTToken{
+		ID:        token.ID,
+		UserID:    token.UserID,
+		TokenHash: token.TokenHash,
+		ExpiresAt: token.ExpiresAt.Time,
+		CreatedAt: token.CreatedAt.Time,
+	}, nil
+}
+
+func (r *AuthRepo) DeleteToken(ctx context.Context, tokenHash string) error {
+	cfg := config.GetConfig()
+	conn, err := connection.GetPgConnection(&cfg.Database)
+	if err != nil {
+		return err
+	}
+
+	queries := db.New(conn)
+	return queries.DeleteJWTToken(ctx, tokenHash)
 }

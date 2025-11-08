@@ -2,21 +2,37 @@ package notificationHandler
 
 import (
 	"context"
-	"strconv"
 
-	notificationRepo "encore.app/internal/notification/repo"
+	"encore.app/internal/notification/repo"
+	"encore.app/internal/notification/service"
 )
 
-type CreateNotificationRequest struct {
-	UserID  string `json:"user_id"`
+var (
+	notificationRepo    = repo.New()
+	notificationService = service.New(notificationRepo)
+)
+
+type SendNotificationRequest struct {
+	UserID  int64  `json:"user_id"`
 	Title   string `json:"title"`
 	Message string `json:"message"`
 	Type    string `json:"type"`
 }
 
-type NotificationResponse struct {
-	ID        string `json:"id"`
-	UserID    string `json:"user_id"`
+type SendNotificationResponse struct {
+	Message string `json:"message"`
+}
+
+//encore:api public method=POST path=/notifications/send
+func SendNotification(ctx context.Context, req *SendNotificationRequest) (*SendNotificationResponse, error) {
+	if err := notificationService.SendNotification(ctx, req.UserID, req.Title, req.Message, req.Type); err != nil {
+		return nil, err
+	}
+	return &SendNotificationResponse{Message: "Notification sent successfully"}, nil
+}
+
+type Notification struct {
+	ID        int64  `json:"id"`
 	Title     string `json:"title"`
 	Message   string `json:"message"`
 	Type      string `json:"type"`
@@ -25,68 +41,42 @@ type NotificationResponse struct {
 }
 
 type GetNotificationsResponse struct {
-	Notifications []*NotificationResponse `json:"notifications"`
+	Notifications []Notification `json:"notifications"`
 }
 
-//encore:api public method=POST path=/notification
-func CreateNotification(ctx context.Context, req *CreateNotificationRequest) (*NotificationResponse, error) {
-	userID, _ := strconv.ParseInt(req.UserID, 10, 64)
-
-	notification, err := notificationRepo.CreateNotification(ctx, userID, req.Title, req.Message, req.Type)
+//encore:api public method=GET path=/notifications/:userID/:page
+func GetNotifications(ctx context.Context, userID int64, page int) (*GetNotificationsResponse, error) {
+	notifications, err := notificationService.GetUserNotifications(ctx, userID, page)
 	if err != nil {
 		return nil, err
 	}
 
-	return &NotificationResponse{
-		ID:        strconv.FormatInt(notification.ID, 10),
-		UserID:    strconv.FormatInt(notification.UserID, 10),
-		Title:     notification.Title,
-		Message:   notification.Message,
-		Type:      notification.Type,
-		IsRead:    notification.IsRead,
-		CreatedAt: notification.CreatedAt,
-	}, nil
-}
-
-//encore:api public method=GET path=/notification/user/:userID
-func GetUserNotifications(ctx context.Context, userID string) (*GetNotificationsResponse, error) {
-	uid, _ := strconv.ParseInt(userID, 10, 64)
-
-	notifications, err := notificationRepo.GetNotificationsByUserID(ctx, uid)
-	if err != nil {
-		return nil, err
+	result := make([]Notification, len(notifications))
+	for i, n := range notifications {
+		result[i] = Notification{
+			ID:        n.ID,
+			Title:     n.Title,
+			Message:   n.Message,
+			Type:      n.Type,
+			IsRead:    n.IsRead,
+			CreatedAt: n.CreatedAt.Format("2006-01-02 15:04:05"),
+		}
 	}
-
-	var result []*NotificationResponse
-	for _, notification := range notifications {
-		result = append(result, &NotificationResponse{
-			ID:      strconv.FormatInt(notification.ID, 10),
-			UserID:  strconv.FormatInt(notification.UserID, 10),
-			Title:   notification.Title,
-			Message: notification.Message,
-			Type:    notification.Type,
-			IsRead:  notification.IsRead,
-		})
-	}
-
 	return &GetNotificationsResponse{Notifications: result}, nil
 }
 
-//encore:api public method=PUT path=/notification/:id/read
-func MarkAsRead(ctx context.Context, id string) (*NotificationResponse, error) {
-	notificationID, _ := strconv.ParseInt(id, 10, 64)
+type MarkAsReadRequest struct {
+	NotificationID int64 `json:"notification_id"`
+}
 
-	notification, err := notificationRepo.MarkAsRead(ctx, notificationID)
-	if err != nil {
+type MarkAsReadResponse struct {
+	Message string `json:"message"`
+}
+
+//encore:api public method=POST path=/notifications/read
+func MarkAsRead(ctx context.Context, req *MarkAsReadRequest) (*MarkAsReadResponse, error) {
+	if err := notificationService.MarkAsRead(ctx, req.NotificationID); err != nil {
 		return nil, err
 	}
-
-	return &NotificationResponse{
-		ID:      strconv.FormatInt(notification.ID, 10),
-		UserID:  strconv.FormatInt(notification.UserID, 10),
-		Title:   notification.Title,
-		Message: notification.Message,
-		Type:    notification.Type,
-		IsRead:  notification.IsRead,
-	}, nil
+	return &MarkAsReadResponse{Message: "Notification marked as read"}, nil
 }

@@ -2,131 +2,112 @@ package walletHandler
 
 import (
 	"context"
-	"strconv"
 
 	"encore.app/internal/wallet/repo"
+	"encore.app/internal/wallet/service"
 )
 
-type CreateWalletRequest struct {
-	UserID   string  `json:"user_id"`
-	Balance  float64 `json:"balance"`
-	Coins    int64   `json:"coins"`
-	Currency string  `json:"currency"`
-}
+var (
+	walletRepo    = repo.New()
+	walletService = service.New(walletRepo)
+)
 
 type WalletResponse struct {
-	ID       string  `json:"id"`
-	UserID   string  `json:"user_id"`
+	ID       int64   `json:"id"`
 	Balance  float64 `json:"balance"`
 	Coins    int64   `json:"coins"`
 	Currency string  `json:"currency"`
 }
 
-type CreateTransactionRequest struct {
-	UserID      string  `json:"user_id"`
-	WalletID    string  `json:"wallet_id"`
-	Title       string  `json:"title"`
-	Description string  `json:"description"`
-	Amount      float64 `json:"amount"`
-	Type        string  `json:"type"`
-	Icon        string  `json:"icon"`
-}
-
-type TransactionResponse struct {
-	ID          string  `json:"id"`
-	UserID      string  `json:"user_id"`
-	WalletID    string  `json:"wallet_id"`
-	Title       string  `json:"title"`
-	Description string  `json:"description"`
-	Amount      float64 `json:"amount"`
-	Type        string  `json:"type"`
-	Icon        string  `json:"icon"`
-}
-
-type GetTransactionsResponse struct {
-	Transactions []*TransactionResponse `json:"transactions"`
-}
-
-//encore:api public method=POST path=/wallet
-func CreateWallet(ctx context.Context, req *CreateWalletRequest) (*WalletResponse, error) {
-	userID, _ := strconv.ParseInt(req.UserID, 10, 64)
-	
-	wallet, err := walletRepo.CreateWallet(ctx, userID, req.Balance, req.Coins, req.Currency)
+//encore:api public method=GET path=/wallet/balance/:userID
+func GetWallet(ctx context.Context, userID int64) (*WalletResponse, error) {
+	wallet, err := walletService.GetBalance(ctx, userID)
 	if err != nil {
 		return nil, err
 	}
 
 	return &WalletResponse{
-		ID:       strconv.FormatInt(wallet.ID, 10),
-		UserID:   strconv.FormatInt(wallet.UserID, 10),
+		ID:       wallet.ID,
 		Balance:  wallet.Balance,
 		Coins:    wallet.Coins,
 		Currency: wallet.Currency,
 	}, nil
 }
 
-//encore:api public method=GET path=/wallet/user/:userID
-func GetUserWallet(ctx context.Context, userID string) (*WalletResponse, error) {
-	uid, _ := strconv.ParseInt(userID, 10, 64)
-	
-	wallet, err := walletRepo.GetWalletByUserID(ctx, uid)
-	if err != nil {
-		return nil, err
-	}
-
-	return &WalletResponse{
-		ID:       strconv.FormatInt(wallet.ID, 10),
-		UserID:   strconv.FormatInt(wallet.UserID, 10),
-		Balance:  wallet.Balance,
-		Coins:    wallet.Coins,
-		Currency: wallet.Currency,
-	}, nil
+type AddMoneyRequest struct {
+	UserID int64   `json:"user_id"`
+	Amount float64 `json:"amount"`
 }
 
-//encore:api public method=POST path=/transaction
-func CreateTransaction(ctx context.Context, req *CreateTransactionRequest) (*TransactionResponse, error) {
-	userID, _ := strconv.ParseInt(req.UserID, 10, 64)
-	walletID, _ := strconv.ParseInt(req.WalletID, 10, 64)
-	
-	transaction, err := walletRepo.CreateTransaction(ctx, userID, walletID, req.Title, req.Description, req.Amount, req.Type, req.Icon)
-	if err != nil {
-		return nil, err
-	}
-
-	return &TransactionResponse{
-		ID:          strconv.FormatInt(transaction.ID, 10),
-		UserID:      strconv.FormatInt(transaction.UserID, 10),
-		WalletID:    strconv.FormatInt(transaction.WalletID, 10),
-		Title:       transaction.Title,
-		Description: transaction.Description,
-		Amount:      transaction.Amount,
-		Type:        transaction.Type,
-		Icon:        transaction.Icon,
-	}, nil
+type AddMoneyResponse struct {
+	Message string `json:"message"`
 }
 
-//encore:api public method=GET path=/transaction/user/:userID
-func GetUserTransactions(ctx context.Context, userID string) (*GetTransactionsResponse, error) {
-	uid, _ := strconv.ParseInt(userID, 10, 64)
-	
-	transactions, err := walletRepo.GetTransactionsByUserID(ctx, uid)
+//encore:api public method=POST path=/wallet/add
+func AddMoney(ctx context.Context, req *AddMoneyRequest) (*AddMoneyResponse, error) {
+	if err := walletService.AddMoney(ctx, req.UserID, req.Amount); err != nil {
+		return nil, err
+	}
+	return &AddMoneyResponse{Message: "Money added successfully"}, nil
+}
+
+type DeductMoneyRequest struct {
+	UserID int64   `json:"user_id"`
+	Amount float64 `json:"amount"`
+}
+
+type DeductMoneyResponse struct {
+	Message string `json:"message"`
+}
+
+//encore:api public method=POST path=/wallet/deduct
+func DeductMoney(ctx context.Context, req *DeductMoneyRequest) (*DeductMoneyResponse, error) {
+	if err := walletService.DeductMoney(ctx, req.UserID, req.Amount); err != nil {
+		return nil, err
+	}
+	return &DeductMoneyResponse{Message: "Money deducted successfully"}, nil
+}
+
+type Transaction struct {
+	ID          int64   `json:"id"`
+	Title       string  `json:"title"`
+	Description string  `json:"description"`
+	Amount      float64 `json:"amount"`
+	Type        string  `json:"type"`
+	Icon        string  `json:"icon"`
+	CreatedAt   string  `json:"created_at"`
+}
+
+type GetHistoryResponse struct {
+	Transactions []Transaction `json:"transactions"`
+}
+
+//encore:api public method=GET path=/wallet/history/:userID/:page
+func GetHistory(ctx context.Context, userID int64, page int) (*GetHistoryResponse, error) {
+	txs, err := walletService.GetHistory(ctx, userID, page)
 	if err != nil {
 		return nil, err
 	}
 
-	var result []*TransactionResponse
-	for _, transaction := range transactions {
-		result = append(result, &TransactionResponse{
-			ID:          strconv.FormatInt(transaction.ID, 10),
-			UserID:      strconv.FormatInt(transaction.UserID, 10),
-			WalletID:    strconv.FormatInt(transaction.WalletID, 10),
-			Title:       transaction.Title,
-			Description: transaction.Description,
-			Amount:      transaction.Amount,
-			Type:        transaction.Type,
-			Icon:        transaction.Icon,
-		})
+	result := make([]Transaction, len(txs))
+	for i, tx := range txs {
+		desc := ""
+		if tx.Description != nil {
+			desc = *tx.Description
+		}
+		icon := ""
+		if tx.Icon != nil {
+			icon = *tx.Icon
+		}
+		result[i] = Transaction{
+			ID:          tx.ID,
+			Title:       tx.Title,
+			Description: desc,
+			Amount:      tx.Amount,
+			Type:        tx.Type,
+			Icon:        icon,
+			CreatedAt:   tx.CreatedAt.Format("2006-01-02 15:04:05"),
+		}
 	}
-
-	return &GetTransactionsResponse{Transactions: result}, nil
+	return &GetHistoryResponse{Transactions: result}, nil
 }
