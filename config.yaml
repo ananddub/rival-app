@@ -1,13 +1,12 @@
 database:
-  host: 192.168.92.128
+  host: 69.62.75.204
   port: 5432
   user: admin
   password: root
-  dbname: rivl
+  dbname: appdb
   sslmode: disable
-
 redis:
-  host: 192.168.92.128
+  host: 69.62.75.204
   PORT: 6379
   db: 0
 

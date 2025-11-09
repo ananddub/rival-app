@@ -22,6 +22,30 @@ WHERE id = $1
 RETURNING *;
 
 
+-- name: UpdateUserProfile :one
+UPDATE users
+SET full_name = $2, phone_number = $3, dob = $4, updated_at = now()
+WHERE id = $1
+RETURNING *;
+
+-- name: UpdateProfilePhoto :one
+UPDATE users
+SET profile_photo = $2, updated_at = now()
+WHERE id = $1
+RETURNING *;
+
+-- name: VerifyEmail :one
+UPDATE users
+SET is_email_verified = true, updated_at = now()
+WHERE id = $1
+RETURNING *;
+
+-- name: VerifyPhone :one
+UPDATE users
+SET is_phone_verified = true, updated_at = now()
+WHERE id = $1
+RETURNING *;
+
 -- name: UpdateEmailVerification :one
 UPDATE users SET is_email_verified = $2, updated_at = now() WHERE id = $1 RETURNING *;
 

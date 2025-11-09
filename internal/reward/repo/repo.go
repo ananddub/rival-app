@@ -17,29 +17,36 @@ func New() rewardInterface.Repository {
 	return &RewardRepo{}
 }
 
-func (r *RewardRepo) CreateReward(ctx context.Context, reward *rewardInterface.Reward) (int64, error) {
+func (r *RewardRepo) GetRewards(ctx context.Context) ([]*rewardInterface.Reward, error) {
 	cfg := config.GetConfig()
 	conn, err := connection.GetPgConnection(&cfg.Database)
 	if err != nil {
-		return 0, err
+		return nil, err
 	}
 
 	queries := db.New(conn)
-	result, err := queries.CreateReward(ctx, db.CreateRewardParams{
-		UserID:      reward.UserID,
-		Title:       reward.Title,
-		Description: pgtype.Text{String: *reward.Description, Valid: reward.Description != nil},
-		Points:      int32(reward.Points),
-		Type:        reward.Type,
-		Status:      reward.Status,
-	})
+	rewards, err := queries.GetAllActiveRewards(ctx)
 	if err != nil {
-		return 0, err
+		return nil, err
 	}
-	return result.ID, nil
+
+	result := make([]*rewardInterface.Reward, len(rewards))
+	for i, reward := range rewards {
+		result[i] = &rewardInterface.Reward{
+			ID:          reward.ID,
+			Title:       reward.Title,
+			Description: reward.Description.String,
+			Type:        reward.Type,
+			Coins:       reward.Coins.Int64,
+			Money:       0, // Will be added if needed
+			IsActive:    reward.IsActive.Bool,
+			CreatedAt:   reward.CreatedAt.Time,
+		}
+	}
+	return result, nil
 }
 
-func (r *RewardRepo) GetReward(ctx context.Context, id int64) (*rewardInterface.Reward, error) {
+func (r *RewardRepo) GetRewardByID(ctx context.Context, id int64) (*rewardInterface.Reward, error) {
 	cfg := config.GetConfig()
 	conn, err := connection.GetPgConnection(&cfg.Database)
 	if err != nil {
@@ -47,35 +54,24 @@ func (r *RewardRepo) GetReward(ctx context.Context, id int64) (*rewardInterface.
 	}
 
 	queries := db.New(conn)
-	reward, err := queries.GetRewardByID(ctx, id)
+	reward, err := queries.GetRewardById(ctx, id)
 	if err != nil {
 		return nil, err
-	}
-
-	var desc *string
-	if reward.Description.Valid {
-		desc = &reward.Description.String
-	}
-	var claimedAt *time.Time
-	if reward.ClaimedAt.Valid {
-		claimedAt = &reward.ClaimedAt.Time
 	}
 
 	return &rewardInterface.Reward{
 		ID:          reward.ID,
-		UserID:      reward.UserID,
 		Title:       reward.Title,
-		Description: desc,
-		Points:      int(reward.Points),
+		Description: reward.Description.String,
 		Type:        reward.Type,
-		Status:      reward.Status,
-		ClaimedAt:   claimedAt,
+		Coins:       reward.Coins.Int64,
+		Money:       0,
+		IsActive:    reward.IsActive.Bool,
 		CreatedAt:   reward.CreatedAt.Time,
-		UpdatedAt:   reward.UpdatedAt.Time,
 	}, nil
 }
 
-func (r *RewardRepo) GetUserRewards(ctx context.Context, userID int64, limit, offset int) ([]*rewardInterface.Reward, error) {
+func (r *RewardRepo) CreateReward(ctx context.Context, reward *rewardInterface.Reward) (*rewardInterface.Reward, error) {
 	cfg := config.GetConfig()
 	conn, err := connection.GetPgConnection(&cfg.Database)
 	if err != nil {
@@ -83,47 +79,30 @@ func (r *RewardRepo) GetUserRewards(ctx context.Context, userID int64, limit, of
 	}
 
 	queries := db.New(conn)
-	rewards, err := queries.GetRewardsByUserID(ctx, userID)
+	newReward, err := queries.CreateNewReward(ctx, db.CreateNewRewardParams{
+		Title:       reward.Title,
+		Description: pgtype.Text{String: reward.Description, Valid: true},
+		Type:        reward.Type,
+		Coins:       pgtype.Int8{Int64: reward.Coins, Valid: true},
+		IsActive:    pgtype.Bool{Bool: reward.IsActive, Valid: true},
+	})
 	if err != nil {
 		return nil, err
 	}
 
-	end := offset + limit
-	if end > len(rewards) {
-		end = len(rewards)
-	}
-	if offset >= len(rewards) {
-		return []*rewardInterface.Reward{}, nil
-	}
-
-	result := make([]*rewardInterface.Reward, 0)
-	for i := offset; i < end; i++ {
-		reward := rewards[i]
-		var desc *string
-		if reward.Description.Valid {
-			desc = &reward.Description.String
-		}
-		var claimedAt *time.Time
-		if reward.ClaimedAt.Valid {
-			claimedAt = &reward.ClaimedAt.Time
-		}
-		result = append(result, &rewardInterface.Reward{
-			ID:          reward.ID,
-			UserID:      reward.UserID,
-			Title:       reward.Title,
-			Description: desc,
-			Points:      int(reward.Points),
-			Type:        reward.Type,
-			Status:      reward.Status,
-			ClaimedAt:   claimedAt,
-			CreatedAt:   reward.CreatedAt.Time,
-			UpdatedAt:   reward.UpdatedAt.Time,
-		})
-	}
-	return result, nil
+	return &rewardInterface.Reward{
+		ID:          newReward.ID,
+		Title:       newReward.Title,
+		Description: newReward.Description.String,
+		Type:        newReward.Type,
+		Coins:       newReward.Coins.Int64,
+		Money:       0,
+		IsActive:    newReward.IsActive.Bool,
+		CreatedAt:   newReward.CreatedAt.Time,
+	}, nil
 }
 
-func (r *RewardRepo) GetRewardsByType(ctx context.Context, userID int64, rewardType string) ([]*rewardInterface.Reward, error) {
+func (r *RewardRepo) GetUserRewards(ctx context.Context, userID int64) ([]*rewardInterface.UserReward, error) {
 	cfg := config.GetConfig()
 	conn, err := connection.GetPgConnection(&cfg.Database)
 	if err != nil {
@@ -131,46 +110,98 @@ func (r *RewardRepo) GetRewardsByType(ctx context.Context, userID int64, rewardT
 	}
 
 	queries := db.New(conn)
-	rewards, err := queries.GetRewardsByType(ctx, rewardType)
+	userRewards, err := queries.GetUserRewards(ctx, userID)
 	if err != nil {
 		return nil, err
 	}
 
-	result := make([]*rewardInterface.Reward, 0)
-	for _, reward := range rewards {
-		if reward.UserID != userID {
-			continue
-		}
-		var desc *string
-		if reward.Description.Valid {
-			desc = &reward.Description.String
-		}
+	result := make([]*rewardInterface.UserReward, len(userRewards))
+	for i, ur := range userRewards {
 		var claimedAt *time.Time
-		if reward.ClaimedAt.Valid {
-			claimedAt = &reward.ClaimedAt.Time
+		if ur.ClaimedAt.Valid {
+			claimedAt = &ur.ClaimedAt.Time
 		}
-		result = append(result, &rewardInterface.Reward{
-			ID:          reward.ID,
-			UserID:      reward.UserID,
-			Title:       reward.Title,
-			Description: desc,
-			Points:      int(reward.Points),
-			Type:        reward.Type,
-			Status:      reward.Status,
-			ClaimedAt:   claimedAt,
-			CreatedAt:   reward.CreatedAt.Time,
-			UpdatedAt:   reward.UpdatedAt.Time,
-		})
+
+		result[i] = &rewardInterface.UserReward{
+			ID:        ur.ID,
+			UserID:    ur.UserID,
+			RewardID:  ur.RewardID,
+			Claimed:   ur.Claimed.Bool,
+			ClaimedAt: claimedAt,
+			CreatedAt: ur.CreatedAt.Time,
+		}
 	}
 	return result, nil
 }
 
-func (r *RewardRepo) UpdateRewardStatus(ctx context.Context, id int64, status string) error {
-	// Status is updated by ClaimReward query
-	return nil
+func (r *RewardRepo) ClaimReward(ctx context.Context, userID, rewardID int64) (*rewardInterface.UserReward, error) {
+	cfg := config.GetConfig()
+	conn, err := connection.GetPgConnection(&cfg.Database)
+	if err != nil {
+		return nil, err
+	}
+
+	queries := db.New(conn)
+	userReward, err := queries.ClaimUserReward(ctx, db.ClaimUserRewardParams{
+		UserID:   userID,
+		RewardID: rewardID,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	var claimedAt *time.Time
+	if userReward.ClaimedAt.Valid {
+		claimedAt = &userReward.ClaimedAt.Time
+	}
+
+	return &rewardInterface.UserReward{
+		ID:        userReward.ID,
+		UserID:    userReward.UserID,
+		RewardID:  userReward.RewardID,
+		Claimed:   userReward.Claimed.Bool,
+		ClaimedAt: claimedAt,
+		CreatedAt: userReward.CreatedAt.Time,
+	}, nil
 }
 
-func (r *RewardRepo) ClaimReward(ctx context.Context, id int64) error {
+func (r *RewardRepo) GetDailyRewards(ctx context.Context, userID int64) ([]*rewardInterface.DailyReward, error) {
+	// Hardcoded daily rewards for 7 days
+	dailyRewards := []*rewardInterface.DailyReward{
+		{Day: 1, Coins: 10, Money: 0, Claimed: false},
+		{Day: 2, Coins: 20, Money: 0, Claimed: false},
+		{Day: 3, Coins: 30, Money: 0, Claimed: false},
+		{Day: 4, Coins: 40, Money: 0, Claimed: false},
+		{Day: 5, Coins: 50, Money: 0, Claimed: false},
+		{Day: 6, Coins: 75, Money: 0, Claimed: false},
+		{Day: 7, Coins: 100, Money: 5.0, Claimed: false},
+	}
+
+	// Check which days are claimed (this would be stored in database)
+	cfg := config.GetConfig()
+	conn, err := connection.GetPgConnection(&cfg.Database)
+	if err != nil {
+		return dailyRewards, nil // Return default if DB error
+	}
+
+	queries := db.New(conn)
+	claimedDays, err := queries.GetClaimedDailyRewards(ctx, userID)
+	if err != nil {
+		return dailyRewards, nil // Return default if error
+	}
+
+	// Mark claimed days
+	for _, claimedDay := range claimedDays {
+		day := int(claimedDay.Day)
+		if day >= 1 && day <= 7 {
+			dailyRewards[day-1].Claimed = true
+		}
+	}
+
+	return dailyRewards, nil
+}
+
+func (r *RewardRepo) ClaimDailyReward(ctx context.Context, userID int64, day int) error {
 	cfg := config.GetConfig()
 	conn, err := connection.GetPgConnection(&cfg.Database)
 	if err != nil {
@@ -178,6 +209,39 @@ func (r *RewardRepo) ClaimReward(ctx context.Context, id int64) error {
 	}
 
 	queries := db.New(conn)
-	_, err = queries.ClaimReward(ctx, id)
+	_, err = queries.ClaimDailyReward(ctx, db.ClaimDailyRewardParams{
+		UserID: userID,
+		Day:    int32(day),
+	})
+	return err
+}
+
+func (r *RewardRepo) GetReferralRewards(ctx context.Context, userID int64) (int64, error) {
+	cfg := config.GetConfig()
+	conn, err := connection.GetPgConnection(&cfg.Database)
+	if err != nil {
+		return 0, err
+	}
+
+	queries := db.New(conn)
+	count, err := queries.GetReferralCount(ctx, userID)
+	if err != nil {
+		return 0, err
+	}
+	return count, nil
+}
+
+func (r *RewardRepo) AddReferralReward(ctx context.Context, userID int64) error {
+	cfg := config.GetConfig()
+	conn, err := connection.GetPgConnection(&cfg.Database)
+	if err != nil {
+		return err
+	}
+
+	queries := db.New(conn)
+	_, err = queries.AddReferralReward(ctx, db.AddReferralRewardParams{
+		ReferrerID:     userID,
+		ReferredUserID: 0, // This should be passed as parameter
+	})
 	return err
 }

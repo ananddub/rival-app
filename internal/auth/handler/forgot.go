@@ -16,5 +16,5 @@ func ForgotPassword(ctx context.Context, req *ForgotPasswordRequest) (*ForgotPas
 		return nil, err
 	}
 
-	return &ForgotPasswordResponse{Message: "Password reset link sent to email"}, nil
+	return &ForgotPasswordResponse{Message: "Password reset OTP sent to your email"}, nil
 }

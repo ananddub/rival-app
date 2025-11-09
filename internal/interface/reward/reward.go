@@ -7,28 +7,53 @@ import (
 
 type Reward struct {
 	ID          int64
-	UserID      int64
 	Title       string
-	Description *string
-	Points      int
-	Type        string
-	Status      string
-	ClaimedAt   *time.Time
+	Description string
+	Type        string // daily, weekly, achievement, referral
+	Coins       int64
+	Money       float64
+	IsActive    bool
 	CreatedAt   time.Time
-	UpdatedAt   time.Time
+}
+
+type UserReward struct {
+	ID        int64
+	UserID    int64
+	RewardID  int64
+	Claimed   bool
+	ClaimedAt *time.Time
+	CreatedAt time.Time
+}
+
+type DailyReward struct {
+	Day     int
+	Coins   int64
+	Money   float64
+	Claimed bool
 }
 
 type Repository interface {
-	CreateReward(ctx context.Context, reward *Reward) (int64, error)
-	GetReward(ctx context.Context, id int64) (*Reward, error)
-	GetUserRewards(ctx context.Context, userID int64, limit, offset int) ([]*Reward, error)
-	GetRewardsByType(ctx context.Context, userID int64, rewardType string) ([]*Reward, error)
-	UpdateRewardStatus(ctx context.Context, id int64, status string) error
-	ClaimReward(ctx context.Context, id int64) error
+	GetRewards(ctx context.Context) ([]*Reward, error)
+	GetRewardByID(ctx context.Context, id int64) (*Reward, error)
+	CreateReward(ctx context.Context, reward *Reward) (*Reward, error)
+	
+	GetUserRewards(ctx context.Context, userID int64) ([]*UserReward, error)
+	ClaimReward(ctx context.Context, userID, rewardID int64) (*UserReward, error)
+	GetDailyRewards(ctx context.Context, userID int64) ([]*DailyReward, error)
+	ClaimDailyReward(ctx context.Context, userID int64, day int) error
+	
+	GetReferralRewards(ctx context.Context, userID int64) (int64, error)
+	AddReferralReward(ctx context.Context, userID int64) error
 }
 
 type Service interface {
-	CreateReward(ctx context.Context, userID int64, title, description, rewardType string, points int) error
-	GetAvailableRewards(ctx context.Context, userID int64) ([]*Reward, error)
-	ClaimReward(ctx context.Context, userID, rewardID int64) error
+	GetAllRewards(ctx context.Context) ([]*Reward, error)
+	GetUserRewards(ctx context.Context, userID int64) ([]*UserReward, error)
+	ClaimReward(ctx context.Context, userID, rewardID int64) (*UserReward, error)
+	
+	GetDailyRewards(ctx context.Context, userID int64) ([]*DailyReward, error)
+	ClaimDailyReward(ctx context.Context, userID int64, day int) error
+	
+	ProcessReferralReward(ctx context.Context, referrerID, newUserID int64) error
+	GetReferralStats(ctx context.Context, userID int64) (int64, error)
 }

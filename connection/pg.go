@@ -16,7 +16,7 @@ func GetPgConnection(config *config.DatabaseConfig) (*pgxpool.Pool, error) {
 		return dbConnection, nil
 	}
 	dsn := fmt.Sprintf(
-		"postgres://%s:%s@%s:%d/%s?sslmode=disable",
+		"postgres://%s:%s@%s:%d/%s",
 		config.User, config.Password, config.Host, config.Port, config.DBName,
 	)
 	poolConfig, err := pgxpool.ParseConfig(dsn)

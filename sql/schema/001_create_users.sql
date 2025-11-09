@@ -5,6 +5,7 @@ CREATE TABLE IF NOT EXISTS public.users (
     email VARCHAR(255) NOT NULL UNIQUE,
     phone_number VARCHAR(20),
     password_hash VARCHAR(255),
+    profile_photo TEXT,
     dob TIMESTAMP,
     is_phone_verified BOOLEAN DEFAULT FALSE,
     is_email_verified BOOLEAN DEFAULT FALSE,

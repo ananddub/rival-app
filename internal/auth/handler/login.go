@@ -1,6 +1,9 @@
 package authHandler
 
-import "context"
+import (
+	"context"
+	"fmt"
+)
 
 type LoginRequest struct {
 	Email    string `json:"email"`
@@ -8,15 +11,26 @@ type LoginRequest struct {
 }
 
 type LoginResponse struct {
-	Token string `json:"token"`
+	AccessToken  string   `json:"access_token"`
+	RefreshToken string   `json:"refresh_token"`
+	User         UserInfo `json:"user"`
 }
 
 //encore:api public method=POST path=/auth/login
 func Login(ctx context.Context, req *LoginRequest) (*LoginResponse, error) {
-	token, err := authService.Login(ctx, req.Email, req.Password)
+	tokens, user, err := authService.Login(ctx, req.Email, req.Password)
 	if err != nil {
 		return nil, err
 	}
-
-	return &LoginResponse{Token: token}, nil
+	fmt.Println(user)
+	return &LoginResponse{
+		AccessToken:  tokens.AccessToken,
+		RefreshToken: tokens.RefreshToken,
+		User: UserInfo{
+			ID:          user.ID,
+			Name:        user.FullName,
+			Email:       user.Email,
+			PhoneNumber: user.PhoneNumber,
+		},
+	}, nil
 }

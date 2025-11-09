@@ -5,6 +5,7 @@ import (
 	"errors"
 
 	walletInterface "encore.app/internal/interface/wallet"
+	"encore.app/internal/wallet/utils"
 )
 
 type WalletService struct {
@@ -20,9 +21,14 @@ func (s *WalletService) GetBalance(ctx context.Context, userID int64) (*walletIn
 }
 
 func (s *WalletService) AddMoney(ctx context.Context, userID int64, amount float64) error {
-	if amount <= 0 {
-		return errors.New("amount must be positive")
+	if err := utils.ValidateUserID(userID); err != nil {
+		return err
 	}
+	if err := utils.ValidateAmount(amount); err != nil {
+		return err
+	}
+
+	amount = utils.FormatAmount(amount)
 
 	wallet, err := s.repo.GetWallet(ctx, userID)
 	if err != nil {
@@ -44,7 +50,8 @@ func (s *WalletService) AddMoney(ctx context.Context, userID int64, amount float
 		Type:        "credit",
 		Icon:        &icon,
 	}
-	return s.repo.CreateTransaction(ctx, tx)
+	_, err = s.repo.CreateTransaction(ctx, tx)
+	return err
 }
 
 func (s *WalletService) DeductMoney(ctx context.Context, userID int64, amount float64) error {
@@ -76,10 +83,68 @@ func (s *WalletService) DeductMoney(ctx context.Context, userID int64, amount fl
 		Type:        "debit",
 		Icon:        &icon,
 	}
-	return s.repo.CreateTransaction(ctx, tx)
+	_, err = s.repo.CreateTransaction(ctx, tx)
+	return err
+}
+
+func (s *WalletService) CreateWallet(ctx context.Context, userID int64) (*walletInterface.Wallet, error) {
+	return s.repo.CreateWallet(ctx, userID)
+}
+
+func (s *WalletService) GetWalletStats(ctx context.Context, userID int64) (*walletInterface.WalletStats, error) {
+	return s.repo.GetWalletStats(ctx, userID)
+}
+
+func (s *WalletService) Transfer(ctx context.Context, fromUserID, toUserID int64, amount float64, title, description string) (int64, error) {
+	if err := utils.ValidateUserID(fromUserID); err != nil {
+		return 0, err
+	}
+	if err := utils.ValidateUserID(toUserID); err != nil {
+		return 0, err
+	}
+	if err := utils.ValidateAmount(amount); err != nil {
+		return 0, err
+	}
+	if err := utils.ValidateTransactionTitle(title); err != nil {
+		return 0, err
+	}
+	if err := utils.ValidateDescription(description); err != nil {
+		return 0, err
+	}
+
+	amount = utils.FormatAmount(amount)
+
+	if fromUserID == toUserID {
+		return 0, errors.New("cannot transfer to same user")
+	}
+
+	// Check sender balance
+	fromWallet, err := s.repo.GetWallet(ctx, fromUserID)
+	if err != nil {
+		return 0, err
+	}
+
+	if fromWallet.Balance < amount {
+		return 0, errors.New("insufficient balance")
+	}
+
+	// Check receiver wallet exists
+	_, err = s.repo.GetWallet(ctx, toUserID)
+	if err != nil {
+		return 0, errors.New("receiver wallet not found")
+	}
+
+	return s.repo.TransferMoney(ctx, fromUserID, toUserID, amount, title, description)
 }
 
 func (s *WalletService) GetHistory(ctx context.Context, userID int64, page int) ([]*walletInterface.Transaction, error) {
+	if err := utils.ValidateUserID(userID); err != nil {
+		return nil, err
+	}
+	if err := utils.ValidatePage(page); err != nil {
+		return nil, err
+	}
+
 	limit := 20
 	offset := (page - 1) * limit
 	return s.repo.GetTransactions(ctx, userID, limit, offset)

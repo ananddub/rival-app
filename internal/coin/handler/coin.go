@@ -102,6 +102,118 @@ type PurchaseResponse struct {
 	Message string `json:"message"`
 }
 
+type CoinTransaction struct {
+	ID        int64  `json:"id"`
+	UserID    int64  `json:"user_id"`
+	Coins     int64  `json:"coins"`
+	Type      string `json:"type"`
+	Reason    string `json:"reason"`
+	CreatedAt string `json:"created_at"`
+}
+
+type GetHistoryResponse struct {
+	Transactions []CoinTransaction `json:"transactions"`
+}
+
+//encore:api public method=GET path=/coins/history/:userID/:page
+func GetHistory(ctx context.Context, userID int64, page int) (*GetHistoryResponse, error) {
+	transactions, err := coinService.GetHistory(ctx, userID, page)
+	if err != nil {
+		return nil, err
+	}
+
+	result := make([]CoinTransaction, len(transactions))
+	for i, tx := range transactions {
+		result[i] = CoinTransaction{
+			ID:        tx.ID,
+			UserID:    tx.UserID,
+			Coins:     tx.Coins,
+			Type:      tx.Type,
+			Reason:    func() string { if tx.Reason != nil { return *tx.Reason }; return "" }(),
+			CreatedAt: tx.CreatedAt.Format("2006-01-02 15:04:05"),
+		}
+	}
+	return &GetHistoryResponse{Transactions: result}, nil
+}
+
+type TransferCoinsRequest struct {
+	FromUserID int64  `json:"from_user_id"`
+	ToUserID   int64  `json:"to_user_id"`
+	Coins      int64  `json:"coins"`
+	Reason     string `json:"reason"`
+}
+
+type TransferCoinsResponse struct {
+	Message       string `json:"message"`
+	TransactionID int64  `json:"transaction_id"`
+}
+
+//encore:api public method=POST path=/coins/transfer
+func TransferCoins(ctx context.Context, req *TransferCoinsRequest) (*TransferCoinsResponse, error) {
+	txID, err := coinService.TransferCoins(ctx, req.FromUserID, req.ToUserID, req.Coins, req.Reason)
+	if err != nil {
+		return nil, err
+	}
+
+	return &TransferCoinsResponse{
+		Message:       "Coins transferred successfully",
+		TransactionID: txID,
+	}, nil
+}
+
+type CoinStatsResponse struct {
+	TotalCoins        int64 `json:"total_coins"`
+	TotalEarned       int64 `json:"total_earned"`
+	TotalSpent        int64 `json:"total_spent"`
+	TotalTransactions int64 `json:"total_transactions"`
+}
+
+//encore:api public method=GET path=/coins/stats/:userID
+func GetCoinStats(ctx context.Context, userID int64) (*CoinStatsResponse, error) {
+	stats, err := coinService.GetCoinStats(ctx, userID)
+	if err != nil {
+		return nil, err
+	}
+
+	return &CoinStatsResponse{
+		TotalCoins:        stats.TotalCoins,
+		TotalEarned:       stats.TotalEarned,
+		TotalSpent:        stats.TotalSpent,
+		TotalTransactions: stats.TotalTransactions,
+	}, nil
+}
+
+type CreatePackageRequest struct {
+	Name       string  `json:"name"`
+	Coins      int64   `json:"coins"`
+	BonusCoins int64   `json:"bonus_coins"`
+	Price      float64 `json:"price"`
+}
+
+type CreatePackageResponse struct {
+	Message string  `json:"message"`
+	Package Package `json:"package"`
+}
+
+//encore:api public method=POST path=/coins/packages/create
+func CreatePackage(ctx context.Context, req *CreatePackageRequest) (*CreatePackageResponse, error) {
+	pkg, err := coinService.CreatePackage(ctx, req.Name, req.Coins, req.BonusCoins, req.Price)
+	if err != nil {
+		return nil, err
+	}
+
+	return &CreatePackageResponse{
+		Message: "Package created successfully",
+		Package: Package{
+			ID:         pkg.ID,
+			Name:       pkg.Name,
+			Coins:      pkg.Coins,
+			BonusCoins: pkg.BonusCoins,
+			Price:      pkg.Price,
+		},
+	}, nil
+}
+
 //encore:api public method=POST path=/coins/purchase
 func Purchase(ctx context.Context, req *PurchaseRequest) (*PurchaseResponse, error) {
 	if err := coinService.PurchaseCoins(ctx, req.UserID, req.PackageID); err != nil {

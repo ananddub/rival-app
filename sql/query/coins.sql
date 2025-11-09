@@ -7,8 +7,16 @@ UPDATE wallets SET coins = coins + $2, updated_at = NOW() WHERE user_id = $1;
 -- name: DeductCoins :exec
 UPDATE wallets SET coins = coins - $2, updated_at = NOW() WHERE user_id = $1 AND coins >= $2;
 
--- name: CreateCoinTransaction :exec
-INSERT INTO coin_transactions (user_id, coins, type, reason) VALUES ($1, $2, $3, $4);
+-- name: CreateCoinTransaction :one
+INSERT INTO coin_transactions (user_id, coins, type, reason) VALUES ($1, $2, $3, $4) RETURNING *;
+
+-- name: GetAllCoinTransactions :many
+SELECT * FROM coin_transactions WHERE user_id = $1 ORDER BY created_at DESC;
+
+-- name: CreateCoinPackage :one
+INSERT INTO coin_packages (name, coins, price, bonus_coins, is_active)
+VALUES ($1, $2, $3, $4, $5)
+RETURNING *;
 
 -- name: GetCoinTransactions :many
 SELECT * FROM coin_transactions WHERE user_id = $1 ORDER BY created_at DESC LIMIT $2 OFFSET $3;

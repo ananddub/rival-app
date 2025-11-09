@@ -14,7 +14,7 @@ import (
 const createUser = `-- name: CreateUser :one
 INSERT INTO users (full_name, email, phone_number, password_hash, sign_type, role)
 VALUES ($1, $2, $3, $4, $5, $6)
-RETURNING id, full_name, email, phone_number, password_hash, dob, is_phone_verified, is_email_verified, sign_type, role, created_at, updated_at
+RETURNING id, full_name, email, phone_number, password_hash, profile_photo, dob, is_phone_verified, is_email_verified, sign_type, role, created_at, updated_at
 `
 
 type CreateUserParams struct {
@@ -42,6 +42,7 @@ func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (User, e
 		&i.Email,
 		&i.PhoneNumber,
 		&i.PasswordHash,
+		&i.ProfilePhoto,
 		&i.Dob,
 		&i.IsPhoneVerified,
 		&i.IsEmailVerified,
@@ -54,7 +55,7 @@ func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (User, e
 }
 
 const getUserByEmail = `-- name: GetUserByEmail :one
-SELECT id, full_name, email, phone_number, password_hash, dob, is_phone_verified, is_email_verified, sign_type, role, created_at, updated_at FROM users WHERE email = $1
+SELECT id, full_name, email, phone_number, password_hash, profile_photo, dob, is_phone_verified, is_email_verified, sign_type, role, created_at, updated_at FROM users WHERE email = $1
 `
 
 func (q *Queries) GetUserByEmail(ctx context.Context, email string) (User, error) {
@@ -66,6 +67,7 @@ func (q *Queries) GetUserByEmail(ctx context.Context, email string) (User, error
 		&i.Email,
 		&i.PhoneNumber,
 		&i.PasswordHash,
+		&i.ProfilePhoto,
 		&i.Dob,
 		&i.IsPhoneVerified,
 		&i.IsEmailVerified,
@@ -78,7 +80,7 @@ func (q *Queries) GetUserByEmail(ctx context.Context, email string) (User, error
 }
 
 const getUserByID = `-- name: GetUserByID :one
-SELECT id, full_name, email, phone_number, password_hash, dob, is_phone_verified, is_email_verified, sign_type, role, created_at, updated_at FROM users WHERE id = $1
+SELECT id, full_name, email, phone_number, password_hash, profile_photo, dob, is_phone_verified, is_email_verified, sign_type, role, created_at, updated_at FROM users WHERE id = $1
 `
 
 func (q *Queries) GetUserByID(ctx context.Context, id int64) (User, error) {
@@ -90,6 +92,7 @@ func (q *Queries) GetUserByID(ctx context.Context, id int64) (User, error) {
 		&i.Email,
 		&i.PhoneNumber,
 		&i.PasswordHash,
+		&i.ProfilePhoto,
 		&i.Dob,
 		&i.IsPhoneVerified,
 		&i.IsEmailVerified,
@@ -102,7 +105,7 @@ func (q *Queries) GetUserByID(ctx context.Context, id int64) (User, error) {
 }
 
 const updateEmailVerification = `-- name: UpdateEmailVerification :one
-UPDATE users SET is_email_verified = $2, updated_at = now() WHERE id = $1 RETURNING id, full_name, email, phone_number, password_hash, dob, is_phone_verified, is_email_verified, sign_type, role, created_at, updated_at
+UPDATE users SET is_email_verified = $2, updated_at = now() WHERE id = $1 RETURNING id, full_name, email, phone_number, password_hash, profile_photo, dob, is_phone_verified, is_email_verified, sign_type, role, created_at, updated_at
 `
 
 type UpdateEmailVerificationParams struct {
@@ -119,6 +122,7 @@ func (q *Queries) UpdateEmailVerification(ctx context.Context, arg UpdateEmailVe
 		&i.Email,
 		&i.PhoneNumber,
 		&i.PasswordHash,
+		&i.ProfilePhoto,
 		&i.Dob,
 		&i.IsPhoneVerified,
 		&i.IsEmailVerified,
@@ -134,7 +138,7 @@ const updatePassword = `-- name: UpdatePassword :one
 UPDATE users
 SET password_hash = $2, updated_at = now()
 WHERE id = $1
-RETURNING id, full_name, email, phone_number, password_hash, dob, is_phone_verified, is_email_verified, sign_type, role, created_at, updated_at
+RETURNING id, full_name, email, phone_number, password_hash, profile_photo, dob, is_phone_verified, is_email_verified, sign_type, role, created_at, updated_at
 `
 
 type UpdatePasswordParams struct {
@@ -151,6 +155,7 @@ func (q *Queries) UpdatePassword(ctx context.Context, arg UpdatePasswordParams) 
 		&i.Email,
 		&i.PhoneNumber,
 		&i.PasswordHash,
+		&i.ProfilePhoto,
 		&i.Dob,
 		&i.IsPhoneVerified,
 		&i.IsEmailVerified,
@@ -163,7 +168,7 @@ func (q *Queries) UpdatePassword(ctx context.Context, arg UpdatePasswordParams) 
 }
 
 const updatePhoneVerification = `-- name: UpdatePhoneVerification :one
-UPDATE users SET is_phone_verified = $2, updated_at = now() WHERE id = $1 RETURNING id, full_name, email, phone_number, password_hash, dob, is_phone_verified, is_email_verified, sign_type, role, created_at, updated_at
+UPDATE users SET is_phone_verified = $2, updated_at = now() WHERE id = $1 RETURNING id, full_name, email, phone_number, password_hash, profile_photo, dob, is_phone_verified, is_email_verified, sign_type, role, created_at, updated_at
 `
 
 type UpdatePhoneVerificationParams struct {
@@ -180,6 +185,40 @@ func (q *Queries) UpdatePhoneVerification(ctx context.Context, arg UpdatePhoneVe
 		&i.Email,
 		&i.PhoneNumber,
 		&i.PasswordHash,
+		&i.ProfilePhoto,
+		&i.Dob,
+		&i.IsPhoneVerified,
+		&i.IsEmailVerified,
+		&i.SignType,
+		&i.Role,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
+}
+
+const updateProfilePhoto = `-- name: UpdateProfilePhoto :one
+UPDATE users
+SET profile_photo = $2, updated_at = now()
+WHERE id = $1
+RETURNING id, full_name, email, phone_number, password_hash, profile_photo, dob, is_phone_verified, is_email_verified, sign_type, role, created_at, updated_at
+`
+
+type UpdateProfilePhotoParams struct {
+	ID           int64       `json:"id"`
+	ProfilePhoto pgtype.Text `json:"profile_photo"`
+}
+
+func (q *Queries) UpdateProfilePhoto(ctx context.Context, arg UpdateProfilePhotoParams) (User, error) {
+	row := q.db.QueryRow(ctx, updateProfilePhoto, arg.ID, arg.ProfilePhoto)
+	var i User
+	err := row.Scan(
+		&i.ID,
+		&i.FullName,
+		&i.Email,
+		&i.PhoneNumber,
+		&i.PasswordHash,
+		&i.ProfilePhoto,
 		&i.Dob,
 		&i.IsPhoneVerified,
 		&i.IsEmailVerified,
@@ -195,7 +234,7 @@ const updateUser = `-- name: UpdateUser :one
 UPDATE users 
 SET full_name = $2, email = $3, phone_number = $4, updated_at = now()
 WHERE id = $1
-RETURNING id, full_name, email, phone_number, password_hash, dob, is_phone_verified, is_email_verified, sign_type, role, created_at, updated_at
+RETURNING id, full_name, email, phone_number, password_hash, profile_photo, dob, is_phone_verified, is_email_verified, sign_type, role, created_at, updated_at
 `
 
 type UpdateUserParams struct {
@@ -219,6 +258,103 @@ func (q *Queries) UpdateUser(ctx context.Context, arg UpdateUserParams) (User, e
 		&i.Email,
 		&i.PhoneNumber,
 		&i.PasswordHash,
+		&i.ProfilePhoto,
+		&i.Dob,
+		&i.IsPhoneVerified,
+		&i.IsEmailVerified,
+		&i.SignType,
+		&i.Role,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
+}
+
+const updateUserProfile = `-- name: UpdateUserProfile :one
+UPDATE users
+SET full_name = $2, phone_number = $3, dob = $4, updated_at = now()
+WHERE id = $1
+RETURNING id, full_name, email, phone_number, password_hash, profile_photo, dob, is_phone_verified, is_email_verified, sign_type, role, created_at, updated_at
+`
+
+type UpdateUserProfileParams struct {
+	ID          int64            `json:"id"`
+	FullName    string           `json:"full_name"`
+	PhoneNumber pgtype.Text      `json:"phone_number"`
+	Dob         pgtype.Timestamp `json:"dob"`
+}
+
+func (q *Queries) UpdateUserProfile(ctx context.Context, arg UpdateUserProfileParams) (User, error) {
+	row := q.db.QueryRow(ctx, updateUserProfile,
+		arg.ID,
+		arg.FullName,
+		arg.PhoneNumber,
+		arg.Dob,
+	)
+	var i User
+	err := row.Scan(
+		&i.ID,
+		&i.FullName,
+		&i.Email,
+		&i.PhoneNumber,
+		&i.PasswordHash,
+		&i.ProfilePhoto,
+		&i.Dob,
+		&i.IsPhoneVerified,
+		&i.IsEmailVerified,
+		&i.SignType,
+		&i.Role,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
+}
+
+const verifyEmail = `-- name: VerifyEmail :one
+UPDATE users
+SET is_email_verified = true, updated_at = now()
+WHERE id = $1
+RETURNING id, full_name, email, phone_number, password_hash, profile_photo, dob, is_phone_verified, is_email_verified, sign_type, role, created_at, updated_at
+`
+
+func (q *Queries) VerifyEmail(ctx context.Context, id int64) (User, error) {
+	row := q.db.QueryRow(ctx, verifyEmail, id)
+	var i User
+	err := row.Scan(
+		&i.ID,
+		&i.FullName,
+		&i.Email,
+		&i.PhoneNumber,
+		&i.PasswordHash,
+		&i.ProfilePhoto,
+		&i.Dob,
+		&i.IsPhoneVerified,
+		&i.IsEmailVerified,
+		&i.SignType,
+		&i.Role,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
+}
+
+const verifyPhone = `-- name: VerifyPhone :one
+UPDATE users
+SET is_phone_verified = true, updated_at = now()
+WHERE id = $1
+RETURNING id, full_name, email, phone_number, password_hash, profile_photo, dob, is_phone_verified, is_email_verified, sign_type, role, created_at, updated_at
+`
+
+func (q *Queries) VerifyPhone(ctx context.Context, id int64) (User, error) {
+	row := q.db.QueryRow(ctx, verifyPhone, id)
+	var i User
+	err := row.Scan(
+		&i.ID,
+		&i.FullName,
+		&i.Email,
+		&i.PhoneNumber,
+		&i.PasswordHash,
+		&i.ProfilePhoto,
 		&i.Dob,
 		&i.IsPhoneVerified,
 		&i.IsEmailVerified,

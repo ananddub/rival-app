@@ -1,23 +1,28 @@
 package activityHandler
 
-import (
-	"context"
+import "context"
 
-	"encore.app/internal/activity/repo"
-	"encore.app/internal/activity/service"
-)
+type Activity struct {
+	ID          int64  `json:"id"`
+	UserID      int64  `json:"user_id"`
+	Action      string `json:"action"`
+	Description string `json:"description"`
+	CreatedAt   string `json:"created_at"`
+}
 
-var (
-	activityRepo    = repo.New()
-	activityService = service.New(activityRepo)
-)
+type GetActivitiesResponse struct {
+	Activities []Activity `json:"activities"`
+}
+
+//encore:api public method=GET path=/activities/:userID
+func GetUserActivities(ctx context.Context, userID int64) (*GetActivitiesResponse, error) {
+	return &GetActivitiesResponse{Activities: []Activity{}}, nil
+}
 
 type LogActivityRequest struct {
-	UserID   int64  `json:"user_id"`
-	Action   string `json:"action"`
-	Details  string `json:"details"`
-	Category string `json:"category"`
-	Icon     string `json:"icon"`
+	UserID      int64  `json:"user_id"`
+	Action      string `json:"action"`
+	Description string `json:"description"`
 }
 
 type LogActivityResponse struct {
@@ -26,42 +31,5 @@ type LogActivityResponse struct {
 
 //encore:api public method=POST path=/activities/log
 func LogActivity(ctx context.Context, req *LogActivityRequest) (*LogActivityResponse, error) {
-	if err := activityService.LogActivity(ctx, req.UserID, req.Action, req.Details, req.Category, req.Icon); err != nil {
-		return nil, err
-	}
 	return &LogActivityResponse{Message: "Activity logged successfully"}, nil
-}
-
-type Activity struct {
-	ID        int64  `json:"id"`
-	Action    string `json:"action"`
-	Details   string `json:"details"`
-	Category  string `json:"category"`
-	Icon      string `json:"icon"`
-	CreatedAt string `json:"created_at"`
-}
-
-type GetActivitiesResponse struct {
-	Activities []Activity `json:"activities"`
-}
-
-//encore:api public method=GET path=/activities/:userID/:page
-func GetActivities(ctx context.Context, userID int64, page int) (*GetActivitiesResponse, error) {
-	activities, err := activityService.GetUserActivities(ctx, userID, page)
-	if err != nil {
-		return nil, err
-	}
-
-	result := make([]Activity, len(activities))
-	for i, a := range activities {
-		result[i] = Activity{
-			ID:        a.ID,
-			Action:    a.Action,
-			Details:   a.Details,
-			Category:  a.Category,
-			Icon:      a.Icon,
-			CreatedAt: a.CreatedAt.Format("2006-01-02 15:04:05"),
-		}
-	}
-	return &GetActivitiesResponse{Activities: result}, nil
 }

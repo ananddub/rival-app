@@ -25,6 +25,41 @@ func (q *Queries) AddCoins(ctx context.Context, arg AddCoinsParams) error {
 	return err
 }
 
+const createCoinPackage = `-- name: CreateCoinPackage :one
+INSERT INTO coin_packages (name, coins, price, bonus_coins, is_active)
+VALUES ($1, $2, $3, $4, $5)
+RETURNING id, name, coins, price, bonus_coins, is_active, created_at
+`
+
+type CreateCoinPackageParams struct {
+	Name       string         `json:"name"`
+	Coins      int64          `json:"coins"`
+	Price      pgtype.Numeric `json:"price"`
+	BonusCoins pgtype.Int8    `json:"bonus_coins"`
+	IsActive   pgtype.Bool    `json:"is_active"`
+}
+
+func (q *Queries) CreateCoinPackage(ctx context.Context, arg CreateCoinPackageParams) (CoinPackage, error) {
+	row := q.db.QueryRow(ctx, createCoinPackage,
+		arg.Name,
+		arg.Coins,
+		arg.Price,
+		arg.BonusCoins,
+		arg.IsActive,
+	)
+	var i CoinPackage
+	err := row.Scan(
+		&i.ID,
+		&i.Name,
+		&i.Coins,
+		&i.Price,
+		&i.BonusCoins,
+		&i.IsActive,
+		&i.CreatedAt,
+	)
+	return i, err
+}
+
 const createCoinPurchase = `-- name: CreateCoinPurchase :one
 INSERT INTO coin_purchases (user_id, package_id, coins_received, amount_paid, payment_status, payment_id) 
 VALUES ($1, $2, $3, $4, $5, $6) RETURNING id, user_id, package_id, coins_received, amount_paid, payment_status, payment_id, created_at
@@ -62,8 +97,8 @@ func (q *Queries) CreateCoinPurchase(ctx context.Context, arg CreateCoinPurchase
 	return i, err
 }
 
-const createCoinTransaction = `-- name: CreateCoinTransaction :exec
-INSERT INTO coin_transactions (user_id, coins, type, reason) VALUES ($1, $2, $3, $4)
+const createCoinTransaction = `-- name: CreateCoinTransaction :one
+INSERT INTO coin_transactions (user_id, coins, type, reason) VALUES ($1, $2, $3, $4) RETURNING id, user_id, coins, type, reason, created_at
 `
 
 type CreateCoinTransactionParams struct {
@@ -73,14 +108,23 @@ type CreateCoinTransactionParams struct {
 	Reason pgtype.Text `json:"reason"`
 }
 
-func (q *Queries) CreateCoinTransaction(ctx context.Context, arg CreateCoinTransactionParams) error {
-	_, err := q.db.Exec(ctx, createCoinTransaction,
+func (q *Queries) CreateCoinTransaction(ctx context.Context, arg CreateCoinTransactionParams) (CoinTransaction, error) {
+	row := q.db.QueryRow(ctx, createCoinTransaction,
 		arg.UserID,
 		arg.Coins,
 		arg.Type,
 		arg.Reason,
 	)
-	return err
+	var i CoinTransaction
+	err := row.Scan(
+		&i.ID,
+		&i.UserID,
+		&i.Coins,
+		&i.Type,
+		&i.Reason,
+		&i.CreatedAt,
+	)
+	return i, err
 }
 
 const deductCoins = `-- name: DeductCoins :exec
@@ -95,6 +139,37 @@ type DeductCoinsParams struct {
 func (q *Queries) DeductCoins(ctx context.Context, arg DeductCoinsParams) error {
 	_, err := q.db.Exec(ctx, deductCoins, arg.UserID, arg.Coins)
 	return err
+}
+
+const getAllCoinTransactions = `-- name: GetAllCoinTransactions :many
+SELECT id, user_id, coins, type, reason, created_at FROM coin_transactions WHERE user_id = $1 ORDER BY created_at DESC
+`
+
+func (q *Queries) GetAllCoinTransactions(ctx context.Context, userID int64) ([]CoinTransaction, error) {
+	rows, err := q.db.Query(ctx, getAllCoinTransactions, userID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []CoinTransaction
+	for rows.Next() {
+		var i CoinTransaction
+		if err := rows.Scan(
+			&i.ID,
+			&i.UserID,
+			&i.Coins,
+			&i.Type,
+			&i.Reason,
+			&i.CreatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
 }
 
 const getCoinPackages = `-- name: GetCoinPackages :many

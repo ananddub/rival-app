@@ -48,6 +48,14 @@ type CoinTransaction struct {
 	CreatedAt pgtype.Timestamp `json:"created_at"`
 }
 
+type DailyReward struct {
+	ID        int64            `json:"id"`
+	UserID    int64            `json:"user_id"`
+	Day       int32            `json:"day"`
+	ClaimedAt pgtype.Timestamp `json:"claimed_at"`
+	CreatedAt pgtype.Timestamp `json:"created_at"`
+}
+
 type JwtToken struct {
 	ID        int64            `json:"id"`
 	UserID    int64            `json:"user_id"`
@@ -82,17 +90,31 @@ type Payment struct {
 	UpdatedAt      pgtype.Timestamp `json:"updated_at"`
 }
 
+type ReferralReward struct {
+	ID             int64            `json:"id"`
+	ReferrerID     int64            `json:"referrer_id"`
+	ReferredUserID int64            `json:"referred_user_id"`
+	CoinsEarned    pgtype.Int8      `json:"coins_earned"`
+	CreatedAt      pgtype.Timestamp `json:"created_at"`
+}
+
+type RefreshToken struct {
+	ID        int64            `json:"id"`
+	UserID    int64            `json:"user_id"`
+	Token     string           `json:"token"`
+	ExpiresAt pgtype.Timestamp `json:"expires_at"`
+	CreatedAt pgtype.Timestamp `json:"created_at"`
+}
+
 type Reward struct {
 	ID          int64            `json:"id"`
-	UserID      int64            `json:"user_id"`
 	Title       string           `json:"title"`
 	Description pgtype.Text      `json:"description"`
-	Points      int32            `json:"points"`
 	Type        string           `json:"type"`
-	Status      string           `json:"status"`
-	ClaimedAt   pgtype.Timestamp `json:"claimed_at"`
+	Coins       pgtype.Int8      `json:"coins"`
+	Money       pgtype.Numeric   `json:"money"`
+	IsActive    pgtype.Bool      `json:"is_active"`
 	CreatedAt   pgtype.Timestamp `json:"created_at"`
-	UpdatedAt   pgtype.Timestamp `json:"updated_at"`
 }
 
 type Transaction struct {
@@ -113,6 +135,7 @@ type User struct {
 	Email           string           `json:"email"`
 	PhoneNumber     pgtype.Text      `json:"phone_number"`
 	PasswordHash    pgtype.Text      `json:"password_hash"`
+	ProfilePhoto    pgtype.Text      `json:"profile_photo"`
 	Dob             pgtype.Timestamp `json:"dob"`
 	IsPhoneVerified pgtype.Bool      `json:"is_phone_verified"`
 	IsEmailVerified pgtype.Bool      `json:"is_email_verified"`
@@ -120,6 +143,15 @@ type User struct {
 	Role            string           `json:"role"`
 	CreatedAt       pgtype.Timestamp `json:"created_at"`
 	UpdatedAt       pgtype.Timestamp `json:"updated_at"`
+}
+
+type UserReward struct {
+	ID        int64            `json:"id"`
+	UserID    int64            `json:"user_id"`
+	RewardID  int64            `json:"reward_id"`
+	Claimed   pgtype.Bool      `json:"claimed"`
+	ClaimedAt pgtype.Timestamp `json:"claimed_at"`
+	CreatedAt pgtype.Timestamp `json:"created_at"`
 }
 
 type Wallet struct {

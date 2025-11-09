@@ -12,8 +12,8 @@ import (
 )
 
 const createNotification = `-- name: CreateNotification :one
-INSERT INTO notifications (user_id, title, message, type)
-VALUES ($1, $2, $3, $4)
+INSERT INTO notifications (user_id, title, message, type, is_read)
+VALUES ($1, $2, $3, $4, $5)
 RETURNING id, user_id, title, message, type, is_read, created_at
 `
 
@@ -22,6 +22,7 @@ type CreateNotificationParams struct {
 	Title   string      `json:"title"`
 	Message string      `json:"message"`
 	Type    pgtype.Text `json:"type"`
+	IsRead  pgtype.Bool `json:"is_read"`
 }
 
 func (q *Queries) CreateNotification(ctx context.Context, arg CreateNotificationParams) (Notification, error) {
@@ -30,6 +31,7 @@ func (q *Queries) CreateNotification(ctx context.Context, arg CreateNotification
 		arg.Title,
 		arg.Message,
 		arg.Type,
+		arg.IsRead,
 	)
 	var i Notification
 	err := row.Scan(
@@ -44,21 +46,12 @@ func (q *Queries) CreateNotification(ctx context.Context, arg CreateNotification
 	return i, err
 }
 
-const deleteNotification = `-- name: DeleteNotification :exec
-DELETE FROM notifications WHERE id = $1
-`
-
-func (q *Queries) DeleteNotification(ctx context.Context, id int64) error {
-	_, err := q.db.Exec(ctx, deleteNotification, id)
-	return err
-}
-
-const getNotificationsByUserID = `-- name: GetNotificationsByUserID :many
+const getUserNotifications = `-- name: GetUserNotifications :many
 SELECT id, user_id, title, message, type, is_read, created_at FROM notifications WHERE user_id = $1 ORDER BY created_at DESC
 `
 
-func (q *Queries) GetNotificationsByUserID(ctx context.Context, userID int64) ([]Notification, error) {
-	rows, err := q.db.Query(ctx, getNotificationsByUserID, userID)
+func (q *Queries) GetUserNotifications(ctx context.Context, userID int64) ([]Notification, error) {
+	rows, err := q.db.Query(ctx, getUserNotifications, userID)
 	if err != nil {
 		return nil, err
 	}
@@ -85,53 +78,11 @@ func (q *Queries) GetNotificationsByUserID(ctx context.Context, userID int64) ([
 	return items, nil
 }
 
-const getUnreadNotifications = `-- name: GetUnreadNotifications :many
-SELECT id, user_id, title, message, type, is_read, created_at FROM notifications WHERE user_id = $1 AND is_read = FALSE ORDER BY created_at DESC
+const markNotificationAsRead = `-- name: MarkNotificationAsRead :exec
+UPDATE notifications SET is_read = true WHERE id = $1
 `
 
-func (q *Queries) GetUnreadNotifications(ctx context.Context, userID int64) ([]Notification, error) {
-	rows, err := q.db.Query(ctx, getUnreadNotifications, userID)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-	var items []Notification
-	for rows.Next() {
-		var i Notification
-		if err := rows.Scan(
-			&i.ID,
-			&i.UserID,
-			&i.Title,
-			&i.Message,
-			&i.Type,
-			&i.IsRead,
-			&i.CreatedAt,
-		); err != nil {
-			return nil, err
-		}
-		items = append(items, i)
-	}
-	if err := rows.Err(); err != nil {
-		return nil, err
-	}
-	return items, nil
-}
-
-const markAsRead = `-- name: MarkAsRead :one
-UPDATE notifications SET is_read = TRUE WHERE id = $1 RETURNING id, user_id, title, message, type, is_read, created_at
-`
-
-func (q *Queries) MarkAsRead(ctx context.Context, id int64) (Notification, error) {
-	row := q.db.QueryRow(ctx, markAsRead, id)
-	var i Notification
-	err := row.Scan(
-		&i.ID,
-		&i.UserID,
-		&i.Title,
-		&i.Message,
-		&i.Type,
-		&i.IsRead,
-		&i.CreatedAt,
-	)
-	return i, err
+func (q *Queries) MarkNotificationAsRead(ctx context.Context, id int64) error {
+	_, err := q.db.Exec(ctx, markNotificationAsRead, id)
+	return err
 }

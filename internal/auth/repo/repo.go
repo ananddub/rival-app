@@ -3,11 +3,13 @@ package repo
 import (
 	"context"
 	"database/sql"
+	"errors"
 
 	"encore.app/config"
 	"encore.app/connection"
 	db "encore.app/gen"
 	authInterface "encore.app/internal/interface/auth"
+	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
@@ -25,10 +27,16 @@ func (r *AuthRepo) CreateUser(ctx context.Context, user *authInterface.User) (in
 	}
 
 	queries := db.New(conn)
+
+	var phoneParam pgtype.Text
+	if user.PhoneNumber != "" {
+		phoneParam = pgtype.Text{String: user.PhoneNumber, Valid: true}
+	}
+
 	result, err := queries.CreateUser(ctx, db.CreateUserParams{
 		FullName:     user.FullName,
 		Email:        user.Email,
-		PhoneNumber:  pgtype.Text{String: *user.PhoneNumber, Valid: user.PhoneNumber != nil},
+		PhoneNumber:  phoneParam,
 		PasswordHash: pgtype.Text{String: user.PasswordHash, Valid: true},
 		SignType:     user.SignType,
 		Role:         user.Role,
@@ -49,22 +57,17 @@ func (r *AuthRepo) GetUserByEmail(ctx context.Context, email string) (*authInter
 	queries := db.New(conn)
 	user, err := queries.GetUserByEmail(ctx, email)
 	if err != nil {
-		if err == sql.ErrNoRows {
+		if errors.Is(err, pgx.ErrNoRows) || errors.Is(err, sql.ErrNoRows) {
 			return nil, nil
 		}
 		return nil, err
-	}
-
-	var phone *string
-	if user.PhoneNumber.Valid {
-		phone = &user.PhoneNumber.String
 	}
 
 	return &authInterface.User{
 		ID:              user.ID,
 		FullName:        user.FullName,
 		Email:           user.Email,
-		PhoneNumber:     phone,
+		PhoneNumber:     user.PhoneNumber.String,
 		PasswordHash:    user.PasswordHash.String,
 		IsEmailVerified: user.IsEmailVerified.Bool,
 		IsPhoneVerified: user.IsPhoneVerified.Bool,
@@ -88,16 +91,11 @@ func (r *AuthRepo) GetUserByID(ctx context.Context, id int64) (*authInterface.Us
 		return nil, err
 	}
 
-	var phone *string
-	if user.PhoneNumber.Valid {
-		phone = &user.PhoneNumber.String
-	}
-
 	return &authInterface.User{
 		ID:              user.ID,
 		FullName:        user.FullName,
 		Email:           user.Email,
-		PhoneNumber:     phone,
+		PhoneNumber:     user.PhoneNumber.String,
 		PasswordHash:    user.PasswordHash.String,
 		IsEmailVerified: user.IsEmailVerified.Bool,
 		IsPhoneVerified: user.IsPhoneVerified.Bool,
@@ -185,4 +183,56 @@ func (r *AuthRepo) DeleteToken(ctx context.Context, tokenHash string) error {
 
 	queries := db.New(conn)
 	return queries.DeleteJWTToken(ctx, tokenHash)
+}
+
+func (r *AuthRepo) CreateRefreshToken(ctx context.Context, token *authInterface.RefreshToken) error {
+	cfg := config.GetConfig()
+	conn, err := connection.GetPgConnection(&cfg.Database)
+	if err != nil {
+		return err
+	}
+
+	queries := db.New(conn)
+	_, err = queries.CreateRefreshToken(ctx, db.CreateRefreshTokenParams{
+		UserID:    token.UserID,
+		Token:     token.Token,
+		ExpiresAt: pgtype.Timestamp{Time: token.ExpiresAt, Valid: true},
+	})
+	return err
+}
+
+func (r *AuthRepo) GetRefreshToken(ctx context.Context, token string) (*authInterface.RefreshToken, error) {
+	cfg := config.GetConfig()
+	conn, err := connection.GetPgConnection(&cfg.Database)
+	if err != nil {
+		return nil, err
+	}
+
+	queries := db.New(conn)
+	refreshToken, err := queries.GetRefreshToken(ctx, token)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) || errors.Is(err, sql.ErrNoRows) {
+			return nil, errors.New("refresh token not found")
+		}
+		return nil, err
+	}
+
+	return &authInterface.RefreshToken{
+		ID:        refreshToken.ID,
+		UserID:    refreshToken.UserID,
+		Token:     refreshToken.Token,
+		ExpiresAt: refreshToken.ExpiresAt.Time,
+		CreatedAt: refreshToken.CreatedAt.Time,
+	}, nil
+}
+
+func (r *AuthRepo) DeleteRefreshToken(ctx context.Context, token string) error {
+	cfg := config.GetConfig()
+	conn, err := connection.GetPgConnection(&cfg.Database)
+	if err != nil {
+		return err
+	}
+
+	queries := db.New(conn)
+	return queries.DeleteRefreshToken(ctx, token)
 }

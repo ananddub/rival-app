@@ -16,15 +16,13 @@ type Notification struct {
 }
 
 type Repository interface {
+	GetUserNotifications(ctx context.Context, userID int64) ([]*Notification, error)
 	CreateNotification(ctx context.Context, notification *Notification) error
-	GetNotifications(ctx context.Context, userID int64, limit, offset int) ([]*Notification, error)
-	GetUnreadCount(ctx context.Context, userID int64) (int, error)
-	MarkAsRead(ctx context.Context, id int64) error
-	MarkAllAsRead(ctx context.Context, userID int64) error
+	MarkAsRead(ctx context.Context, notificationID int64) error
 }
 
 type Service interface {
-	SendNotification(ctx context.Context, userID int64, title, message, notifType string) error
-	GetUserNotifications(ctx context.Context, userID int64, page int) ([]*Notification, error)
+	GetUserNotifications(ctx context.Context, userID int64) ([]*Notification, error)
+	SendNotification(ctx context.Context, userID int64, title, message, notificationType string) error
 	MarkAsRead(ctx context.Context, notificationID int64) error
 }
