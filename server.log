@@ -1,4 +1,3 @@
-task: [run] encore run --listen=0.0.0.0:4000
 78[0J[1000D[2K[36m  ⠋ Building Encore application graph... [0m
 8[0J[1000D[2K[36m  ⠙ Building Encore application graph... [0m
 [1000D[2K[36m  ⠋ Analyzing service topology... [0m
@@ -47,72 +46,43 @@ task: [run] encore run --listen=0.0.0.0:4000
 [1000D[2K[36m  ⠂ Generating boilerplate code... [0m
 [1000D[2K[36m  ⠚ Compiling application source code... [0m
 8[0J[1000D[2K[36m  ⠐ Building Encore application graph... [0m
-[1000D[2K[36m  ⠒ Analyzing service topology... [0m
+[1000D[2K[32m  ✔ Analyzing service topology... Done![0m
 [1000D[2K[32m  ✔ Starting PubSub daemon... Done![0m
-[1000D[2K[32m  ✔ Fetching application secrets... Done![0m
+[1000D[2K[36m  ⠲ Fetching application secrets... [0m
 [1000D[2K[36m  ⠒ Generating boilerplate code... [0m
 [1000D[2K[36m  ⠒ Compiling application source code... [0m
 8[0J[1000D[2K[36m  ⠐ Building Encore application graph... [0m
 [1000D[2K[32m  ✔ Analyzing service topology... Done![0m
 [1000D[2K[32m  ✔ Starting PubSub daemon... Done![0m
-[1000D[2K[32m  ✔ Fetching application secrets... Done![0m
+[1000D[2K[36m  ⠴ Fetching application secrets... [0m
 [1000D[2K[36m  ⠲ Generating boilerplate code... [0m
 [1000D[2K[36m  ⠂ Compiling application source code... [0m
 8[0J[1000D[2K[36m  ⠒ Building Encore application graph... [0m
 [1000D[2K[32m  ✔ Analyzing service topology... Done![0m
 [1000D[2K[32m  ✔ Starting PubSub daemon... Done![0m
-[1000D[2K[32m  ✔ Fetching application secrets... Done![0m
+[1000D[2K[36m  ⠦ Fetching application secrets... [0m
 [1000D[2K[36m  ⠴ Generating boilerplate code... [0m
-[1000D[2K[36m  ⠂ Compiling application source code... [0m
+[1000D[2K[31m  ❌ Compiling application source code... Failed: Error[0m
 8[0J[1000D[2K[36m  ⠓ Building Encore application graph... [0m
 [1000D[2K[32m  ✔ Analyzing service topology... Done![0m
 [1000D[2K[32m  ✔ Starting PubSub daemon... Done![0m
-[1000D[2K[32m  ✔ Fetching application secrets... Done![0m
+[1000D[2K[33m  ⚠️ Fetching application secrets... Canceled[0m
 [1000D[2K[36m  ⠦ Generating boilerplate code... [0m
-[1000D[2K[36m  ⠒ Compiling application source code... [0m
-8[0J[1000D[2K[36m  ⠋ Building Encore application graph... [0m
-[1000D[2K[32m  ✔ Analyzing service topology... Done![0m
-[1000D[2K[32m  ✔ Starting PubSub daemon... Done![0m
-[1000D[2K[32m  ✔ Fetching application secrets... Done![0m
-[1000D[2K[36m  ⠖ Generating boilerplate code... [0m
-[1000D[2K[36m  ⠲ Compiling application source code... [0m
-[1000D[2K[36m  ⠋ Starting Encore application... [0m
-8[0J[1000D[2K[36m  ⠋ Building Encore application graph... [0m
-[1000D[2K[32m  ✔ Analyzing service topology... Done![0m
-[1000D[2K[32m  ✔ Starting PubSub daemon... Done![0m
-[1000D[2K[32m  ✔ Fetching application secrets... Done![0m
-[1000D[2K[36m  ⠒ Generating boilerplate code... [0m
-[1000D[2K[36m  ⠴ Compiling application source code... [0m
-[1000D[2K[36m  ⠙ Starting Encore application... [0m
-8[0J[1000D[2K[32m  ✔ Building Encore application graph... Done![0m
-[1000D[2K[32m  ✔ Analyzing service topology... Done![0m
-[1000D[2K[32m  ✔ Starting PubSub daemon... Done![0m
-[1000D[2K[32m  ✔ Fetching application secrets... Done![0m
-[1000D[2K[32m  ✔ Generating boilerplate code... Done![0m
-[1000D[2K[32m  ✔ Compiling application source code... Done![0m
-[1000D[2K[32m  ✔ Starting Encore application... Done![0m
+[1000D[2K[31m  ❌ Compiling application source code... Failed: Error[0m
 
-  Encore development server running!
+── Error ──────────────────────────────────────────────────────────────────────────────────[E0003]──
 
-  Your API is running at:     [36mhttp://0.0.0.0:4000[0m
-  Development Dashboard URL:  [36mhttp://127.0.0.1:9400/rival-n3t2[0m
-  MCP SSE URL:                [36mhttp://127.0.0.1:9900/sse?appID=rival-n3t2[0m
-[2m
-  New Encore release available: v1.50.6 (you have v1.50.4)
-  Update with: encore version update
-[0m
-9:41AM INF registered subscription service=queue subscription=send-password-reset topic=forgot
-9:41AM INF registered subscription service=queue subscription=send-otp topic=signups
-9:41AM INF registered 18 API endpoints
-9:41AM INF listening for incoming HTTP requests
-9:41AM INF starting request endpoint=GetUserWallet service=walletHandler trace_id=em4prj7ct9jomaa1mpsuer2q2c
-9:41AM INF request completed code=ok duration=38.1835 endpoint=GetUserWallet service=walletHandler trace_id=em4prj7ct9jomaa1mpsuer2q2c
-9:41AM INF starting request endpoint=GetUserNotifications service=notificationHandler trace_id=njv703uf61st0ln0gmbg23ffos
-9:41AM INF request completed code=ok duration=4.4016 endpoint=GetUserNotifications service=notificationHandler trace_id=njv703uf61st0ln0gmbg23ffos
-9:41AM INF starting request endpoint=GetUserActivities service=activityHandler trace_id=rrtrmksiaor33pc6doccfa743c
-9:41AM INF request completed code=ok duration=3.3757 endpoint=GetUserActivities service=activityHandler trace_id=rrtrmksiaor33pc6doccfa743c
-9:43AM INF starting request endpoint=GetUserTransactions service=walletHandler trace_id=mdp5s7nmsv9fh4rbrakcv0fius
-9:43AM INF request completed code=ok duration=2.5213 endpoint=GetUserTransactions service=walletHandler trace_id=mdp5s7nmsv9fh4rbrakcv0fius
-9:43AM INF starting request endpoint=GetUserWallet service=walletHandler trace_id=n307utnqufm9botm67e4rjbgdk
-9:43AM INF request completed code=ok duration=1.9695 endpoint=GetUserWallet service=walletHandler trace_id=n307utnqufm9botm67e4rjbgdk
-task: Signal received: "interrupt"
+compilation failure: # encore.app/internal/activity/handler
+internal/activity/handler/activity.go:25:9: not enough arguments in call to config.Load
+	have ()
+	want (string)
+
+╭─[Stack Trace]
+├─▶ build.(*builder).buildMain-fm.(*builder).buildMain.func1 encr.dev/v2/compiler/build/build.go:316
+├─▶ etrace.Sync0                                             encr.dev/internal/etrace/etrace.go:10
+├─▶ build.(*builder).buildMain                               encr.dev/v2/compiler/build/build.go:251
+├─▶ build.(*builder).Build                                   encr.dev/v2/compiler/build/build.go:128
+├─▶ build.Build                                              encr.dev/v2/compiler/build/build.go:73
+├─▶ v2builder.BuilderImpl.Compile.func1                      encr.dev/v2/v2builder/v2builder.go:149
+╰─[... remaining frames omitted ...]
+

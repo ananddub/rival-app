@@ -1,12 +1,18 @@
 package activityHandler
 
-import "context"
+import (
+	"context"
+	"encore.app/connection"
+	"encore.app/config"
+)
 
 type Activity struct {
 	ID          int64  `json:"id"`
 	UserID      int64  `json:"user_id"`
 	Action      string `json:"action"`
-	Description string `json:"description"`
+	Details     string `json:"details"`
+	Category    string `json:"category"`
+	Icon        string `json:"icon"`
 	CreatedAt   string `json:"created_at"`
 }
 
@@ -16,7 +22,34 @@ type GetActivitiesResponse struct {
 
 //encore:api public method=GET path=/activities/:userID
 func GetUserActivities(ctx context.Context, userID int64) (*GetActivitiesResponse, error) {
-	return &GetActivitiesResponse{Activities: []Activity{}}, nil
+	cfg := config.Load("config.yaml")
+	db, err := connection.GetPgConnection(&cfg.Database)
+	if err != nil {
+		return &GetActivitiesResponse{Activities: []Activity{}}, nil
+	}
+	
+	query := `SELECT id, user_id, action, COALESCE(details, ''), COALESCE(category, ''), COALESCE(icon, ''), 
+			  TO_CHAR(created_at, 'YYYY-MM-DD HH24:MI:SS') as created_at
+			  FROM activities WHERE user_id = $1 ORDER BY created_at DESC LIMIT 50`
+	
+	rows, err := db.Query(ctx, query, userID)
+	if err != nil {
+		return &GetActivitiesResponse{Activities: []Activity{}}, nil
+	}
+	defer rows.Close()
+	
+	var activities []Activity
+	for rows.Next() {
+		var activity Activity
+		err := rows.Scan(&activity.ID, &activity.UserID, &activity.Action, 
+						&activity.Details, &activity.Category, &activity.Icon, &activity.CreatedAt)
+		if err != nil {
+			continue
+		}
+		activities = append(activities, activity)
+	}
+	
+	return &GetActivitiesResponse{Activities: activities}, nil
 }
 
 type LogActivityRequest struct {
