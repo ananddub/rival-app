@@ -3,3 +3,7 @@ encore.gen.go
 encore.gen.cue
 /encore.gen
 /uploads
+.env
+config.yaml
+env.yaml
+.env
