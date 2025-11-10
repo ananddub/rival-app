@@ -2,7 +2,7 @@ package authHandler
 
 import (
 	"context"
-	
+
 	"encore.app/internal/auth/utils"
 )
 
@@ -40,7 +40,11 @@ func VerifyOtp(ctx context.Context, req *VerifyOtpRequest) (*VerifyOtpResponse, 
 	}
 
 	if valid {
-		return &VerifyOtpResponse{Valid: true, Message: "OTP verified successfully"}, nil
+
+		return &VerifyOtpResponse{
+			Valid:   true,
+			Message: "OTP verified and user created successfully",
+		}, nil
 	}
 
 	return &VerifyOtpResponse{Valid: false, Message: "Invalid OTP"}, nil

@@ -2,9 +2,11 @@ package authHandler
 
 import (
 	"context"
+	"errors"
 
 	"encore.app/internal/auth/repo"
 	"encore.app/internal/auth/service"
+	"encore.app/internal/auth/utils"
 )
 
 var (
@@ -20,9 +22,7 @@ type SignupRequest struct {
 }
 
 type SignupResponse struct {
-	AccessToken  string   `json:"access_token"`
-	RefreshToken string   `json:"refresh_token"`
-	User         UserInfo `json:"user"`
+	Message string `json:"message"`
 }
 
 type UserInfo struct {
@@ -34,19 +34,27 @@ type UserInfo struct {
 
 //encore:api public method=POST path=/auth/signup
 func Signup(ctx context.Context, req *SignupRequest) (*SignupResponse, error) {
-	tokens, user, err := authService.Signup(ctx, req.Name, req.Email, req.PhoneNumber, req.Password)
-	if err != nil {
+	// Validate input
+	if err := utils.ValidateEmail(req.Email); err != nil {
+		return nil, err
+	}
+	if err := utils.ValidatePassword(req.Password); err != nil {
 		return nil, err
 	}
 
+	// Check if user already exists
+	existing, err := authRepo.GetUserByEmail(ctx, req.Email)
+	if err == nil && existing != nil {
+		return nil, errors.New("user already exists")
+	}
+
+	// Store signup data temporarily
+	utils.StorePendingSignup(req.Email, req.Name, req.PhoneNumber, req.Password)
+	
+	// Send OTP
+	utils.StoreOtp(req.Email)
+	
 	return &SignupResponse{
-		AccessToken:  tokens.AccessToken,
-		RefreshToken: tokens.RefreshToken,
-		User: UserInfo{
-			ID:          user.ID,
-			Name:        user.FullName,
-			Email:       user.Email,
-			PhoneNumber: user.PhoneNumber,
-		},
+		Message: "OTP sent to your email. Please verify to complete registration.",
 	}, nil
 }
