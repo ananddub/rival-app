@@ -1,0 +1,159 @@
+syntax = "proto3";
+
+package rival.schema.v1;
+
+option go_package = "encore.app/gen/proto/proto/schema";
+
+enum UserRole {
+  USER_ROLE_UNSPECIFIED = 0;
+  USER_ROLE_CUSTOMER = 1;
+  USER_ROLE_MERCHANT = 2;
+  USER_ROLE_ADMIN = 3;
+}
+
+message User {
+  string id = 1;
+  string email = 2;
+  string password_hash = 3;
+  string phone = 4;
+  string name = 5;
+  string profile_pic = 6;
+  string firebase_uid = 7;
+  double coin_balance = 8;
+  UserRole role = 9;
+  string referral_code = 10;
+  string referred_by = 11;
+  int64 created_at = 12;
+  int64 updated_at = 13;
+}
+
+message ReferralReward {
+  string id = 1;
+  string referrer_id = 2;
+  string referred_id = 3;
+  double reward_amount = 4;
+  string reward_type = 5;
+  string status = 6;
+  int64 credited_at = 7;
+  int64 created_at = 8;
+}
+
+message Merchant {
+  string id = 1;
+  string name = 2;
+  string email = 3;
+  string password_hash = 4;
+  string phone = 5;
+  string category = 6;
+  double discount_percentage = 7;
+  bool is_active = 8;
+  int64 created_at = 9;
+  int64 updated_at = 10;
+}
+
+message MerchantAddress {
+  string id = 1;
+  string merchant_id = 2;
+  string street = 3;
+  string city = 4;
+  string state = 5;
+  string postal_code = 6;
+  string country = 7;
+  double latitude = 8;
+  double longitude = 9;
+  bool is_primary = 10;
+  int64 created_at = 11;
+  int64 updated_at = 12;
+}
+
+message CoinPurchase {
+  string id = 1;
+  string user_id = 2;
+  double amount = 3;
+  double coins_received = 4;
+  string payment_method = 5;
+  string payment_id = 6;
+  string status = 7;
+  int64 created_at = 8;
+}
+
+message JwtSession {
+  string id = 1;
+  string user_id = 2;
+  string token_hash = 3;
+  string refresh_token_hash = 4;
+  int64 expires_at = 5;
+  bool is_revoked = 6;
+  int64 created_at = 7;
+}
+
+message Transaction {
+  string id = 1;
+  string user_id = 2;
+  string merchant_id = 3;
+  double coins_spent = 4;
+  double original_amount = 5;
+  double discount_amount = 6;
+  double final_amount = 7;
+  string transaction_type = 8;
+  string status = 9;
+  int64 created_at = 10;
+}
+
+message Settlement {
+  string id = 1;
+  string merchant_id = 2;
+  string period_start = 3;
+  string period_end = 4;
+  int32 total_transactions = 5;
+  double total_discount_amount = 6;
+  double settlement_amount = 7;
+  string status = 8;
+  int64 paid_at = 9;
+  int64 created_at = 10;
+}
+
+message Offer {
+  string id = 1;
+  string merchant_id = 2;
+  string title = 3;
+  string description = 4;
+  double discount_percentage = 5;
+  double min_amount = 6;
+  double max_discount = 7;
+  bool is_active = 8;
+  int64 valid_from = 9;
+  int64 valid_until = 10;
+  int64 created_at = 11;
+  int64 updated_at = 12;
+}
+
+message Order {
+  string id = 1;
+  string merchant_id = 2;
+  string user_id = 3;
+  string offer_id = 4;
+  string order_number = 5;
+  string items = 6; // JSON string
+  double subtotal = 7;
+  double discount_amount = 8;
+  double total_amount = 9;
+  double coins_used = 10;
+  string status = 11;
+  string notes = 12;
+  int64 created_at = 13;
+  int64 updated_at = 14;
+}
+
+message AuditLog {
+  string id = 1;
+  string actor_id = 2;
+  string actor_type = 3;
+  string action = 4;
+  string target_type = 5;
+  string target_id = 6;
+  string metadata = 7; // JSON string
+  string ip_address = 8;
+  string user_agent = 9;
+  int64 created_at = 10;
+}

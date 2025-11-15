@@ -1,0 +1,182 @@
+syntax = "proto3";
+
+package rival.api.v1;
+
+option go_package = "encore.app/gen/proto/proto/api";
+
+import "proto/schema/schema.proto";
+
+service MerchantService {
+  rpc GetMerchant(GetMerchantRequest) returns (GetMerchantResponse);
+  rpc UpdateMerchant(UpdateMerchantRequest) returns (UpdateMerchantResponse);
+  rpc GetMerchantAddress(GetMerchantAddressRequest) returns (GetMerchantAddressResponse);
+  rpc UpdateMerchantAddress(UpdateMerchantAddressRequest) returns (UpdateMerchantAddressResponse);
+  rpc GetOrders(GetOrdersRequest) returns (GetOrdersResponse);
+  rpc UpdateOrderStatus(UpdateOrderStatusRequest) returns (UpdateOrderStatusResponse);
+  rpc GetCustomers(GetCustomersRequest) returns (GetCustomersResponse);
+  rpc GetPayouts(GetPayoutsRequest) returns (GetPayoutsResponse);
+  rpc CreateOffer(CreateOfferRequest) returns (CreateOfferResponse);
+  rpc GetOffers(GetOffersRequest) returns (GetOffersResponse);
+  rpc UpdateOffer(UpdateOfferRequest) returns (UpdateOfferResponse);
+  rpc GetDashboardStats(GetDashboardStatsRequest) returns (GetDashboardStatsResponse);
+  rpc StreamOrders(StreamOrdersRequest) returns (stream StreamOrdersResponse);
+  rpc StreamNotifications(StreamNotificationsRequest) returns (stream StreamNotificationsResponse);
+}
+
+message GetMerchantRequest {
+  string merchant_id = 1;
+}
+
+message GetMerchantResponse {
+  rival.schema.v1.Merchant merchant = 1;
+}
+
+message UpdateMerchantRequest {
+  string merchant_id = 1;
+  string name = 2;
+  string phone = 3;
+  string category = 4;
+  double discount_percentage = 5;
+}
+
+message UpdateMerchantResponse {
+  rival.schema.v1.Merchant merchant = 1;
+}
+
+message GetMerchantAddressRequest {
+  string merchant_id = 1;
+}
+
+message GetMerchantAddressResponse {
+  repeated rival.schema.v1.MerchantAddress addresses = 1;
+}
+
+message UpdateMerchantAddressRequest {
+  string merchant_id = 1;
+  string street = 2;
+  string city = 3;
+  string state = 4;
+  string postal_code = 5;
+  string country = 6;
+  double latitude = 7;
+  double longitude = 8;
+}
+
+message UpdateMerchantAddressResponse {
+  rival.schema.v1.MerchantAddress address = 1;
+}
+
+message GetOrdersRequest {
+  string merchant_id = 1;
+  int32 page = 2;
+  int32 limit = 3;
+  string status = 4;
+}
+
+message GetOrdersResponse {
+  repeated rival.schema.v1.Order orders = 1;
+  int32 total_count = 2;
+}
+
+message UpdateOrderStatusRequest {
+  string order_id = 1;
+  string status = 2;
+  string notes = 3;
+}
+
+message UpdateOrderStatusResponse {
+  rival.schema.v1.Order order = 1;
+}
+
+message GetCustomersRequest {
+  string merchant_id = 1;
+  int32 page = 2;
+  int32 limit = 3;
+}
+
+message GetCustomersResponse {
+  repeated rival.schema.v1.User customers = 1;
+  int32 total_count = 2;
+}
+
+message GetPayoutsRequest {
+  string merchant_id = 1;
+  int32 page = 2;
+  int32 limit = 3;
+}
+
+message GetPayoutsResponse {
+  repeated rival.schema.v1.Settlement payouts = 1;
+  int32 total_count = 2;
+}
+
+message CreateOfferRequest {
+  string merchant_id = 1;
+  string title = 2;
+  string description = 3;
+  double discount_percentage = 4;
+  double min_amount = 5;
+  double max_discount = 6;
+  int64 valid_until = 7;
+}
+
+message CreateOfferResponse {
+  rival.schema.v1.Offer offer = 1;
+}
+
+message GetOffersRequest {
+  string merchant_id = 1;
+  bool active_only = 2;
+}
+
+message GetOffersResponse {
+  repeated rival.schema.v1.Offer offers = 1;
+}
+
+message UpdateOfferRequest {
+  string offer_id = 1;
+  string title = 2;
+  string description = 3;
+  double discount_percentage = 4;
+  double min_amount = 5;
+  double max_discount = 6;
+  bool is_active = 7;
+  int64 valid_until = 8;
+}
+
+message UpdateOfferResponse {
+  rival.schema.v1.Offer offer = 1;
+}
+
+message GetDashboardStatsRequest {
+  string merchant_id = 1;
+}
+
+message GetDashboardStatsResponse {
+  double today_revenue = 1;
+  int32 today_orders = 2;
+  int32 new_customers = 3;
+  int32 total_customers = 4;
+  double pending_payout = 5;
+}
+
+message StreamOrdersRequest {
+  string merchant_id = 1;
+}
+
+message StreamOrdersResponse {
+  rival.schema.v1.Order order = 1;
+  string event_type = 2; // new, updated, cancelled
+}
+
+message StreamNotificationsRequest {
+  string merchant_id = 1;
+}
+
+message StreamNotificationsResponse {
+  string id = 1;
+  string title = 2;
+  string message = 3;
+  string type = 4; // order, payout, system
+  int64 timestamp = 5;
+}

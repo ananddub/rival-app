@@ -1,0 +1,74 @@
+syntax = "proto3";
+
+package rival.api.v1;
+
+option go_package = "encore.app/gen/proto/proto/api";
+
+import "proto/schema/schema.proto";
+
+service PaymentService {
+  rpc InitiateCoinPurchase(InitiateCoinPurchaseRequest) returns (InitiateCoinPurchaseResponse);
+  rpc VerifyPayment(VerifyPaymentRequest) returns (VerifyPaymentResponse);
+  rpc GetPaymentHistory(GetPaymentHistoryRequest) returns (GetPaymentHistoryResponse);
+  rpc RefundPayment(RefundPaymentRequest) returns (RefundPaymentResponse);
+  rpc StreamPaymentUpdates(StreamPaymentUpdatesRequest) returns (stream StreamPaymentUpdatesResponse);
+}
+
+message InitiateCoinPurchaseRequest {
+  string user_id = 1;
+  double amount = 2;
+  string payment_method = 3; // stripe, razorpay, upi
+}
+
+message InitiateCoinPurchaseResponse {
+  string payment_id = 1;
+  string payment_url = 2;
+  double coins_to_receive = 3;
+  string status = 4;
+}
+
+message VerifyPaymentRequest {
+  string payment_id = 1;
+  string transaction_id = 2;
+}
+
+message VerifyPaymentResponse {
+  bool success = 1;
+  double coins_added = 2;
+  double new_balance = 3;
+  rival.schema.v1.CoinPurchase purchase = 4;
+}
+
+message GetPaymentHistoryRequest {
+  string user_id = 1;
+  int32 page = 2;
+  int32 limit = 3;
+}
+
+message GetPaymentHistoryResponse {
+  repeated rival.schema.v1.CoinPurchase purchases = 1;
+  int32 total_count = 2;
+}
+
+message RefundPaymentRequest {
+  string payment_id = 1;
+  string reason = 2;
+}
+
+message RefundPaymentResponse {
+  bool success = 1;
+  string refund_id = 2;
+  double refunded_amount = 3;
+}
+
+message StreamPaymentUpdatesRequest {
+  string user_id = 1;
+}
+
+message StreamPaymentUpdatesResponse {
+  string payment_id = 1;
+  string status = 2; // pending, completed, failed, refunded
+  double coins_added = 3;
+  rival.schema.v1.CoinPurchase purchase = 4;
+  string event_type = 5; // initiated, completed, failed, refunded
+}

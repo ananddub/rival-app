@@ -1,0 +1,67 @@
+syntax = "proto3";
+
+package rival.api.v1;
+
+option go_package = "encore.app/gen/proto/proto/api";
+
+import "proto/schema/schema.proto";
+
+service OrderService {
+  rpc CreateOrder(CreateOrderRequest) returns (CreateOrderResponse);
+  rpc GetOrder(GetOrderRequest) returns (GetOrderResponse);
+  rpc GetUserOrders(GetUserOrdersRequest) returns (GetUserOrdersResponse);
+  rpc CancelOrder(CancelOrderRequest) returns (CancelOrderResponse);
+  rpc StreamOrderUpdates(StreamOrderUpdatesRequest) returns (stream StreamOrderUpdatesResponse);
+}
+
+message CreateOrderRequest {
+  string user_id = 1;
+  string merchant_id = 2;
+  string offer_id = 3;
+  string items = 4; // JSON string
+  double subtotal = 5;
+  double coins_used = 6;
+  string notes = 7;
+}
+
+message CreateOrderResponse {
+  rival.schema.v1.Order order = 1;
+}
+
+message GetOrderRequest {
+  string order_id = 1;
+}
+
+message GetOrderResponse {
+  rival.schema.v1.Order order = 1;
+}
+
+message GetUserOrdersRequest {
+  string user_id = 1;
+  int32 page = 2;
+  int32 limit = 3;
+  string status = 4;
+}
+
+message GetUserOrdersResponse {
+  repeated rival.schema.v1.Order orders = 1;
+  int32 total_count = 2;
+}
+
+message CancelOrderRequest {
+  string order_id = 1;
+  string reason = 2;
+}
+
+message CancelOrderResponse {
+  bool success = 1;
+}
+
+message StreamOrderUpdatesRequest {
+  string user_id = 1;
+}
+
+message StreamOrderUpdatesResponse {
+  rival.schema.v1.Order order = 1;
+  string event_type = 2; // created, confirmed, completed, cancelled
+}

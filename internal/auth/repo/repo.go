@@ -2,237 +2,161 @@ package repo
 
 import (
 	"context"
-	"database/sql"
-	"errors"
+	"math/rand"
+	"strings"
+	"time"
 
 	"encore.app/config"
 	"encore.app/connection"
-	db "encore.app/gen"
-	authInterface "encore.app/internal/interface/auth"
-	"github.com/jackc/pgx/v5"
+	schema "encore.app/gen/sql"
+	"encore.app/pkg/tigerbeetle"
+	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgtype"
+	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/redis/go-redis/v9"
 )
 
-type AuthRepo struct{}
-
-func New() authInterface.Repository {
-	return &AuthRepo{}
+type AuthRepository interface {
+	CreateUser(ctx context.Context, params schema.CreateUserParams) (schema.User, error)
+	GetUserByEmail(ctx context.Context, email string) (schema.User, error)
+	GetUserByID(ctx context.Context, id uuid.UUID) (schema.User, error)
+	UpdateUser(ctx context.Context, params schema.UpdateUserParams) error
+	UpdateUserPassword(ctx context.Context, params schema.UpdateUserPasswordParams) error
+	CreateSession(ctx context.Context, params schema.CreateJWTSessionParams) error
+	GetSession(ctx context.Context, tokenHash string) (schema.JwtSession, error)
+	RevokeSession(ctx context.Context, tokenHash string) error
+	StoreOTP(ctx context.Context, email, otp string, expiry time.Duration) error
+	VerifyOTP(ctx context.Context, email, otp string) (bool, error)
 }
 
-func (r *AuthRepo) CreateUser(ctx context.Context, user *authInterface.User) (int64, error) {
-	cfg := config.GetConfig()
-	conn, err := connection.GetPgConnection(&cfg.Database)
-	if err != nil {
-		return 0, err
-	}
-
-	queries := db.New(conn)
-
-	var phoneParam pgtype.Text
-	if user.PhoneNumber != "" {
-		phoneParam = pgtype.Text{String: user.PhoneNumber, Valid: true}
-	}
-
-	result, err := queries.CreateUser(ctx, db.CreateUserParams{
-		FullName:     user.FullName,
-		Email:        user.Email,
-		PhoneNumber:  phoneParam,
-		PasswordHash: pgtype.Text{String: user.PasswordHash, Valid: true},
-		SignType:     user.SignType,
-		Role:         user.Role,
-	})
-	if err != nil {
-		return 0, err
-	}
-	return result.ID, nil
+type authRepository struct {
+	db      *pgxpool.Pool
+	queries *schema.Queries
+	redis   *redis.Client
+	tb      tigerbeetle.Service
 }
 
-func (r *AuthRepo) GetUserByEmail(ctx context.Context, email string) (*authInterface.User, error) {
+func NewAuthRepository() (AuthRepository, error) {
 	cfg := config.GetConfig()
-	conn, err := connection.GetPgConnection(&cfg.Database)
+	
+	db, err := connection.GetPgConnection(&cfg.Database)
 	if err != nil {
 		return nil, err
 	}
-
-	queries := db.New(conn)
-	user, err := queries.GetUserByEmail(ctx, email)
+	
+	redisClient := connection.GetRedisClient(&cfg.Redis)
+	
+	tbService, err := tigerbeetle.NewService()
 	if err != nil {
-		if errors.Is(err, pgx.ErrNoRows) || errors.Is(err, sql.ErrNoRows) {
-			return nil, nil
-		}
 		return nil, err
 	}
-
-	return &authInterface.User{
-		ID:              user.ID,
-		FullName:        user.FullName,
-		Email:           user.Email,
-		PhoneNumber:     user.PhoneNumber.String,
-		PasswordHash:    user.PasswordHash.String,
-		IsEmailVerified: user.IsEmailVerified.Bool,
-		IsPhoneVerified: user.IsPhoneVerified.Bool,
-		SignType:        user.SignType,
-		Role:            user.Role,
-		CreatedAt:       user.CreatedAt.Time,
-		UpdatedAt:       user.UpdatedAt.Time,
+	
+	return &authRepository{
+		db:      db,
+		queries: schema.New(db),
+		redis:   redisClient,
+		tb:      tbService,
 	}, nil
 }
 
-func (r *AuthRepo) GetUserByID(ctx context.Context, id int64) (*authInterface.User, error) {
-	cfg := config.GetConfig()
-	conn, err := connection.GetPgConnection(&cfg.Database)
-	if err != nil {
-		return nil, err
+func (r *authRepository) CreateUser(ctx context.Context, params schema.CreateUserParams) (schema.User, error) {
+	// Generate user-friendly referral code if not provided
+	if !params.ReferralCode.Valid {
+		code := generateUserFriendlyReferralCode(params.Name)
+		params.ReferralCode = pgtype.Text{String: code, Valid: true}
 	}
 
-	queries := db.New(conn)
-	user, err := queries.GetUserByID(ctx, id)
+	// Create user in database
+	dbUser, err := r.queries.CreateUser(ctx, params)
 	if err != nil {
-		return nil, err
+		return schema.User{}, err
 	}
 
-	return &authInterface.User{
-		ID:              user.ID,
-		FullName:        user.FullName,
-		Email:           user.Email,
-		PhoneNumber:     user.PhoneNumber.String,
-		PasswordHash:    user.PasswordHash.String,
-		IsEmailVerified: user.IsEmailVerified.Bool,
-		IsPhoneVerified: user.IsPhoneVerified.Bool,
-		SignType:        user.SignType,
-		Role:            user.Role,
-		CreatedAt:       user.CreatedAt.Time,
-		UpdatedAt:       user.UpdatedAt.Time,
-	}, nil
+	// Create TigerBeetle account based on user role
+	userUUID, _ := dbUser.ID.Value()
+	userID, _ := uuid.Parse(userUUID.(string))
+	
+	// Get user role for TigerBeetle account type
+	var role string
+	if dbUser.Role.Valid {
+		role = string(dbUser.Role.UserRole)
+	} else {
+		role = "customer" // default
+	}
+	
+	err = r.tb.CreateAccountByRole(userID, role)
+	if err != nil {
+		return schema.User{}, err
+	}
+
+	return dbUser, nil
 }
 
-func (r *AuthRepo) UpdatePassword(ctx context.Context, userID int64, passwordHash string) error {
-	cfg := config.GetConfig()
-	conn, err := connection.GetPgConnection(&cfg.Database)
-	if err != nil {
-		return err
-	}
-
-	queries := db.New(conn)
-	_, err = queries.UpdatePassword(ctx, db.UpdatePasswordParams{
-		ID:           userID,
-		PasswordHash: pgtype.Text{String: passwordHash, Valid: true},
-	})
-	return err
+func (r *authRepository) GetUserByEmail(ctx context.Context, email string) (schema.User, error) {
+	return r.queries.GetUserByEmail(ctx, email)
 }
 
-func (r *AuthRepo) VerifyEmail(ctx context.Context, userID int64) error {
-	cfg := config.GetConfig()
-	conn, err := connection.GetPgConnection(&cfg.Database)
-	if err != nil {
-		return err
-	}
-
-	queries := db.New(conn)
-	_, err = queries.UpdateEmailVerification(ctx, db.UpdateEmailVerificationParams{
-		ID:              userID,
-		IsEmailVerified: pgtype.Bool{Bool: true, Valid: true},
-	})
-	return err
+func (r *authRepository) GetUserByID(ctx context.Context, id uuid.UUID) (schema.User, error) {
+	pgUUID := pgtype.UUID{}
+	pgUUID.Scan(id)
+	return r.queries.GetUserByID(ctx, pgUUID)
 }
 
-func (r *AuthRepo) CreateToken(ctx context.Context, token *authInterface.JWTToken) error {
-	cfg := config.GetConfig()
-	conn, err := connection.GetPgConnection(&cfg.Database)
-	if err != nil {
-		return err
-	}
-
-	queries := db.New(conn)
-	_, err = queries.CreateJWTToken(ctx, db.CreateJWTTokenParams{
-		UserID:    token.UserID,
-		TokenHash: token.TokenHash,
-		ExpiresAt: pgtype.Timestamp{Time: token.ExpiresAt, Valid: true},
-	})
-	return err
+func (r *authRepository) UpdateUser(ctx context.Context, params schema.UpdateUserParams) error {
+	return r.queries.UpdateUser(ctx, params)
 }
 
-func (r *AuthRepo) GetTokenByHash(ctx context.Context, tokenHash string) (*authInterface.JWTToken, error) {
-	cfg := config.GetConfig()
-	conn, err := connection.GetPgConnection(&cfg.Database)
-	if err != nil {
-		return nil, err
-	}
-
-	queries := db.New(conn)
-	token, err := queries.GetJWTToken(ctx, tokenHash)
-	if err != nil {
-		return nil, err
-	}
-
-	return &authInterface.JWTToken{
-		ID:        token.ID,
-		UserID:    token.UserID,
-		TokenHash: token.TokenHash,
-		ExpiresAt: token.ExpiresAt.Time,
-		CreatedAt: token.CreatedAt.Time,
-	}, nil
+func (r *authRepository) UpdateUserPassword(ctx context.Context, params schema.UpdateUserPasswordParams) error {
+	return r.queries.UpdateUserPassword(ctx, params)
 }
 
-func (r *AuthRepo) DeleteToken(ctx context.Context, tokenHash string) error {
-	cfg := config.GetConfig()
-	conn, err := connection.GetPgConnection(&cfg.Database)
-	if err != nil {
-		return err
-	}
-
-	queries := db.New(conn)
-	return queries.DeleteJWTToken(ctx, tokenHash)
+func (r *authRepository) CreateSession(ctx context.Context, params schema.CreateJWTSessionParams) error {
+	return r.queries.CreateJWTSession(ctx, params)
 }
 
-func (r *AuthRepo) CreateRefreshToken(ctx context.Context, token *authInterface.RefreshToken) error {
-	cfg := config.GetConfig()
-	conn, err := connection.GetPgConnection(&cfg.Database)
-	if err != nil {
-		return err
-	}
-
-	queries := db.New(conn)
-	_, err = queries.CreateRefreshToken(ctx, db.CreateRefreshTokenParams{
-		UserID:    token.UserID,
-		Token:     token.Token,
-		ExpiresAt: pgtype.Timestamp{Time: token.ExpiresAt, Valid: true},
-	})
-	return err
+func (r *authRepository) GetSession(ctx context.Context, tokenHash string) (schema.JwtSession, error) {
+	return r.queries.GetJWTSession(ctx, tokenHash)
 }
 
-func (r *AuthRepo) GetRefreshToken(ctx context.Context, token string) (*authInterface.RefreshToken, error) {
-	cfg := config.GetConfig()
-	conn, err := connection.GetPgConnection(&cfg.Database)
-	if err != nil {
-		return nil, err
-	}
-
-	queries := db.New(conn)
-	refreshToken, err := queries.GetRefreshToken(ctx, token)
-	if err != nil {
-		if errors.Is(err, pgx.ErrNoRows) || errors.Is(err, sql.ErrNoRows) {
-			return nil, errors.New("refresh token not found")
-		}
-		return nil, err
-	}
-
-	return &authInterface.RefreshToken{
-		ID:        refreshToken.ID,
-		UserID:    refreshToken.UserID,
-		Token:     refreshToken.Token,
-		ExpiresAt: refreshToken.ExpiresAt.Time,
-		CreatedAt: refreshToken.CreatedAt.Time,
-	}, nil
+func (r *authRepository) RevokeSession(ctx context.Context, tokenHash string) error {
+	return r.queries.RevokeJWTSession(ctx, tokenHash)
 }
 
-func (r *AuthRepo) DeleteRefreshToken(ctx context.Context, token string) error {
-	cfg := config.GetConfig()
-	conn, err := connection.GetPgConnection(&cfg.Database)
+func (r *authRepository) StoreOTP(ctx context.Context, email, otp string, expiry time.Duration) error {
+	key := "otp:" + email
+	return r.redis.Set(ctx, key, otp, expiry).Err()
+}
+
+func (r *authRepository) VerifyOTP(ctx context.Context, email, otp string) (bool, error) {
+	key := "otp:" + email
+	storedOTP, err := r.redis.Get(ctx, key).Result()
 	if err != nil {
-		return err
+		return false, err
 	}
 
-	queries := db.New(conn)
-	return queries.DeleteRefreshToken(ctx, token)
+	if storedOTP == otp {
+		r.redis.Del(ctx, key)
+		return true, nil
+	}
+
+	return false, nil
+}
+
+func generateUserFriendlyReferralCode(userName string) string {
+	// Create user-friendly code: RIV + first 2 letters of name + 4 random chars
+	namePrefix := strings.ToUpper(userName)
+	if len(namePrefix) >= 2 {
+		namePrefix = namePrefix[:2]
+	} else {
+		namePrefix = "US" // Default
+	}
+	
+	// Generate 4 random alphanumeric characters
+	chars := "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+	randomPart := make([]byte, 4)
+	for i := range randomPart {
+		randomPart[i] = chars[rand.Intn(len(chars))]
+	}
+	
+	return "RIV" + namePrefix + string(randomPart)
 }

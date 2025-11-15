@@ -1,275 +1,328 @@
-# Rival App - Development Rules
+# RIVAL Development Rules & Architecture
 
-## 🏗️ Architecture Rules
+## Project Overview
+RIVAL is a reward coin system for restaurants where users buy coins and get discounts. Built with Go backend, PostgreSQL, Redis, TigerBeetle for transactions, MinIO for storage, MailHog for emails, and Firebase for social auth.
 
-### Project Structure
+## Core Architecture Principles
+
+### 1. Clean Architecture Layers
+```
+Handler (gRPC) → Service (Business Logic) → Repository (Database)
+```
+
+**NEVER:**
+- Pass protobuf types to service layer
+- Return protobuf types from repository
+- Mix business logic in handlers
+
+**ALWAYS:**
+- Convert gRPC requests to service parameters in handler
+- Service returns gRPC response types
+- Repository returns sqlc generated types
+- Service converts between sqlc and protobuf types
+
+### 2. Directory Structure
 ```
 internal/
-├── auth/           # Authentication module
-├── user/           # User profile & photo management
-├── wallet/         # Wallet & transactions
-├── coin/           # Coin system
-├── notification/   # Notifications
-├── reward/         # Rewards system
-├── activity/       # User activities
-├── global/         # Global configurations
-└── interface/      # Interfaces for all modules
-
-uploads/
-└── profile_photos/ # Local photo storage
+├── auth/
+│   ├── handler/     # gRPC handlers
+│   ├── service/     # Business logic
+│   ├── repo/        # Database operations
+│   └── util/        # Utilities (JWT, Email, Firebase)
+├── users/
+├── merchants/
+└── payments/
 ```
 
-### Layer Separation
-- **Handler** - Only API endpoints, request/response handling
-- **Service** - Business logic only
-- **Repository** - Database operations only
-- **Utils** - Utility functions only
+### 3. Database & Code Generation
 
-## 🔐 Authentication Rules
+**SQL Schema:**
+- Location: `sql/schema/001_initial_schema.sql`
+- Use goose for migrations: `-- +goose Up` / `-- +goose Down`
+- Always include proper indexes
 
-### JWT Token
-- **Expiry**: 24 hours
-- **Algorithm**: HS256
-- **Claims**: user_id, email, exp, iat
-- **Storage**: Hashed tokens in database for logout tracking
+**SQL Queries:**
+- Location: `sql/queries/{module}.sql`
+- Use sqlc annotations: `-- name: FunctionName :one/:many/:exec`
+- Generated code goes to: `gen/sql/`
 
-### Password Security
-- **Hashing**: bcrypt
-- **Validation**: Min 8 chars, 1 uppercase, 1 lowercase, 1 number
-- **Reset**: OTP-based (5 min expiry)
+**Protobuf:**
+- Schema: `proto/schema/schema.proto`
+- APIs: `proto/api/{service}.proto`
+- Generated code goes to: `gen/proto/`
 
-### OTP System
-- **Test OTP**: 123456 (always valid)
-- **Generated OTP**: 6-digit random
-- **Expiry**: 5 minutes
-- **Storage**: In-memory map
+**Generation Commands:**
+```bash
+make proto-gen    # Generate protobuf
+make sqlc-gen     # Generate SQL code
+make gen-all      # Generate everything
+```
 
-## 👤 User Management Rules
+### 4. Service Implementation Pattern
 
-### Profile Management
-- **Name**: 2-100 characters, alphanumeric + spaces
-- **Phone**: 10-15 digits, international format
-- **DOB**: YYYY-MM-DD format only
-- **Email**: Unique, validated format
+**Handler Example:**
+```go
+func (h *AuthHandler) Signup(ctx context.Context, req *authpb.SignupRequest) (*authpb.SignupResponse, error) {
+    // 1. Validate input
+    if req.Email == "" {
+        return &authpb.SignupResponse{Message: "Email required"}, nil
+    }
 
-### Photo Upload System
-- **Formats**: JPG, JPEG, PNG, GIF only
-- **Upload**: Base64 encoded strings
-- **Storage**: Local directory `./uploads/profile_photos/`
-- **Naming**: `userID_timestamp.ext` format
-- **Size**: No limit (add if needed)
-- **Security**: Path traversal protection
+    // 2. Convert to service parameters
+    params := service.SignupParams{
+        Email: req.Email,
+        Password: req.Password,
+    }
 
-### Verification Rules
-- **Email**: OTP-based verification
-- **Phone**: OTP-based verification
-- **Test OTP**: 123456 for all verifications
-
-## 💰 Coin System Rules
-
-### Coin Operations
-- **Earn**: Add coins with reason tracking
-- **Spend**: Deduct coins with validation
-- **Balance**: Real-time coin balance
-- **Packages**: Predefined coin packages with bonus
-
-### Transaction Tracking
-- All coin operations logged
-- User ID, amount, type, reason stored
-- Immutable transaction history
-
-## 💳 Wallet Rules
-
-### Wallet Operations
-- **Add Money**: Credit wallet balance
-- **Deduct Money**: Debit with validation
-- **Transfer**: P2P money transfer with atomic transactions
-- **Balance**: Separate from coins
-- **Currency**: INR, USD, EUR supported
-
-### Transaction History
-- All wallet operations tracked
-- Title, description, amount, type stored
-- Paginated history API (20 per page)
-- Icons for transaction types
-
-### Validation Rules
-- **Amount**: Positive, max 1,000,000
-- **User ID**: Positive integer
-- **Title**: 1-100 chars, alphanumeric + basic symbols
-- **Description**: Max 500 characters
-- **Page**: 1-1000 range
-
-## 🔒 Security Rules
-
-### API Security
-- All endpoints require proper validation
-- Sensitive operations need authentication
-- Input sanitization mandatory
-- File upload security (extension validation)
-
-### Database Security
-- Foreign key constraints enforced
-- Cascade deletes for user data
-- Indexed queries for performance
-- Transaction rollback on failures
-
-### File Security
-- Only allowed file extensions
-- Unique filename generation
-- Path traversal prevention
-- Automatic cleanup on errors
-
-## 📝 Code Standards
-
-### Naming Conventions
-- **Files**: snake_case.go
-- **Functions**: PascalCase for exported, camelCase for private
-- **Variables**: camelCase
-- **Constants**: UPPER_SNAKE_CASE
-- **Photo Files**: userID_timestamp.ext
-
-### Error Handling
-- Always return meaningful error messages
-- Use custom error types where needed
-- Log errors for debugging
-- Rollback operations on failures
-
-### API Response Format
-```json
-{
-  "data": {},
-  "message": "Success message",
-  "error": null
+    // 3. Call service
+    return h.service.Signup(ctx, params)
 }
 ```
 
-## 🚀 Development Rules
+**Service Example:**
+```go
+func (s *authService) Signup(ctx context.Context, params SignupParams) (*authpb.SignupResponse, error) {
+    // 1. Business logic
+    hashedPassword, _ := bcrypt.GenerateFromPassword([]byte(params.Password), bcrypt.DefaultCost)
 
-### Database Changes
-1. Create migration file in `sql/schema/`
-2. Add queries in `sql/query/`
-3. Run `sqlc generate`
-4. Update repository methods
+    // 2. Convert to repository parameters
+    createParams := schema.CreateUserParams{
+        Email: params.Email,
+        PasswordHash: pgtype.Text{String: string(hashedPassword), Valid: true},
+    }
 
-### New Feature Addition
-1. Define interface in `internal/interface/`
-2. Implement repository layer
-3. Implement service layer
-4. Create handlers
-5. Add tests
+    // 3. Call repository
+    user, err := s.repo.CreateUser(ctx, createParams)
 
-### File Upload Rules
-1. Validate file extension first
-2. Decode Base64 data
-3. Create directory if needed
-4. Generate unique filename
-5. Save file to local storage
-6. Update database record
-7. Rollback file on DB error
-
-### Testing Rules
-- Test OTP: 123456
-- Test credentials: Any valid email/password
-- Mock external services
-- Unit tests for business logic
-
-## 📊 API Endpoints
-
-### Authentication
-- `POST /auth/signup` - User registration
-- `POST /auth/login` - User login
-- `POST /auth/verify` - Token verification
-- `POST /auth/logout` - User logout
-- `POST /auth/forgot-password` - Send reset OTP
-- `POST /auth/reset-password` - Reset with OTP
-- `POST /auth/send-otp` - Send OTP
-- `POST /auth/verify-otp` - Verify OTP
-
-### User Management
-- `GET /user/profile/:userID` - Get user profile
-- `PUT /user/profile` - Update profile
-- `POST /user/upload-photo` - Upload profile photo
-- `GET /user/photo/:fileName` - Get uploaded photo
-- `DELETE /user/photo/:userID` - Delete profile photo
-- `GET /user/photos/:userID` - List user photos
-- `POST /user/verify-email` - Verify email with OTP
-- `POST /user/verify-phone` - Verify phone with OTP
-- `GET /user/dashboard/:userID` - User dashboard
-- `GET /user/test` - Test user system
-
-### Wallet
-- `GET /wallet/balance/:userID` - Get wallet balance
-- `POST /wallet/create` - Create new wallet
-- `POST /wallet/add` - Add money
-- `POST /wallet/deduct` - Deduct money
-- `POST /wallet/transfer` - Transfer money P2P
-- `GET /wallet/history/:userID/:page` - Transaction history
-- `GET /wallet/stats/:userID` - Wallet statistics
-- `GET /wallet/summary/:userID` - Complete wallet summary
-- `GET /wallet/test` - Test wallet system
-
-### Coins
-- `GET /coins/balance/:userID` - Get coin balance
-- `POST /coins/earn` - Earn coins
-- `POST /coins/spend` - Spend coins
-- `GET /coins/packages` - Get coin packages
-- `POST /coins/purchase` - Purchase coins
-
-## ⚠️ Important Notes
-
-- Never commit sensitive data
-- Always validate user input
-- Use proper HTTP status codes
-- Maintain backward compatibility
-- Document API changes
-- Test before deployment
-- Clean up files on errors
-- Use atomic transactions for critical operations
-
-## 🔧 Environment Setup
-
-### Required Tools
-- Go 1.21+
-- PostgreSQL
-- Encore CLI
-- SQLC
-
-### Environment Variables
-```
-GOOSE_DRIVER=postgres
-GOOSE_DBSTRING=postgres://user:pass@host:port/db
-GOOSE_MIGRATION_DIR=./sql/schema
+    // 4. Convert to protobuf and return
+    return &authpb.SignupResponse{Message: "Success"}, nil
+}
 ```
 
-### Directory Structure
+**Repository Example:**
+```go
+func (r *authRepository) CreateUser(ctx context.Context, params schema.CreateUserParams) (schema.User, error) {
+    // 1. Database operation
+    user, err := r.queries.CreateUser(ctx, params)
+
+    // 2. TigerBeetle account creation
+    accountID := uuidToUint128(user.ID.String())
+    account := types.Account{ID: accountID, Ledger: 1, Code: 1}
+    r.tb.CreateAccounts([]types.Account{account})
+
+    return user, err
+}
 ```
-uploads/
-└── profile_photos/     # User profile photos
-    └── userID_timestamp.ext
+
+### 5. Database Integration
+
+**PostgreSQL (Primary Database):**
+- Use pgx/v5 with pgxpool
+- All user data, transactions, sessions
+- Connection: `connection.GetPgConnection()`
+
+**Redis (Cache & OTP):**
+- OTP storage with expiry
+- Session caching
+- Connection: `connection.GetRedisClient()`
+
+**TigerBeetle (Financial Transactions):**
+- Account creation for each user (same UUID as DB)
+- All coin transactions
+- Connection: `connection.NewTbClient()`
+
+**MinIO (File Storage):**
+- Profile pictures, documents
+- Use signed URLs for uploads
+- Connection: `connection.NewMinioClient()`
+
+### 6. Type Handling
+
+**PostgreSQL Types:**
+```go
+// String fields
+pgtype.Text{String: value, Valid: value != ""}
+
+// Timestamps
+pgtype.Timestamp{Time: time.Now(), Valid: true}
+
+// UUIDs
+pgtype.UUID{} // Use .Scan() method
+
+// Numeric
+pgtype.Numeric{} // Use .Value() method
 ```
 
-## 📁 File Management Rules
+**Protobuf Conversion:**
+```go
+func convertToProtoUser(user schema.User) *schemapb.User {
+    userID, _ := user.ID.Value()
+    return &schemapb.User{
+        Id: userID.(string),
+        Email: user.Email,
+        CreatedAt: user.CreatedAt.Time.Unix(),
+    }
+}
+```
 
-### Upload Process
-1. **Validation**: Check file extension (.jpg, .jpeg, .png, .gif)
-2. **Decoding**: Convert Base64 to binary data
-3. **Storage**: Save to `./uploads/profile_photos/`
-4. **Naming**: Format `userID_timestamp.extension`
-5. **Database**: Update user profile_photo field
-6. **Cleanup**: Remove file if DB update fails
+### 7. Error Handling
 
-### File Serving
-- **Security**: Only serve files from allowed directories
-- **MIME Types**: Proper content-type headers
-- **Base64**: Return images as Base64 encoded strings
-- **Access Control**: User-specific file access
+**Service Layer:**
+- Return business logic errors
+- Use fmt.Errorf for context
+- Don't expose internal errors to client
 
-### File Deletion
-- **Database**: Remove photo path from user record
-- **Filesystem**: Delete actual file from storage
-- **Validation**: Ensure user owns the photo
+**Handler Layer:**
+- Validate input and return proper gRPC errors
+- Convert service errors to appropriate responses
 
----
-**Last Updated**: November 2024
-**Version**: 2.0.0
+### 8. Configuration
+
+**Config Structure:**
+```go
+type Config struct {
+    Database DatabaseConfig `yaml:"database"`
+    Redis    RedisConfig    `yaml:"redis"`
+    Firebase FirebaseConfig `yaml:"firebase"`
+    MailHog  MailHogConfig  `yaml:"mail"`
+    // etc...
+}
+```
+
+**Usage:**
+```go
+cfg := config.GetConfig()
+```
+
+### 9. External Services
+
+**Email (MailHog):**
+```go
+emailService := util.NewEmailService()
+emailService.SendOTP(email, otp)
+```
+
+**Firebase Auth:**
+```go
+firebaseService, _ := util.NewFirebaseService(credentialsPath)
+user, _ := firebaseService.VerifyToken(ctx, token)
+```
+
+**JWT:**
+```go
+jwtUtil := util.NewJWTUtil(secret, accessTTL, refreshTTL)
+accessToken, refreshToken, _ := jwtUtil.GenerateTokens(user)
+```
+
+### 10. Testing & Building
+
+**Build Commands:**
+```bash
+go build ./internal/auth/...     # Build specific module
+go build ./...                   # Build everything
+```
+
+**Module Structure:**
+- Each module (auth, users, merchants) is self-contained
+- Handler creates all dependencies internally
+- No shared state between modules
+
+### 11. Security Rules
+
+**Passwords:**
+- Always use bcrypt for hashing
+- Minimum 8 characters (implement in validation)
+
+**JWT Tokens:**
+- Store hashed tokens in database
+- Implement token revocation
+- Use proper expiry times
+
+**Database:**
+- Use parameterized queries (sqlc handles this)
+- Validate all inputs in handlers
+- Use proper indexes for performance
+
+### 12. Business Logic Rules
+
+**User Creation:**
+- Create PostgreSQL user record
+- Create TigerBeetle account with same UUID
+- Generate unique referral code
+- Send welcome email
+
+**Coin System:**
+- 1 Coin = $1 USD
+- Restaurant discount: 15%
+- Grocery discount: 2%
+- All transactions through TigerBeetle
+
+**Referral System:**
+- Unique referral codes per user
+- Reward both referrer and referred
+- Track in referral_rewards table
+
+### 13. API Design
+
+**Protobuf Naming:**
+- Services: `{Module}Service`
+- Methods: `{Action}{Resource}`
+- Messages: `{Action}{Resource}Request/Response`
+
+**Streaming APIs:**
+- Use for real-time updates
+- Pattern: `Stream{Resource}Updates`
+
+### 14. Future Development
+
+**Adding New Module:**
+1. Create directory: `internal/{module}/`
+2. Add subdirectories: `handler/`, `service/`, `repo/`, `util/`
+3. Create protobuf: `proto/api/{module}.proto`
+4. Add SQL queries: `sql/queries/{module}.sql`
+5. Follow same architecture pattern
+
+**Adding New Feature:**
+1. Add to protobuf schema if needed
+2. Add SQL queries
+3. Implement repository methods
+4. Implement service methods
+5. Add handler methods
+6. Generate code: `make gen-all`
+7. Build and test
+
+## Common Mistakes to Avoid
+
+1. **Don't** pass protobuf types to service layer
+2. **Don't** return protobuf types from repository
+3. **Don't** mix database logic in service layer
+4. **Don't** forget to handle PostgreSQL null types
+5. **Don't** forget to create TigerBeetle accounts for users
+6. **Don't** forget to validate inputs in handlers
+7. **Don't** forget to regenerate code after schema changes
+8. **Don't** forget to add proper error handling
+9. **Don't** forget to use transactions for multi-step operations
+10. **Don't** forget to test build after changes
+
+## Module Dependencies
+
+```
+Handler → Service → Repository
+   ↓        ↓         ↓
+gRPC    Business   Database
+Types    Logic     Operations
+```
+
+**External Dependencies:**
+- PostgreSQL (via connection package)
+- Redis (via connection package)
+- TigerBeetle (via connection package)
+- MinIO (via connection package)
+- MailHog (via util package)
+- Firebase (via util package)
+
+alltrascation shuld bhi done with tigerbetle is main for transaction in financel related thing if money will be addded then in tigerbetle
+tranfse then also
+
+
+Follow these rules strictly for consistent, maintainable code!

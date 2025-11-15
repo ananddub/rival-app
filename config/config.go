@@ -15,6 +15,12 @@ type Config struct {
 	Tb       TbConfig       `yaml:"tb"`
 	S3       S3Config       `yaml:"s3"`
 	MailHog  MailHogConfig  `yaml:"mail"`
+	Firebase FirebaseConfig `yaml:"firebase"`
+}
+
+type FirebaseConfig struct {
+	CredentialsPath string `yaml:"credentials_path"`
+	ProjectID       string `yaml:"project_id"`
 }
 type TbConfig struct {
 	Addr string `yaml:"addr"`

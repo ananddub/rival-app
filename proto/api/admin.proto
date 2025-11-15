@@ -1,0 +1,114 @@
+syntax = "proto3";
+
+package rival.api.v1;
+
+option go_package = "encore.app/gen/proto/proto/api";
+
+import "proto/schema/schema.proto";
+
+service AdminService {
+  rpc GetDashboardStats(GetAdminDashboardStatsRequest) returns (GetAdminDashboardStatsResponse);
+  rpc GetAllMerchants(GetAllMerchantsRequest) returns (GetAllMerchantsResponse);
+  rpc ApproveMerchant(ApproveMerchantRequest) returns (ApproveMerchantResponse);
+  rpc SuspendMerchant(SuspendMerchantRequest) returns (SuspendMerchantResponse);
+  rpc GetAllUsers(GetAllUsersRequest) returns (GetAllUsersResponse);
+  rpc SuspendUser(SuspendUserRequest) returns (SuspendUserResponse);
+  rpc GetAllTransactions(GetAllTransactionsRequest) returns (GetAllTransactionsResponse);
+  rpc GetAuditLogs(GetAuditLogsRequest) returns (GetAuditLogsResponse);
+  rpc StreamSystemAlerts(StreamSystemAlertsRequest) returns (stream StreamSystemAlertsResponse);
+}
+
+message GetAdminDashboardStatsRequest {}
+
+message GetAdminDashboardStatsResponse {
+  int32 total_merchants = 1;
+  int32 active_merchants = 2;
+  int32 total_users = 3;
+  double total_transaction_volume = 4;
+  int32 pending_merchant_approvals = 5;
+}
+
+message GetAllMerchantsRequest {
+  int32 page = 1;
+  int32 limit = 2;
+  string status = 3; // all, active, pending, suspended
+}
+
+message GetAllMerchantsResponse {
+  repeated rival.schema.v1.Merchant merchants = 1;
+  int32 total_count = 2;
+}
+
+message ApproveMerchantRequest {
+  string merchant_id = 1;
+}
+
+message ApproveMerchantResponse {
+  bool success = 1;
+}
+
+message SuspendMerchantRequest {
+  string merchant_id = 1;
+  string reason = 2;
+}
+
+message SuspendMerchantResponse {
+  bool success = 1;
+}
+
+message GetAllUsersRequest {
+  int32 page = 1;
+  int32 limit = 2;
+  string role = 3; // all, customer, merchant, admin
+}
+
+message GetAllUsersResponse {
+  repeated rival.schema.v1.User users = 1;
+  int32 total_count = 2;
+}
+
+message SuspendUserRequest {
+  string user_id = 1;
+  string reason = 2;
+}
+
+message SuspendUserResponse {
+  bool success = 1;
+}
+
+message GetAllTransactionsRequest {
+  int32 page = 1;
+  int32 limit = 2;
+  string merchant_id = 3;
+  string user_id = 4;
+  int64 start_date = 5;
+  int64 end_date = 6;
+}
+
+message GetAllTransactionsResponse {
+  repeated rival.schema.v1.Transaction transactions = 1;
+  int32 total_count = 2;
+}
+
+message GetAuditLogsRequest {
+  int32 page = 1;
+  int32 limit = 2;
+  string actor_type = 3;
+  string action = 4;
+}
+
+message GetAuditLogsResponse {
+  repeated rival.schema.v1.AuditLog logs = 1;
+  int32 total_count = 2;
+}
+
+message StreamSystemAlertsRequest {}
+
+message StreamSystemAlertsResponse {
+  string id = 1;
+  string title = 2;
+  string message = 3;
+  string severity = 4; // info, warning, error, critical
+  string type = 5; // merchant_signup, high_volume, system_error
+  int64 timestamp = 6;
+}
