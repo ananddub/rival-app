@@ -67,6 +67,4 @@ type Service interface {
 	ForgotPassword(ctx context.Context, email string) error
 	VerifyOtp(ctx context.Context, email, otp string) (bool, error)
 	ResetPassword(ctx context.Context, email, newPassword, otp string) error
-	CompleteSignupAfterOtp(ctx context.Context, email string) (*User, error)
-	GenerateToken(ctx context.Context, userID int64) (string, error)
 }

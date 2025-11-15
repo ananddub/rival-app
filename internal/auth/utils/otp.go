@@ -11,22 +11,11 @@ import (
 var (
 	otpStore = make(map[string]otpData)
 	otpMutex = sync.RWMutex{}
-	
-	// Store pending signup data temporarily
-	pendingSignups = make(map[string]*PendingSignupData)
-	signupMutex = sync.RWMutex{}
 )
 
 type otpData struct {
 	otp       string
 	expiresAt time.Time
-}
-
-type PendingSignupData struct {
-	Name        string
-	PhoneNumber string
-	Password    string
-	CreatedAt   time.Time
 }
 
 func GenerateOTP() string {
@@ -71,44 +60,4 @@ func VerifyOtp(email, otp string) bool {
 	}
 	
 	return false
-}
-
-// StorePendingSignup stores signup data temporarily until OTP verification
-func StorePendingSignup(email, name, phoneNumber, password string) {
-	signupMutex.Lock()
-	defer signupMutex.Unlock()
-	
-	pendingSignups[email] = &PendingSignupData{
-		Name:        name,
-		PhoneNumber: phoneNumber,
-		Password:    password,
-		CreatedAt:   time.Now(),
-	}
-}
-
-// GetPendingSignup retrieves pending signup data
-func GetPendingSignup(email string) *PendingSignupData {
-	signupMutex.RLock()
-	defer signupMutex.RUnlock()
-	
-	data, exists := pendingSignups[email]
-	if !exists {
-		return nil
-	}
-	
-	// Check if data is expired (1 hour)
-	if time.Since(data.CreatedAt) > time.Hour {
-		delete(pendingSignups, email)
-		return nil
-	}
-	
-	return data
-}
-
-// ClearPendingSignup removes pending signup data
-func ClearPendingSignup(email string) {
-	signupMutex.Lock()
-	defer signupMutex.Unlock()
-	
-	delete(pendingSignups, email)
 }

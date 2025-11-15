@@ -3,7 +3,6 @@ package service
 import (
 	"context"
 	"errors"
-	"fmt"
 	"time"
 
 	"encore.app/internal/auth/utils"
@@ -241,7 +240,7 @@ func (s *AuthService) ForgotPassword(ctx context.Context, email string) error {
 }
 
 func (s *AuthService) generateToken(ctx context.Context, userID int64, email string) (string, error) {
-	tokenString, err := utils.GenerateToken(userID)
+	tokenString, err := utils.GenerateToken(userID, email)
 	if err != nil {
 		return "", err
 	}
@@ -262,57 +261,6 @@ func (s *AuthService) generateToken(ctx context.Context, userID int64, email str
 
 func (s *AuthService) VerifyOtp(ctx context.Context, email, otp string) (bool, error) {
 	return utils.VerifyOtp(email, otp), nil
-}
-
-// CompleteSignupAfterOtp completes user registration after OTP verification
-func (s *AuthService) CompleteSignupAfterOtp(ctx context.Context, email string) (*authInterface.User, error) {
-	// Get pending signup data from temporary storage
-	signupData := utils.GetPendingSignup(email)
-	if signupData == nil {
-		return nil, errors.New("no pending signup found for this email")
-	}
-
-	// Debug: Log the signup data
-	fmt.Printf("DEBUG: Pending signup data - Name: %s, Phone: %s, Email: %s\n", 
-		signupData.Name, signupData.PhoneNumber, email)
-
-	// Create user in database
-	hashedPassword, err := utils.HashPassword(signupData.Password)
-	if err != nil {
-		return nil, err
-	}
-
-	user := &authInterface.User{
-		FullName:         signupData.Name,
-		Email:           email,
-		PhoneNumber:     signupData.PhoneNumber,
-		PasswordHash:    hashedPassword,
-		IsEmailVerified: true, // Email is verified via OTP
-		IsPhoneVerified: false,
-		SignType:        "email",
-		Role:            "user",
-	}
-
-	// Debug: Log the user data before saving
-	fmt.Printf("DEBUG: User data before save - Name: %s, Phone: %s, Email: %s\n", 
-		user.FullName, user.PhoneNumber, user.Email)
-
-	userID, err := s.repo.CreateUser(ctx, user)
-	if err != nil {
-		return nil, err
-	}
-
-	user.ID = userID
-
-	// Clear pending signup data
-	utils.ClearPendingSignup(email)
-
-	return user, nil
-}
-
-// GenerateToken generates JWT token for user
-func (s *AuthService) GenerateToken(ctx context.Context, userID int64) (string, error) {
-	return utils.GenerateToken(userID)
 }
 
 func (s *AuthService) ResetPassword(ctx context.Context, email, newPassword, otp string) error {

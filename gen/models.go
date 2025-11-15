@@ -18,6 +18,13 @@ type Activity struct {
 	CreatedAt pgtype.Timestamp `json:"created_at"`
 }
 
+type BlacklistedToken struct {
+	ID          int64            `json:"id"`
+	UserID      int64            `json:"user_id"`
+	HashedToken string           `json:"hashed_token"`
+	CreatedAt   pgtype.Timestamp `json:"created_at"`
+}
+
 type CoinPackage struct {
 	ID         int64            `json:"id"`
 	Name       string           `json:"name"`

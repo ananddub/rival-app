@@ -12,18 +12,6 @@ import (
 
 var jwtSecret = []byte("your-secret-key")
 
-func GenerateToken(userID int64) (string, error) {
-	claims := jwt.MapClaims{
-		"user_id": userID,
-		"exp":     time.Now().Add(24 * time.Hour).Unix(),
-		"iat":     time.Now().Unix(),
-		"type":    "access",
-	}
-
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-	return token.SignedString(jwtSecret)
-}
-
 func GenerateAccessToken(userID int64, email string) (string, error) {
 	claims := jwt.MapClaims{
 		"user_id": userID,
@@ -43,6 +31,10 @@ func GenerateRefreshToken() (string, error) {
 		return "", err
 	}
 	return hex.EncodeToString(bytes), nil
+}
+
+func GenerateToken(userID int64, email string) (string, error) {
+	return GenerateAccessToken(userID, email)
 }
 
 func ValidateToken(tokenString string) (int64, string, error) {

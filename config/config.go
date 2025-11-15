@@ -12,6 +12,25 @@ type Config struct {
 	Redis    RedisConfig    `yaml:"redis"`
 	JWT      JWTConfig      `yaml:"jwt"`
 	Server   ServerConfig   `yaml:"server"`
+	Tb       TbConfig       `yaml:"tb"`
+	S3       S3Config       `yaml:"s3"`
+	MailHog  MailHogConfig  `yaml:"mail"`
+}
+type TbConfig struct {
+	Addr string `yaml:"addr"`
+}
+type S3Config struct {
+	Endpoint   string `yaml:"endpoint"`
+	AccessKey  string `yaml:"access_key"`
+	SecretKey  string `yaml:"secret_key"`
+	BucketName string `yaml:"bucket_name"`
+	SSLMode    bool   `yaml:"sslmode"`
+}
+
+type MailHogConfig struct {
+	SMTPServer string `yaml:"smtp_server"`
+	SMTPPort   int    `yaml:"smtp_port"`
+	WebUIPort  int    `yaml:"web_ui_port"`
 }
 
 type DatabaseConfig struct {
