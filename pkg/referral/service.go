@@ -6,31 +6,31 @@ import (
 	"math/rand"
 	"strings"
 
-	schema "encore.app/gen/sql"
-	"encore.app/pkg/tigerbeetle"
-	"encore.app/pkg/utils"
-	"github.com/google/uuid"
+	schema "rival/gen/sql"
+	"rival/pkg/tb"
+	"rival/pkg/utils"
+
 	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
 type Config struct {
-	ReferrerBonus    float64 // Bonus for person who referred
-	RefereeBonus     float64 // Bonus for new user
-	CodeLength       int     // Length of referral code
-	CodePrefix       string  // Prefix for codes (e.g., "RIV")
-	MaxRewards       int     // Max rewards per referrer
-	ExpiryDays       int     // Days before reward expires
+	ReferrerBonus float64 // Bonus for person who referred
+	RefereeBonus  float64 // Bonus for new user
+	CodeLength    int     // Length of referral code
+	CodePrefix    string  // Prefix for codes (e.g., "RIV")
+	MaxRewards    int     // Max rewards per referrer
+	ExpiryDays    int     // Days before reward expires
 }
 
 type Service struct {
 	db      *pgxpool.Pool
 	queries *schema.Queries
-	tb      tigerbeetle.Service
+	tb      *tb.TbService
 	config  Config
 }
 
-func NewService(db *pgxpool.Pool, tb tigerbeetle.Service) *Service {
+func NewService(db *pgxpool.Pool, tb *tb.TbService) *Service {
 	return &Service{
 		db:      db,
 		queries: schema.New(db),
@@ -54,23 +54,18 @@ func (s *Service) GenerateReferralCode(userName string) string {
 	} else {
 		namePrefix = "US" // Default
 	}
-	
+
 	// Generate 4 random alphanumeric characters
 	chars := "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
 	randomPart := make([]byte, 4)
 	for i := range randomPart {
 		randomPart[i] = chars[rand.Intn(len(chars))]
 	}
-	
+
 	return s.config.CodePrefix + namePrefix + string(randomPart)
 }
 
-func (s *Service) ProcessReferral(ctx context.Context, referrerCode, newUserID string) error {
-	// Parse new user ID
-	newUID, err := uuid.Parse(newUserID)
-	if err != nil {
-		return fmt.Errorf("invalid user ID: %v", err)
-	}
+func (s *Service) ProcessReferral(ctx context.Context, referrerCode string, newUserID int) error {
 
 	// Find referrer by code
 	referrer, err := s.queries.GetUserByReferralCode(ctx, pgtype.Text{String: referrerCode, Valid: true})
@@ -79,7 +74,7 @@ func (s *Service) ProcessReferral(ctx context.Context, referrerCode, newUserID s
 	}
 
 	// Check if referrer has reached max rewards
-	stats, err := s.queries.GetUserReferralStats(ctx, referrer.ID)
+	stats, err := s.queries.GetUserReferralStats(ctx, pgtype.Int8{Int64: referrer.ID, Valid: true})
 	if err != nil {
 		return fmt.Errorf("failed to get referral stats: %v", err)
 	}
@@ -97,13 +92,8 @@ func (s *Service) ProcessReferral(ctx context.Context, referrerCode, newUserID s
 
 	qtx := s.queries.WithTx(tx)
 
-	// Create referral reward record
-	newUserPgUUID := pgtype.UUID{}
-	newUserPgUUID.Scan(newUID)
-
 	_, err = qtx.CreateReferralReward(ctx, schema.CreateReferralRewardParams{
-		ReferrerID:   referrer.ID,
-		ReferredID:   newUserPgUUID,
+		ReferrerID:   pgtype.Int8{Int64: referrer.ID, Valid: true},
 		RewardAmount: utils.Float64ToNumeric(s.config.ReferrerBonus),
 		RewardType:   pgtype.Text{String: "signup", Valid: true},
 		Status:       pgtype.Text{String: "pending", Valid: true},
@@ -113,16 +103,11 @@ func (s *Service) ProcessReferral(ctx context.Context, referrerCode, newUserID s
 	}
 
 	// Give bonus to new user immediately
-	err = s.tb.AddCoins(newUID, s.config.RefereeBonus)
+	err = (*s.tb).AddCoins(newUserID, s.config.RefereeBonus)
 	if err != nil {
 		return fmt.Errorf("failed to add bonus to new user: %v", err)
 	}
-
-	// Give bonus to referrer
-	referrerUUID, _ := referrer.ID.Value()
-	referrerID, _ := uuid.Parse(referrerUUID.(string))
-	
-	err = s.tb.AddCoins(referrerID, s.config.ReferrerBonus)
+	err = (*s.tb).AddCoins(int(referrer.ID), s.config.ReferrerBonus)
 	if err != nil {
 		return fmt.Errorf("failed to add bonus to referrer: %v", err)
 	}
@@ -154,16 +139,8 @@ func (s *Service) ValidateReferralCode(ctx context.Context, code string) (bool, 
 	return true, nil
 }
 
-func (s *Service) GetReferralStats(ctx context.Context, userID string) (*ReferralStats, error) {
-	uid, err := uuid.Parse(userID)
-	if err != nil {
-		return nil, fmt.Errorf("invalid user ID: %v", err)
-	}
-
-	pgUUID := pgtype.UUID{}
-	pgUUID.Scan(uid)
-
-	stats, err := s.queries.GetUserReferralStats(ctx, pgUUID)
+func (s *Service) GetReferralStats(ctx context.Context, userID int) (*ReferralStats, error) {
+	stats, err := s.queries.GetUserReferralStats(ctx, pgtype.Int8{Int64: int64(userID), Valid: true})
 	if err != nil {
 		return nil, err
 	}

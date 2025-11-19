@@ -7,10 +7,10 @@
 package api
 
 import (
-	schema "encore.app/gen/proto/proto/schema"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 	reflect "reflect"
+	schema "rival/gen/proto/proto/schema"
 	sync "sync"
 	unsafe "unsafe"
 )
@@ -24,7 +24,7 @@ const (
 
 type GetUserRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	UserId        string                 `protobuf:"bytes,1,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
+	UserId        int64                  `protobuf:"varint,1,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -59,11 +59,11 @@ func (*GetUserRequest) Descriptor() ([]byte, []int) {
 	return file_proto_api_users_proto_rawDescGZIP(), []int{0}
 }
 
-func (x *GetUserRequest) GetUserId() string {
+func (x *GetUserRequest) GetUserId() int64 {
 	if x != nil {
 		return x.UserId
 	}
-	return ""
+	return 0
 }
 
 type GetUserResponse struct {
@@ -112,7 +112,7 @@ func (x *GetUserResponse) GetUser() *schema.User {
 
 type UpdateUserRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	UserId        string                 `protobuf:"bytes,1,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
+	UserId        int64                  `protobuf:"varint,1,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
 	Name          string                 `protobuf:"bytes,2,opt,name=name,proto3" json:"name,omitempty"`
 	Phone         string                 `protobuf:"bytes,3,opt,name=phone,proto3" json:"phone,omitempty"`
 	ProfilePic    string                 `protobuf:"bytes,4,opt,name=profile_pic,json=profilePic,proto3" json:"profile_pic,omitempty"`
@@ -150,11 +150,11 @@ func (*UpdateUserRequest) Descriptor() ([]byte, []int) {
 	return file_proto_api_users_proto_rawDescGZIP(), []int{2}
 }
 
-func (x *UpdateUserRequest) GetUserId() string {
+func (x *UpdateUserRequest) GetUserId() int64 {
 	if x != nil {
 		return x.UserId
 	}
-	return ""
+	return 0
 }
 
 func (x *UpdateUserRequest) GetName() string {
@@ -224,7 +224,7 @@ func (x *UpdateUserResponse) GetUser() *schema.User {
 
 type GetUploadURLRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	UserId        string                 `protobuf:"bytes,1,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
+	UserId        int64                  `protobuf:"varint,1,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
 	FileName      string                 `protobuf:"bytes,2,opt,name=file_name,json=fileName,proto3" json:"file_name,omitempty"`
 	ContentType   string                 `protobuf:"bytes,3,opt,name=content_type,json=contentType,proto3" json:"content_type,omitempty"`
 	unknownFields protoimpl.UnknownFields
@@ -261,11 +261,11 @@ func (*GetUploadURLRequest) Descriptor() ([]byte, []int) {
 	return file_proto_api_users_proto_rawDescGZIP(), []int{4}
 }
 
-func (x *GetUploadURLRequest) GetUserId() string {
+func (x *GetUploadURLRequest) GetUserId() int64 {
 	if x != nil {
 		return x.UserId
 	}
-	return ""
+	return 0
 }
 
 func (x *GetUploadURLRequest) GetFileName() string {
@@ -344,7 +344,7 @@ func (x *GetUploadURLResponse) GetExpiresIn() int64 {
 
 type UpdateCoinBalanceRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	UserId        string                 `protobuf:"bytes,1,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
+	UserId        int64                  `protobuf:"varint,1,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
 	Amount        float64                `protobuf:"fixed64,2,opt,name=amount,proto3" json:"amount,omitempty"`
 	Operation     string                 `protobuf:"bytes,3,opt,name=operation,proto3" json:"operation,omitempty"` // add, subtract
 	unknownFields protoimpl.UnknownFields
@@ -381,11 +381,11 @@ func (*UpdateCoinBalanceRequest) Descriptor() ([]byte, []int) {
 	return file_proto_api_users_proto_rawDescGZIP(), []int{6}
 }
 
-func (x *UpdateCoinBalanceRequest) GetUserId() string {
+func (x *UpdateCoinBalanceRequest) GetUserId() int64 {
 	if x != nil {
 		return x.UserId
 	}
-	return ""
+	return 0
 }
 
 func (x *UpdateCoinBalanceRequest) GetAmount() float64 {
@@ -448,7 +448,7 @@ func (x *UpdateCoinBalanceResponse) GetNewBalance() float64 {
 
 type GetCoinBalanceRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	UserId        string                 `protobuf:"bytes,1,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
+	UserId        int64                  `protobuf:"varint,1,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -483,11 +483,11 @@ func (*GetCoinBalanceRequest) Descriptor() ([]byte, []int) {
 	return file_proto_api_users_proto_rawDescGZIP(), []int{8}
 }
 
-func (x *GetCoinBalanceRequest) GetUserId() string {
+func (x *GetCoinBalanceRequest) GetUserId() int64 {
 	if x != nil {
 		return x.UserId
 	}
-	return ""
+	return 0
 }
 
 type GetCoinBalanceResponse struct {
@@ -534,29 +534,29 @@ func (x *GetCoinBalanceResponse) GetBalance() float64 {
 	return 0
 }
 
-type GetTransactionHistoryRequest struct {
+type GetUserTransactionHistoryRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	UserId        string                 `protobuf:"bytes,1,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
+	UserId        int64                  `protobuf:"varint,1,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
 	Page          int32                  `protobuf:"varint,2,opt,name=page,proto3" json:"page,omitempty"`
 	Limit         int32                  `protobuf:"varint,3,opt,name=limit,proto3" json:"limit,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
-func (x *GetTransactionHistoryRequest) Reset() {
-	*x = GetTransactionHistoryRequest{}
+func (x *GetUserTransactionHistoryRequest) Reset() {
+	*x = GetUserTransactionHistoryRequest{}
 	mi := &file_proto_api_users_proto_msgTypes[10]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
 
-func (x *GetTransactionHistoryRequest) String() string {
+func (x *GetUserTransactionHistoryRequest) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*GetTransactionHistoryRequest) ProtoMessage() {}
+func (*GetUserTransactionHistoryRequest) ProtoMessage() {}
 
-func (x *GetTransactionHistoryRequest) ProtoReflect() protoreflect.Message {
+func (x *GetUserTransactionHistoryRequest) ProtoReflect() protoreflect.Message {
 	mi := &file_proto_api_users_proto_msgTypes[10]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -568,33 +568,33 @@ func (x *GetTransactionHistoryRequest) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use GetTransactionHistoryRequest.ProtoReflect.Descriptor instead.
-func (*GetTransactionHistoryRequest) Descriptor() ([]byte, []int) {
+// Deprecated: Use GetUserTransactionHistoryRequest.ProtoReflect.Descriptor instead.
+func (*GetUserTransactionHistoryRequest) Descriptor() ([]byte, []int) {
 	return file_proto_api_users_proto_rawDescGZIP(), []int{10}
 }
 
-func (x *GetTransactionHistoryRequest) GetUserId() string {
+func (x *GetUserTransactionHistoryRequest) GetUserId() int64 {
 	if x != nil {
 		return x.UserId
 	}
-	return ""
+	return 0
 }
 
-func (x *GetTransactionHistoryRequest) GetPage() int32 {
+func (x *GetUserTransactionHistoryRequest) GetPage() int32 {
 	if x != nil {
 		return x.Page
 	}
 	return 0
 }
 
-func (x *GetTransactionHistoryRequest) GetLimit() int32 {
+func (x *GetUserTransactionHistoryRequest) GetLimit() int32 {
 	if x != nil {
 		return x.Limit
 	}
 	return 0
 }
 
-type GetTransactionHistoryResponse struct {
+type GetUserTransactionHistoryResponse struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Transactions  []*schema.Transaction  `protobuf:"bytes,1,rep,name=transactions,proto3" json:"transactions,omitempty"`
 	TotalCount    int32                  `protobuf:"varint,2,opt,name=total_count,json=totalCount,proto3" json:"total_count,omitempty"`
@@ -602,20 +602,20 @@ type GetTransactionHistoryResponse struct {
 	sizeCache     protoimpl.SizeCache
 }
 
-func (x *GetTransactionHistoryResponse) Reset() {
-	*x = GetTransactionHistoryResponse{}
+func (x *GetUserTransactionHistoryResponse) Reset() {
+	*x = GetUserTransactionHistoryResponse{}
 	mi := &file_proto_api_users_proto_msgTypes[11]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
 
-func (x *GetTransactionHistoryResponse) String() string {
+func (x *GetUserTransactionHistoryResponse) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*GetTransactionHistoryResponse) ProtoMessage() {}
+func (*GetUserTransactionHistoryResponse) ProtoMessage() {}
 
-func (x *GetTransactionHistoryResponse) ProtoReflect() protoreflect.Message {
+func (x *GetUserTransactionHistoryResponse) ProtoReflect() protoreflect.Message {
 	mi := &file_proto_api_users_proto_msgTypes[11]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -627,19 +627,19 @@ func (x *GetTransactionHistoryResponse) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use GetTransactionHistoryResponse.ProtoReflect.Descriptor instead.
-func (*GetTransactionHistoryResponse) Descriptor() ([]byte, []int) {
+// Deprecated: Use GetUserTransactionHistoryResponse.ProtoReflect.Descriptor instead.
+func (*GetUserTransactionHistoryResponse) Descriptor() ([]byte, []int) {
 	return file_proto_api_users_proto_rawDescGZIP(), []int{11}
 }
 
-func (x *GetTransactionHistoryResponse) GetTransactions() []*schema.Transaction {
+func (x *GetUserTransactionHistoryResponse) GetTransactions() []*schema.Transaction {
 	if x != nil {
 		return x.Transactions
 	}
 	return nil
 }
 
-func (x *GetTransactionHistoryResponse) GetTotalCount() int32 {
+func (x *GetUserTransactionHistoryResponse) GetTotalCount() int32 {
 	if x != nil {
 		return x.TotalCount
 	}
@@ -648,7 +648,7 @@ func (x *GetTransactionHistoryResponse) GetTotalCount() int32 {
 
 type StreamWalletUpdatesRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	UserId        string                 `protobuf:"bytes,1,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
+	UserId        int64                  `protobuf:"varint,1,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -683,11 +683,11 @@ func (*StreamWalletUpdatesRequest) Descriptor() ([]byte, []int) {
 	return file_proto_api_users_proto_rawDescGZIP(), []int{12}
 }
 
-func (x *StreamWalletUpdatesRequest) GetUserId() string {
+func (x *StreamWalletUpdatesRequest) GetUserId() int64 {
 	if x != nil {
 		return x.UserId
 	}
-	return ""
+	return 0
 }
 
 type StreamWalletUpdatesResponse struct {
@@ -752,7 +752,7 @@ func (x *StreamWalletUpdatesResponse) GetEventType() string {
 
 type StreamUserNotificationsRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	UserId        string                 `protobuf:"bytes,1,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
+	UserId        int64                  `protobuf:"varint,1,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -787,11 +787,11 @@ func (*StreamUserNotificationsRequest) Descriptor() ([]byte, []int) {
 	return file_proto_api_users_proto_rawDescGZIP(), []int{14}
 }
 
-func (x *StreamUserNotificationsRequest) GetUserId() string {
+func (x *StreamUserNotificationsRequest) GetUserId() int64 {
 	if x != nil {
 		return x.UserId
 	}
-	return ""
+	return 0
 }
 
 type StreamUserNotificationsResponse struct {
@@ -872,7 +872,7 @@ func (x *StreamUserNotificationsResponse) GetTimestamp() int64 {
 
 type GetReferralCodeRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	UserId        string                 `protobuf:"bytes,1,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
+	UserId        int64                  `protobuf:"varint,1,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -907,11 +907,11 @@ func (*GetReferralCodeRequest) Descriptor() ([]byte, []int) {
 	return file_proto_api_users_proto_rawDescGZIP(), []int{16}
 }
 
-func (x *GetReferralCodeRequest) GetUserId() string {
+func (x *GetReferralCodeRequest) GetUserId() int64 {
 	if x != nil {
 		return x.UserId
 	}
-	return ""
+	return 0
 }
 
 type GetReferralCodeResponse struct {
@@ -960,7 +960,7 @@ func (x *GetReferralCodeResponse) GetReferralCode() string {
 
 type ApplyReferralCodeRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	UserId        string                 `protobuf:"bytes,1,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
+	UserId        int64                  `protobuf:"varint,1,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
 	ReferralCode  string                 `protobuf:"bytes,2,opt,name=referral_code,json=referralCode,proto3" json:"referral_code,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
@@ -996,11 +996,11 @@ func (*ApplyReferralCodeRequest) Descriptor() ([]byte, []int) {
 	return file_proto_api_users_proto_rawDescGZIP(), []int{18}
 }
 
-func (x *ApplyReferralCodeRequest) GetUserId() string {
+func (x *ApplyReferralCodeRequest) GetUserId() int64 {
 	if x != nil {
 		return x.UserId
 	}
-	return ""
+	return 0
 }
 
 func (x *ApplyReferralCodeRequest) GetReferralCode() string {
@@ -1072,7 +1072,7 @@ func (x *ApplyReferralCodeResponse) GetRewardAmount() float64 {
 
 type GetReferralRewardsRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	UserId        string                 `protobuf:"bytes,1,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
+	UserId        int64                  `protobuf:"varint,1,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
 	Page          int32                  `protobuf:"varint,2,opt,name=page,proto3" json:"page,omitempty"`
 	Limit         int32                  `protobuf:"varint,3,opt,name=limit,proto3" json:"limit,omitempty"`
 	unknownFields protoimpl.UnknownFields
@@ -1109,11 +1109,11 @@ func (*GetReferralRewardsRequest) Descriptor() ([]byte, []int) {
 	return file_proto_api_users_proto_rawDescGZIP(), []int{20}
 }
 
-func (x *GetReferralRewardsRequest) GetUserId() string {
+func (x *GetReferralRewardsRequest) GetUserId() int64 {
 	if x != nil {
 		return x.UserId
 	}
-	return ""
+	return 0
 }
 
 func (x *GetReferralRewardsRequest) GetPage() int32 {
@@ -1196,11 +1196,11 @@ const file_proto_api_users_proto_rawDesc = "" +
 	"\n" +
 	"\x15proto/api/users.proto\x12\frival.api.v1\x1a\x19proto/schema/schema.proto\")\n" +
 	"\x0eGetUserRequest\x12\x17\n" +
-	"\auser_id\x18\x01 \x01(\tR\x06userId\"<\n" +
+	"\auser_id\x18\x01 \x01(\x03R\x06userId\"<\n" +
 	"\x0fGetUserResponse\x12)\n" +
 	"\x04user\x18\x01 \x01(\v2\x15.rival.schema.v1.UserR\x04user\"w\n" +
 	"\x11UpdateUserRequest\x12\x17\n" +
-	"\auser_id\x18\x01 \x01(\tR\x06userId\x12\x12\n" +
+	"\auser_id\x18\x01 \x01(\x03R\x06userId\x12\x12\n" +
 	"\x04name\x18\x02 \x01(\tR\x04name\x12\x14\n" +
 	"\x05phone\x18\x03 \x01(\tR\x05phone\x12\x1f\n" +
 	"\vprofile_pic\x18\x04 \x01(\tR\n" +
@@ -1208,7 +1208,7 @@ const file_proto_api_users_proto_rawDesc = "" +
 	"\x12UpdateUserResponse\x12)\n" +
 	"\x04user\x18\x01 \x01(\v2\x15.rival.schema.v1.UserR\x04user\"n\n" +
 	"\x13GetUploadURLRequest\x12\x17\n" +
-	"\auser_id\x18\x01 \x01(\tR\x06userId\x12\x1b\n" +
+	"\auser_id\x18\x01 \x01(\x03R\x06userId\x12\x1b\n" +
 	"\tfile_name\x18\x02 \x01(\tR\bfileName\x12!\n" +
 	"\fcontent_type\x18\x03 \x01(\tR\vcontentType\"o\n" +
 	"\x14GetUploadURLResponse\x12\x1d\n" +
@@ -1218,26 +1218,26 @@ const file_proto_api_users_proto_rawDesc = "" +
 	"\n" +
 	"expires_in\x18\x03 \x01(\x03R\texpiresIn\"i\n" +
 	"\x18UpdateCoinBalanceRequest\x12\x17\n" +
-	"\auser_id\x18\x01 \x01(\tR\x06userId\x12\x16\n" +
+	"\auser_id\x18\x01 \x01(\x03R\x06userId\x12\x16\n" +
 	"\x06amount\x18\x02 \x01(\x01R\x06amount\x12\x1c\n" +
 	"\toperation\x18\x03 \x01(\tR\toperation\"<\n" +
 	"\x19UpdateCoinBalanceResponse\x12\x1f\n" +
 	"\vnew_balance\x18\x01 \x01(\x01R\n" +
 	"newBalance\"0\n" +
 	"\x15GetCoinBalanceRequest\x12\x17\n" +
-	"\auser_id\x18\x01 \x01(\tR\x06userId\"2\n" +
+	"\auser_id\x18\x01 \x01(\x03R\x06userId\"2\n" +
 	"\x16GetCoinBalanceResponse\x12\x18\n" +
-	"\abalance\x18\x01 \x01(\x01R\abalance\"a\n" +
-	"\x1cGetTransactionHistoryRequest\x12\x17\n" +
-	"\auser_id\x18\x01 \x01(\tR\x06userId\x12\x12\n" +
+	"\abalance\x18\x01 \x01(\x01R\abalance\"e\n" +
+	" GetUserTransactionHistoryRequest\x12\x17\n" +
+	"\auser_id\x18\x01 \x01(\x03R\x06userId\x12\x12\n" +
 	"\x04page\x18\x02 \x01(\x05R\x04page\x12\x14\n" +
-	"\x05limit\x18\x03 \x01(\x05R\x05limit\"\x82\x01\n" +
-	"\x1dGetTransactionHistoryResponse\x12@\n" +
+	"\x05limit\x18\x03 \x01(\x05R\x05limit\"\x86\x01\n" +
+	"!GetUserTransactionHistoryResponse\x12@\n" +
 	"\ftransactions\x18\x01 \x03(\v2\x1c.rival.schema.v1.TransactionR\ftransactions\x12\x1f\n" +
 	"\vtotal_count\x18\x02 \x01(\x05R\n" +
 	"totalCount\"5\n" +
 	"\x1aStreamWalletUpdatesRequest\x12\x17\n" +
-	"\auser_id\x18\x01 \x01(\tR\x06userId\"\x9d\x01\n" +
+	"\auser_id\x18\x01 \x01(\x03R\x06userId\"\x9d\x01\n" +
 	"\x1bStreamWalletUpdatesResponse\x12\x1f\n" +
 	"\vnew_balance\x18\x01 \x01(\x01R\n" +
 	"newBalance\x12>\n" +
@@ -1245,7 +1245,7 @@ const file_proto_api_users_proto_rawDesc = "" +
 	"\n" +
 	"event_type\x18\x03 \x01(\tR\teventType\"9\n" +
 	"\x1eStreamUserNotificationsRequest\x12\x17\n" +
-	"\auser_id\x18\x01 \x01(\tR\x06userId\"\x93\x01\n" +
+	"\auser_id\x18\x01 \x01(\x03R\x06userId\"\x93\x01\n" +
 	"\x1fStreamUserNotificationsResponse\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12\x14\n" +
 	"\x05title\x18\x02 \x01(\tR\x05title\x12\x18\n" +
@@ -1253,38 +1253,38 @@ const file_proto_api_users_proto_rawDesc = "" +
 	"\x04type\x18\x04 \x01(\tR\x04type\x12\x1c\n" +
 	"\ttimestamp\x18\x05 \x01(\x03R\ttimestamp\"1\n" +
 	"\x16GetReferralCodeRequest\x12\x17\n" +
-	"\auser_id\x18\x01 \x01(\tR\x06userId\">\n" +
+	"\auser_id\x18\x01 \x01(\x03R\x06userId\">\n" +
 	"\x17GetReferralCodeResponse\x12#\n" +
 	"\rreferral_code\x18\x01 \x01(\tR\freferralCode\"X\n" +
 	"\x18ApplyReferralCodeRequest\x12\x17\n" +
-	"\auser_id\x18\x01 \x01(\tR\x06userId\x12#\n" +
+	"\auser_id\x18\x01 \x01(\x03R\x06userId\x12#\n" +
 	"\rreferral_code\x18\x02 \x01(\tR\freferralCode\"t\n" +
 	"\x19ApplyReferralCodeResponse\x12\x18\n" +
 	"\asuccess\x18\x01 \x01(\bR\asuccess\x12\x18\n" +
 	"\amessage\x18\x02 \x01(\tR\amessage\x12#\n" +
 	"\rreward_amount\x18\x03 \x01(\x01R\frewardAmount\"^\n" +
 	"\x19GetReferralRewardsRequest\x12\x17\n" +
-	"\auser_id\x18\x01 \x01(\tR\x06userId\x12\x12\n" +
+	"\auser_id\x18\x01 \x01(\x03R\x06userId\x12\x12\n" +
 	"\x04page\x18\x02 \x01(\x05R\x04page\x12\x14\n" +
 	"\x05limit\x18\x03 \x01(\x05R\x05limit\"\x9b\x01\n" +
 	"\x1aGetReferralRewardsResponse\x129\n" +
 	"\arewards\x18\x01 \x03(\v2\x1f.rival.schema.v1.ReferralRewardR\arewards\x12\x1f\n" +
 	"\vtotal_count\x18\x02 \x01(\x05R\n" +
 	"totalCount\x12!\n" +
-	"\ftotal_earned\x18\x03 \x01(\x01R\vtotalEarned2\xc9\b\n" +
+	"\ftotal_earned\x18\x03 \x01(\x01R\vtotalEarned2\xd5\b\n" +
 	"\vUserService\x12F\n" +
 	"\aGetUser\x12\x1c.rival.api.v1.GetUserRequest\x1a\x1d.rival.api.v1.GetUserResponse\x12O\n" +
 	"\n" +
 	"UpdateUser\x12\x1f.rival.api.v1.UpdateUserRequest\x1a .rival.api.v1.UpdateUserResponse\x12U\n" +
 	"\fGetUploadURL\x12!.rival.api.v1.GetUploadURLRequest\x1a\".rival.api.v1.GetUploadURLResponse\x12d\n" +
 	"\x11UpdateCoinBalance\x12&.rival.api.v1.UpdateCoinBalanceRequest\x1a'.rival.api.v1.UpdateCoinBalanceResponse\x12[\n" +
-	"\x0eGetCoinBalance\x12#.rival.api.v1.GetCoinBalanceRequest\x1a$.rival.api.v1.GetCoinBalanceResponse\x12p\n" +
-	"\x15GetTransactionHistory\x12*.rival.api.v1.GetTransactionHistoryRequest\x1a+.rival.api.v1.GetTransactionHistoryResponse\x12^\n" +
+	"\x0eGetCoinBalance\x12#.rival.api.v1.GetCoinBalanceRequest\x1a$.rival.api.v1.GetCoinBalanceResponse\x12|\n" +
+	"\x19GetUserTransactionHistory\x12..rival.api.v1.GetUserTransactionHistoryRequest\x1a/.rival.api.v1.GetUserTransactionHistoryResponse\x12^\n" +
 	"\x0fGetReferralCode\x12$.rival.api.v1.GetReferralCodeRequest\x1a%.rival.api.v1.GetReferralCodeResponse\x12d\n" +
 	"\x11ApplyReferralCode\x12&.rival.api.v1.ApplyReferralCodeRequest\x1a'.rival.api.v1.ApplyReferralCodeResponse\x12g\n" +
 	"\x12GetReferralRewards\x12'.rival.api.v1.GetReferralRewardsRequest\x1a(.rival.api.v1.GetReferralRewardsResponse\x12l\n" +
 	"\x13StreamWalletUpdates\x12(.rival.api.v1.StreamWalletUpdatesRequest\x1a).rival.api.v1.StreamWalletUpdatesResponse0\x01\x12x\n" +
-	"\x17StreamUserNotifications\x12,.rival.api.v1.StreamUserNotificationsRequest\x1a-.rival.api.v1.StreamUserNotificationsResponse0\x01B Z\x1eencore.app/gen/proto/proto/apib\x06proto3"
+	"\x17StreamUserNotifications\x12,.rival.api.v1.StreamUserNotificationsRequest\x1a-.rival.api.v1.StreamUserNotificationsResponse0\x01B\x1bZ\x19rival/gen/proto/proto/apib\x06proto3"
 
 var (
 	file_proto_api_users_proto_rawDescOnce sync.Once
@@ -1300,36 +1300,36 @@ func file_proto_api_users_proto_rawDescGZIP() []byte {
 
 var file_proto_api_users_proto_msgTypes = make([]protoimpl.MessageInfo, 22)
 var file_proto_api_users_proto_goTypes = []any{
-	(*GetUserRequest)(nil),                  // 0: rival.api.v1.GetUserRequest
-	(*GetUserResponse)(nil),                 // 1: rival.api.v1.GetUserResponse
-	(*UpdateUserRequest)(nil),               // 2: rival.api.v1.UpdateUserRequest
-	(*UpdateUserResponse)(nil),              // 3: rival.api.v1.UpdateUserResponse
-	(*GetUploadURLRequest)(nil),             // 4: rival.api.v1.GetUploadURLRequest
-	(*GetUploadURLResponse)(nil),            // 5: rival.api.v1.GetUploadURLResponse
-	(*UpdateCoinBalanceRequest)(nil),        // 6: rival.api.v1.UpdateCoinBalanceRequest
-	(*UpdateCoinBalanceResponse)(nil),       // 7: rival.api.v1.UpdateCoinBalanceResponse
-	(*GetCoinBalanceRequest)(nil),           // 8: rival.api.v1.GetCoinBalanceRequest
-	(*GetCoinBalanceResponse)(nil),          // 9: rival.api.v1.GetCoinBalanceResponse
-	(*GetTransactionHistoryRequest)(nil),    // 10: rival.api.v1.GetTransactionHistoryRequest
-	(*GetTransactionHistoryResponse)(nil),   // 11: rival.api.v1.GetTransactionHistoryResponse
-	(*StreamWalletUpdatesRequest)(nil),      // 12: rival.api.v1.StreamWalletUpdatesRequest
-	(*StreamWalletUpdatesResponse)(nil),     // 13: rival.api.v1.StreamWalletUpdatesResponse
-	(*StreamUserNotificationsRequest)(nil),  // 14: rival.api.v1.StreamUserNotificationsRequest
-	(*StreamUserNotificationsResponse)(nil), // 15: rival.api.v1.StreamUserNotificationsResponse
-	(*GetReferralCodeRequest)(nil),          // 16: rival.api.v1.GetReferralCodeRequest
-	(*GetReferralCodeResponse)(nil),         // 17: rival.api.v1.GetReferralCodeResponse
-	(*ApplyReferralCodeRequest)(nil),        // 18: rival.api.v1.ApplyReferralCodeRequest
-	(*ApplyReferralCodeResponse)(nil),       // 19: rival.api.v1.ApplyReferralCodeResponse
-	(*GetReferralRewardsRequest)(nil),       // 20: rival.api.v1.GetReferralRewardsRequest
-	(*GetReferralRewardsResponse)(nil),      // 21: rival.api.v1.GetReferralRewardsResponse
-	(*schema.User)(nil),                     // 22: rival.schema.v1.User
-	(*schema.Transaction)(nil),              // 23: rival.schema.v1.Transaction
-	(*schema.ReferralReward)(nil),           // 24: rival.schema.v1.ReferralReward
+	(*GetUserRequest)(nil),                    // 0: rival.api.v1.GetUserRequest
+	(*GetUserResponse)(nil),                   // 1: rival.api.v1.GetUserResponse
+	(*UpdateUserRequest)(nil),                 // 2: rival.api.v1.UpdateUserRequest
+	(*UpdateUserResponse)(nil),                // 3: rival.api.v1.UpdateUserResponse
+	(*GetUploadURLRequest)(nil),               // 4: rival.api.v1.GetUploadURLRequest
+	(*GetUploadURLResponse)(nil),              // 5: rival.api.v1.GetUploadURLResponse
+	(*UpdateCoinBalanceRequest)(nil),          // 6: rival.api.v1.UpdateCoinBalanceRequest
+	(*UpdateCoinBalanceResponse)(nil),         // 7: rival.api.v1.UpdateCoinBalanceResponse
+	(*GetCoinBalanceRequest)(nil),             // 8: rival.api.v1.GetCoinBalanceRequest
+	(*GetCoinBalanceResponse)(nil),            // 9: rival.api.v1.GetCoinBalanceResponse
+	(*GetUserTransactionHistoryRequest)(nil),  // 10: rival.api.v1.GetUserTransactionHistoryRequest
+	(*GetUserTransactionHistoryResponse)(nil), // 11: rival.api.v1.GetUserTransactionHistoryResponse
+	(*StreamWalletUpdatesRequest)(nil),        // 12: rival.api.v1.StreamWalletUpdatesRequest
+	(*StreamWalletUpdatesResponse)(nil),       // 13: rival.api.v1.StreamWalletUpdatesResponse
+	(*StreamUserNotificationsRequest)(nil),    // 14: rival.api.v1.StreamUserNotificationsRequest
+	(*StreamUserNotificationsResponse)(nil),   // 15: rival.api.v1.StreamUserNotificationsResponse
+	(*GetReferralCodeRequest)(nil),            // 16: rival.api.v1.GetReferralCodeRequest
+	(*GetReferralCodeResponse)(nil),           // 17: rival.api.v1.GetReferralCodeResponse
+	(*ApplyReferralCodeRequest)(nil),          // 18: rival.api.v1.ApplyReferralCodeRequest
+	(*ApplyReferralCodeResponse)(nil),         // 19: rival.api.v1.ApplyReferralCodeResponse
+	(*GetReferralRewardsRequest)(nil),         // 20: rival.api.v1.GetReferralRewardsRequest
+	(*GetReferralRewardsResponse)(nil),        // 21: rival.api.v1.GetReferralRewardsResponse
+	(*schema.User)(nil),                       // 22: rival.schema.v1.User
+	(*schema.Transaction)(nil),                // 23: rival.schema.v1.Transaction
+	(*schema.ReferralReward)(nil),             // 24: rival.schema.v1.ReferralReward
 }
 var file_proto_api_users_proto_depIdxs = []int32{
 	22, // 0: rival.api.v1.GetUserResponse.user:type_name -> rival.schema.v1.User
 	22, // 1: rival.api.v1.UpdateUserResponse.user:type_name -> rival.schema.v1.User
-	23, // 2: rival.api.v1.GetTransactionHistoryResponse.transactions:type_name -> rival.schema.v1.Transaction
+	23, // 2: rival.api.v1.GetUserTransactionHistoryResponse.transactions:type_name -> rival.schema.v1.Transaction
 	23, // 3: rival.api.v1.StreamWalletUpdatesResponse.transaction:type_name -> rival.schema.v1.Transaction
 	24, // 4: rival.api.v1.GetReferralRewardsResponse.rewards:type_name -> rival.schema.v1.ReferralReward
 	0,  // 5: rival.api.v1.UserService.GetUser:input_type -> rival.api.v1.GetUserRequest
@@ -1337,7 +1337,7 @@ var file_proto_api_users_proto_depIdxs = []int32{
 	4,  // 7: rival.api.v1.UserService.GetUploadURL:input_type -> rival.api.v1.GetUploadURLRequest
 	6,  // 8: rival.api.v1.UserService.UpdateCoinBalance:input_type -> rival.api.v1.UpdateCoinBalanceRequest
 	8,  // 9: rival.api.v1.UserService.GetCoinBalance:input_type -> rival.api.v1.GetCoinBalanceRequest
-	10, // 10: rival.api.v1.UserService.GetTransactionHistory:input_type -> rival.api.v1.GetTransactionHistoryRequest
+	10, // 10: rival.api.v1.UserService.GetUserTransactionHistory:input_type -> rival.api.v1.GetUserTransactionHistoryRequest
 	16, // 11: rival.api.v1.UserService.GetReferralCode:input_type -> rival.api.v1.GetReferralCodeRequest
 	18, // 12: rival.api.v1.UserService.ApplyReferralCode:input_type -> rival.api.v1.ApplyReferralCodeRequest
 	20, // 13: rival.api.v1.UserService.GetReferralRewards:input_type -> rival.api.v1.GetReferralRewardsRequest
@@ -1348,7 +1348,7 @@ var file_proto_api_users_proto_depIdxs = []int32{
 	5,  // 18: rival.api.v1.UserService.GetUploadURL:output_type -> rival.api.v1.GetUploadURLResponse
 	7,  // 19: rival.api.v1.UserService.UpdateCoinBalance:output_type -> rival.api.v1.UpdateCoinBalanceResponse
 	9,  // 20: rival.api.v1.UserService.GetCoinBalance:output_type -> rival.api.v1.GetCoinBalanceResponse
-	11, // 21: rival.api.v1.UserService.GetTransactionHistory:output_type -> rival.api.v1.GetTransactionHistoryResponse
+	11, // 21: rival.api.v1.UserService.GetUserTransactionHistory:output_type -> rival.api.v1.GetUserTransactionHistoryResponse
 	17, // 22: rival.api.v1.UserService.GetReferralCode:output_type -> rival.api.v1.GetReferralCodeResponse
 	19, // 23: rival.api.v1.UserService.ApplyReferralCode:output_type -> rival.api.v1.ApplyReferralCodeResponse
 	21, // 24: rival.api.v1.UserService.GetReferralRewards:output_type -> rival.api.v1.GetReferralRewardsResponse

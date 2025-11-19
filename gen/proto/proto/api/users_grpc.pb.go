@@ -19,17 +19,17 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	UserService_GetUser_FullMethodName                 = "/rival.api.v1.UserService/GetUser"
-	UserService_UpdateUser_FullMethodName              = "/rival.api.v1.UserService/UpdateUser"
-	UserService_GetUploadURL_FullMethodName            = "/rival.api.v1.UserService/GetUploadURL"
-	UserService_UpdateCoinBalance_FullMethodName       = "/rival.api.v1.UserService/UpdateCoinBalance"
-	UserService_GetCoinBalance_FullMethodName          = "/rival.api.v1.UserService/GetCoinBalance"
-	UserService_GetTransactionHistory_FullMethodName   = "/rival.api.v1.UserService/GetTransactionHistory"
-	UserService_GetReferralCode_FullMethodName         = "/rival.api.v1.UserService/GetReferralCode"
-	UserService_ApplyReferralCode_FullMethodName       = "/rival.api.v1.UserService/ApplyReferralCode"
-	UserService_GetReferralRewards_FullMethodName      = "/rival.api.v1.UserService/GetReferralRewards"
-	UserService_StreamWalletUpdates_FullMethodName     = "/rival.api.v1.UserService/StreamWalletUpdates"
-	UserService_StreamUserNotifications_FullMethodName = "/rival.api.v1.UserService/StreamUserNotifications"
+	UserService_GetUser_FullMethodName                   = "/rival.api.v1.UserService/GetUser"
+	UserService_UpdateUser_FullMethodName                = "/rival.api.v1.UserService/UpdateUser"
+	UserService_GetUploadURL_FullMethodName              = "/rival.api.v1.UserService/GetUploadURL"
+	UserService_UpdateCoinBalance_FullMethodName         = "/rival.api.v1.UserService/UpdateCoinBalance"
+	UserService_GetCoinBalance_FullMethodName            = "/rival.api.v1.UserService/GetCoinBalance"
+	UserService_GetUserTransactionHistory_FullMethodName = "/rival.api.v1.UserService/GetUserTransactionHistory"
+	UserService_GetReferralCode_FullMethodName           = "/rival.api.v1.UserService/GetReferralCode"
+	UserService_ApplyReferralCode_FullMethodName         = "/rival.api.v1.UserService/ApplyReferralCode"
+	UserService_GetReferralRewards_FullMethodName        = "/rival.api.v1.UserService/GetReferralRewards"
+	UserService_StreamWalletUpdates_FullMethodName       = "/rival.api.v1.UserService/StreamWalletUpdates"
+	UserService_StreamUserNotifications_FullMethodName   = "/rival.api.v1.UserService/StreamUserNotifications"
 )
 
 // UserServiceClient is the client API for UserService service.
@@ -41,7 +41,7 @@ type UserServiceClient interface {
 	GetUploadURL(ctx context.Context, in *GetUploadURLRequest, opts ...grpc.CallOption) (*GetUploadURLResponse, error)
 	UpdateCoinBalance(ctx context.Context, in *UpdateCoinBalanceRequest, opts ...grpc.CallOption) (*UpdateCoinBalanceResponse, error)
 	GetCoinBalance(ctx context.Context, in *GetCoinBalanceRequest, opts ...grpc.CallOption) (*GetCoinBalanceResponse, error)
-	GetTransactionHistory(ctx context.Context, in *GetTransactionHistoryRequest, opts ...grpc.CallOption) (*GetTransactionHistoryResponse, error)
+	GetUserTransactionHistory(ctx context.Context, in *GetUserTransactionHistoryRequest, opts ...grpc.CallOption) (*GetUserTransactionHistoryResponse, error)
 	GetReferralCode(ctx context.Context, in *GetReferralCodeRequest, opts ...grpc.CallOption) (*GetReferralCodeResponse, error)
 	ApplyReferralCode(ctx context.Context, in *ApplyReferralCodeRequest, opts ...grpc.CallOption) (*ApplyReferralCodeResponse, error)
 	GetReferralRewards(ctx context.Context, in *GetReferralRewardsRequest, opts ...grpc.CallOption) (*GetReferralRewardsResponse, error)
@@ -107,10 +107,10 @@ func (c *userServiceClient) GetCoinBalance(ctx context.Context, in *GetCoinBalan
 	return out, nil
 }
 
-func (c *userServiceClient) GetTransactionHistory(ctx context.Context, in *GetTransactionHistoryRequest, opts ...grpc.CallOption) (*GetTransactionHistoryResponse, error) {
+func (c *userServiceClient) GetUserTransactionHistory(ctx context.Context, in *GetUserTransactionHistoryRequest, opts ...grpc.CallOption) (*GetUserTransactionHistoryResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(GetTransactionHistoryResponse)
-	err := c.cc.Invoke(ctx, UserService_GetTransactionHistory_FullMethodName, in, out, cOpts...)
+	out := new(GetUserTransactionHistoryResponse)
+	err := c.cc.Invoke(ctx, UserService_GetUserTransactionHistory_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
@@ -194,7 +194,7 @@ type UserServiceServer interface {
 	GetUploadURL(context.Context, *GetUploadURLRequest) (*GetUploadURLResponse, error)
 	UpdateCoinBalance(context.Context, *UpdateCoinBalanceRequest) (*UpdateCoinBalanceResponse, error)
 	GetCoinBalance(context.Context, *GetCoinBalanceRequest) (*GetCoinBalanceResponse, error)
-	GetTransactionHistory(context.Context, *GetTransactionHistoryRequest) (*GetTransactionHistoryResponse, error)
+	GetUserTransactionHistory(context.Context, *GetUserTransactionHistoryRequest) (*GetUserTransactionHistoryResponse, error)
 	GetReferralCode(context.Context, *GetReferralCodeRequest) (*GetReferralCodeResponse, error)
 	ApplyReferralCode(context.Context, *ApplyReferralCodeRequest) (*ApplyReferralCodeResponse, error)
 	GetReferralRewards(context.Context, *GetReferralRewardsRequest) (*GetReferralRewardsResponse, error)
@@ -225,8 +225,8 @@ func (UnimplementedUserServiceServer) UpdateCoinBalance(context.Context, *Update
 func (UnimplementedUserServiceServer) GetCoinBalance(context.Context, *GetCoinBalanceRequest) (*GetCoinBalanceResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetCoinBalance not implemented")
 }
-func (UnimplementedUserServiceServer) GetTransactionHistory(context.Context, *GetTransactionHistoryRequest) (*GetTransactionHistoryResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method GetTransactionHistory not implemented")
+func (UnimplementedUserServiceServer) GetUserTransactionHistory(context.Context, *GetUserTransactionHistoryRequest) (*GetUserTransactionHistoryResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetUserTransactionHistory not implemented")
 }
 func (UnimplementedUserServiceServer) GetReferralCode(context.Context, *GetReferralCodeRequest) (*GetReferralCodeResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetReferralCode not implemented")
@@ -354,20 +354,20 @@ func _UserService_GetCoinBalance_Handler(srv interface{}, ctx context.Context, d
 	return interceptor(ctx, in, info, handler)
 }
 
-func _UserService_GetTransactionHistory_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(GetTransactionHistoryRequest)
+func _UserService_GetUserTransactionHistory_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetUserTransactionHistoryRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(UserServiceServer).GetTransactionHistory(ctx, in)
+		return srv.(UserServiceServer).GetUserTransactionHistory(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: UserService_GetTransactionHistory_FullMethodName,
+		FullMethod: UserService_GetUserTransactionHistory_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(UserServiceServer).GetTransactionHistory(ctx, req.(*GetTransactionHistoryRequest))
+		return srv.(UserServiceServer).GetUserTransactionHistory(ctx, req.(*GetUserTransactionHistoryRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -476,8 +476,8 @@ var UserService_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _UserService_GetCoinBalance_Handler,
 		},
 		{
-			MethodName: "GetTransactionHistory",
-			Handler:    _UserService_GetTransactionHistory_Handler,
+			MethodName: "GetUserTransactionHistory",
+			Handler:    _UserService_GetUserTransactionHistory_Handler,
 		},
 		{
 			MethodName: "GetReferralCode",

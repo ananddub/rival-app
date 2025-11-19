@@ -75,7 +75,7 @@ func (UserRole) EnumDescriptor() ([]byte, []int) {
 
 type User struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	Id            string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
+	Id            int64                  `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty"`
 	Email         string                 `protobuf:"bytes,2,opt,name=email,proto3" json:"email,omitempty"`
 	PasswordHash  string                 `protobuf:"bytes,3,opt,name=password_hash,json=passwordHash,proto3" json:"password_hash,omitempty"`
 	Phone         string                 `protobuf:"bytes,4,opt,name=phone,proto3" json:"phone,omitempty"`
@@ -122,11 +122,11 @@ func (*User) Descriptor() ([]byte, []int) {
 	return file_proto_schema_schema_proto_rawDescGZIP(), []int{0}
 }
 
-func (x *User) GetId() string {
+func (x *User) GetId() int64 {
 	if x != nil {
 		return x.Id
 	}
-	return ""
+	return 0
 }
 
 func (x *User) GetEmail() string {
@@ -215,9 +215,9 @@ func (x *User) GetUpdatedAt() int64 {
 
 type ReferralReward struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	Id            string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
-	ReferrerId    string                 `protobuf:"bytes,2,opt,name=referrer_id,json=referrerId,proto3" json:"referrer_id,omitempty"`
-	ReferredId    string                 `protobuf:"bytes,3,opt,name=referred_id,json=referredId,proto3" json:"referred_id,omitempty"`
+	Id            int64                  `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty"`
+	ReferrerId    int64                  `protobuf:"varint,2,opt,name=referrer_id,json=referrerId,proto3" json:"referrer_id,omitempty"`
+	ReferredId    int64                  `protobuf:"varint,3,opt,name=referred_id,json=referredId,proto3" json:"referred_id,omitempty"`
 	RewardAmount  float64                `protobuf:"fixed64,4,opt,name=reward_amount,json=rewardAmount,proto3" json:"reward_amount,omitempty"`
 	RewardType    string                 `protobuf:"bytes,5,opt,name=reward_type,json=rewardType,proto3" json:"reward_type,omitempty"`
 	Status        string                 `protobuf:"bytes,6,opt,name=status,proto3" json:"status,omitempty"`
@@ -257,25 +257,25 @@ func (*ReferralReward) Descriptor() ([]byte, []int) {
 	return file_proto_schema_schema_proto_rawDescGZIP(), []int{1}
 }
 
-func (x *ReferralReward) GetId() string {
+func (x *ReferralReward) GetId() int64 {
 	if x != nil {
 		return x.Id
 	}
-	return ""
+	return 0
 }
 
-func (x *ReferralReward) GetReferrerId() string {
+func (x *ReferralReward) GetReferrerId() int64 {
 	if x != nil {
 		return x.ReferrerId
 	}
-	return ""
+	return 0
 }
 
-func (x *ReferralReward) GetReferredId() string {
+func (x *ReferralReward) GetReferredId() int64 {
 	if x != nil {
 		return x.ReferredId
 	}
-	return ""
+	return 0
 }
 
 func (x *ReferralReward) GetRewardAmount() float64 {
@@ -315,7 +315,7 @@ func (x *ReferralReward) GetCreatedAt() int64 {
 
 type Merchant struct {
 	state              protoimpl.MessageState `protogen:"open.v1"`
-	Id                 string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
+	Id                 int64                  `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty"`
 	Name               string                 `protobuf:"bytes,2,opt,name=name,proto3" json:"name,omitempty"`
 	Email              string                 `protobuf:"bytes,3,opt,name=email,proto3" json:"email,omitempty"`
 	PasswordHash       string                 `protobuf:"bytes,4,opt,name=password_hash,json=passwordHash,proto3" json:"password_hash,omitempty"`
@@ -359,11 +359,11 @@ func (*Merchant) Descriptor() ([]byte, []int) {
 	return file_proto_schema_schema_proto_rawDescGZIP(), []int{2}
 }
 
-func (x *Merchant) GetId() string {
+func (x *Merchant) GetId() int64 {
 	if x != nil {
 		return x.Id
 	}
-	return ""
+	return 0
 }
 
 func (x *Merchant) GetName() string {
@@ -431,8 +431,8 @@ func (x *Merchant) GetUpdatedAt() int64 {
 
 type MerchantAddress struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	Id            string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
-	MerchantId    string                 `protobuf:"bytes,2,opt,name=merchant_id,json=merchantId,proto3" json:"merchant_id,omitempty"`
+	Id            int64                  `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty"`
+	MerchantId    int64                  `protobuf:"varint,2,opt,name=merchant_id,json=merchantId,proto3" json:"merchant_id,omitempty"`
 	Street        string                 `protobuf:"bytes,3,opt,name=street,proto3" json:"street,omitempty"`
 	City          string                 `protobuf:"bytes,4,opt,name=city,proto3" json:"city,omitempty"`
 	State         string                 `protobuf:"bytes,5,opt,name=state,proto3" json:"state,omitempty"`
@@ -477,18 +477,18 @@ func (*MerchantAddress) Descriptor() ([]byte, []int) {
 	return file_proto_schema_schema_proto_rawDescGZIP(), []int{3}
 }
 
-func (x *MerchantAddress) GetId() string {
+func (x *MerchantAddress) GetId() int64 {
 	if x != nil {
 		return x.Id
 	}
-	return ""
+	return 0
 }
 
-func (x *MerchantAddress) GetMerchantId() string {
+func (x *MerchantAddress) GetMerchantId() int64 {
 	if x != nil {
 		return x.MerchantId
 	}
-	return ""
+	return 0
 }
 
 func (x *MerchantAddress) GetStreet() string {
@@ -563,8 +563,8 @@ func (x *MerchantAddress) GetUpdatedAt() int64 {
 
 type CoinPurchase struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	Id            string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
-	UserId        string                 `protobuf:"bytes,2,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
+	Id            int64                  `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty"`
+	UserId        int64                  `protobuf:"varint,2,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
 	Amount        float64                `protobuf:"fixed64,3,opt,name=amount,proto3" json:"amount,omitempty"`
 	CoinsReceived float64                `protobuf:"fixed64,4,opt,name=coins_received,json=coinsReceived,proto3" json:"coins_received,omitempty"`
 	PaymentMethod string                 `protobuf:"bytes,5,opt,name=payment_method,json=paymentMethod,proto3" json:"payment_method,omitempty"`
@@ -605,18 +605,18 @@ func (*CoinPurchase) Descriptor() ([]byte, []int) {
 	return file_proto_schema_schema_proto_rawDescGZIP(), []int{4}
 }
 
-func (x *CoinPurchase) GetId() string {
+func (x *CoinPurchase) GetId() int64 {
 	if x != nil {
 		return x.Id
 	}
-	return ""
+	return 0
 }
 
-func (x *CoinPurchase) GetUserId() string {
+func (x *CoinPurchase) GetUserId() int64 {
 	if x != nil {
 		return x.UserId
 	}
-	return ""
+	return 0
 }
 
 func (x *CoinPurchase) GetAmount() float64 {
@@ -663,8 +663,8 @@ func (x *CoinPurchase) GetCreatedAt() int64 {
 
 type JwtSession struct {
 	state            protoimpl.MessageState `protogen:"open.v1"`
-	Id               string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
-	UserId           string                 `protobuf:"bytes,2,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
+	Id               int64                  `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty"`
+	UserId           int64                  `protobuf:"varint,2,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
 	TokenHash        string                 `protobuf:"bytes,3,opt,name=token_hash,json=tokenHash,proto3" json:"token_hash,omitempty"`
 	RefreshTokenHash string                 `protobuf:"bytes,4,opt,name=refresh_token_hash,json=refreshTokenHash,proto3" json:"refresh_token_hash,omitempty"`
 	ExpiresAt        int64                  `protobuf:"varint,5,opt,name=expires_at,json=expiresAt,proto3" json:"expires_at,omitempty"`
@@ -704,18 +704,18 @@ func (*JwtSession) Descriptor() ([]byte, []int) {
 	return file_proto_schema_schema_proto_rawDescGZIP(), []int{5}
 }
 
-func (x *JwtSession) GetId() string {
+func (x *JwtSession) GetId() int64 {
 	if x != nil {
 		return x.Id
 	}
-	return ""
+	return 0
 }
 
-func (x *JwtSession) GetUserId() string {
+func (x *JwtSession) GetUserId() int64 {
 	if x != nil {
 		return x.UserId
 	}
-	return ""
+	return 0
 }
 
 func (x *JwtSession) GetTokenHash() string {
@@ -755,9 +755,9 @@ func (x *JwtSession) GetCreatedAt() int64 {
 
 type Transaction struct {
 	state           protoimpl.MessageState `protogen:"open.v1"`
-	Id              string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
-	UserId          string                 `protobuf:"bytes,2,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
-	MerchantId      string                 `protobuf:"bytes,3,opt,name=merchant_id,json=merchantId,proto3" json:"merchant_id,omitempty"`
+	Id              int64                  `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty"`
+	UserId          int64                  `protobuf:"varint,2,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
+	MerchantId      int64                  `protobuf:"varint,3,opt,name=merchant_id,json=merchantId,proto3" json:"merchant_id,omitempty"`
 	CoinsSpent      float64                `protobuf:"fixed64,4,opt,name=coins_spent,json=coinsSpent,proto3" json:"coins_spent,omitempty"`
 	OriginalAmount  float64                `protobuf:"fixed64,5,opt,name=original_amount,json=originalAmount,proto3" json:"original_amount,omitempty"`
 	DiscountAmount  float64                `protobuf:"fixed64,6,opt,name=discount_amount,json=discountAmount,proto3" json:"discount_amount,omitempty"`
@@ -799,25 +799,25 @@ func (*Transaction) Descriptor() ([]byte, []int) {
 	return file_proto_schema_schema_proto_rawDescGZIP(), []int{6}
 }
 
-func (x *Transaction) GetId() string {
+func (x *Transaction) GetId() int64 {
 	if x != nil {
 		return x.Id
 	}
-	return ""
+	return 0
 }
 
-func (x *Transaction) GetUserId() string {
+func (x *Transaction) GetUserId() int64 {
 	if x != nil {
 		return x.UserId
 	}
-	return ""
+	return 0
 }
 
-func (x *Transaction) GetMerchantId() string {
+func (x *Transaction) GetMerchantId() int64 {
 	if x != nil {
 		return x.MerchantId
 	}
-	return ""
+	return 0
 }
 
 func (x *Transaction) GetCoinsSpent() float64 {
@@ -871,8 +871,8 @@ func (x *Transaction) GetCreatedAt() int64 {
 
 type Settlement struct {
 	state               protoimpl.MessageState `protogen:"open.v1"`
-	Id                  string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
-	MerchantId          string                 `protobuf:"bytes,2,opt,name=merchant_id,json=merchantId,proto3" json:"merchant_id,omitempty"`
+	Id                  int64                  `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty"`
+	MerchantId          int64                  `protobuf:"varint,2,opt,name=merchant_id,json=merchantId,proto3" json:"merchant_id,omitempty"`
 	PeriodStart         string                 `protobuf:"bytes,3,opt,name=period_start,json=periodStart,proto3" json:"period_start,omitempty"`
 	PeriodEnd           string                 `protobuf:"bytes,4,opt,name=period_end,json=periodEnd,proto3" json:"period_end,omitempty"`
 	TotalTransactions   int32                  `protobuf:"varint,5,opt,name=total_transactions,json=totalTransactions,proto3" json:"total_transactions,omitempty"`
@@ -915,18 +915,18 @@ func (*Settlement) Descriptor() ([]byte, []int) {
 	return file_proto_schema_schema_proto_rawDescGZIP(), []int{7}
 }
 
-func (x *Settlement) GetId() string {
+func (x *Settlement) GetId() int64 {
 	if x != nil {
 		return x.Id
 	}
-	return ""
+	return 0
 }
 
-func (x *Settlement) GetMerchantId() string {
+func (x *Settlement) GetMerchantId() int64 {
 	if x != nil {
 		return x.MerchantId
 	}
-	return ""
+	return 0
 }
 
 func (x *Settlement) GetPeriodStart() string {
@@ -987,8 +987,8 @@ func (x *Settlement) GetCreatedAt() int64 {
 
 type Offer struct {
 	state              protoimpl.MessageState `protogen:"open.v1"`
-	Id                 string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
-	MerchantId         string                 `protobuf:"bytes,2,opt,name=merchant_id,json=merchantId,proto3" json:"merchant_id,omitempty"`
+	Id                 int64                  `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty"`
+	MerchantId         int64                  `protobuf:"varint,2,opt,name=merchant_id,json=merchantId,proto3" json:"merchant_id,omitempty"`
 	Title              string                 `protobuf:"bytes,3,opt,name=title,proto3" json:"title,omitempty"`
 	Description        string                 `protobuf:"bytes,4,opt,name=description,proto3" json:"description,omitempty"`
 	DiscountPercentage float64                `protobuf:"fixed64,5,opt,name=discount_percentage,json=discountPercentage,proto3" json:"discount_percentage,omitempty"`
@@ -1033,18 +1033,18 @@ func (*Offer) Descriptor() ([]byte, []int) {
 	return file_proto_schema_schema_proto_rawDescGZIP(), []int{8}
 }
 
-func (x *Offer) GetId() string {
+func (x *Offer) GetId() int64 {
 	if x != nil {
 		return x.Id
 	}
-	return ""
+	return 0
 }
 
-func (x *Offer) GetMerchantId() string {
+func (x *Offer) GetMerchantId() int64 {
 	if x != nil {
 		return x.MerchantId
 	}
-	return ""
+	return 0
 }
 
 func (x *Offer) GetTitle() string {
@@ -1119,12 +1119,12 @@ func (x *Offer) GetUpdatedAt() int64 {
 
 type Order struct {
 	state          protoimpl.MessageState `protogen:"open.v1"`
-	Id             string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
-	MerchantId     string                 `protobuf:"bytes,2,opt,name=merchant_id,json=merchantId,proto3" json:"merchant_id,omitempty"`
-	UserId         string                 `protobuf:"bytes,3,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
-	OfferId        string                 `protobuf:"bytes,4,opt,name=offer_id,json=offerId,proto3" json:"offer_id,omitempty"`
+	Id             int64                  `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty"`
+	MerchantId     int64                  `protobuf:"varint,2,opt,name=merchant_id,json=merchantId,proto3" json:"merchant_id,omitempty"`
+	UserId         int64                  `protobuf:"varint,3,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
+	OfferId        int64                  `protobuf:"varint,4,opt,name=offer_id,json=offerId,proto3" json:"offer_id,omitempty"`
 	OrderNumber    string                 `protobuf:"bytes,5,opt,name=order_number,json=orderNumber,proto3" json:"order_number,omitempty"`
-	Items          string                 `protobuf:"bytes,6,opt,name=items,proto3" json:"items,omitempty"` // JSON string
+	Items          string                 `protobuf:"bytes,6,opt,name=items,proto3" json:"items,omitempty"`
 	Subtotal       float64                `protobuf:"fixed64,7,opt,name=subtotal,proto3" json:"subtotal,omitempty"`
 	DiscountAmount float64                `protobuf:"fixed64,8,opt,name=discount_amount,json=discountAmount,proto3" json:"discount_amount,omitempty"`
 	TotalAmount    float64                `protobuf:"fixed64,9,opt,name=total_amount,json=totalAmount,proto3" json:"total_amount,omitempty"`
@@ -1167,32 +1167,32 @@ func (*Order) Descriptor() ([]byte, []int) {
 	return file_proto_schema_schema_proto_rawDescGZIP(), []int{9}
 }
 
-func (x *Order) GetId() string {
+func (x *Order) GetId() int64 {
 	if x != nil {
 		return x.Id
 	}
-	return ""
+	return 0
 }
 
-func (x *Order) GetMerchantId() string {
+func (x *Order) GetMerchantId() int64 {
 	if x != nil {
 		return x.MerchantId
 	}
-	return ""
+	return 0
 }
 
-func (x *Order) GetUserId() string {
+func (x *Order) GetUserId() int64 {
 	if x != nil {
 		return x.UserId
 	}
-	return ""
+	return 0
 }
 
-func (x *Order) GetOfferId() string {
+func (x *Order) GetOfferId() int64 {
 	if x != nil {
 		return x.OfferId
 	}
-	return ""
+	return 0
 }
 
 func (x *Order) GetOrderNumber() string {
@@ -1267,13 +1267,13 @@ func (x *Order) GetUpdatedAt() int64 {
 
 type AuditLog struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	Id            string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
-	ActorId       string                 `protobuf:"bytes,2,opt,name=actor_id,json=actorId,proto3" json:"actor_id,omitempty"`
+	Id            int64                  `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty"`
+	ActorId       int64                  `protobuf:"varint,2,opt,name=actor_id,json=actorId,proto3" json:"actor_id,omitempty"`
 	ActorType     string                 `protobuf:"bytes,3,opt,name=actor_type,json=actorType,proto3" json:"actor_type,omitempty"`
 	Action        string                 `protobuf:"bytes,4,opt,name=action,proto3" json:"action,omitempty"`
 	TargetType    string                 `protobuf:"bytes,5,opt,name=target_type,json=targetType,proto3" json:"target_type,omitempty"`
-	TargetId      string                 `protobuf:"bytes,6,opt,name=target_id,json=targetId,proto3" json:"target_id,omitempty"`
-	Metadata      string                 `protobuf:"bytes,7,opt,name=metadata,proto3" json:"metadata,omitempty"` // JSON string
+	TargetId      int64                  `protobuf:"varint,6,opt,name=target_id,json=targetId,proto3" json:"target_id,omitempty"`
+	Metadata      string                 `protobuf:"bytes,7,opt,name=metadata,proto3" json:"metadata,omitempty"`
 	IpAddress     string                 `protobuf:"bytes,8,opt,name=ip_address,json=ipAddress,proto3" json:"ip_address,omitempty"`
 	UserAgent     string                 `protobuf:"bytes,9,opt,name=user_agent,json=userAgent,proto3" json:"user_agent,omitempty"`
 	CreatedAt     int64                  `protobuf:"varint,10,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`
@@ -1311,18 +1311,18 @@ func (*AuditLog) Descriptor() ([]byte, []int) {
 	return file_proto_schema_schema_proto_rawDescGZIP(), []int{10}
 }
 
-func (x *AuditLog) GetId() string {
+func (x *AuditLog) GetId() int64 {
 	if x != nil {
 		return x.Id
 	}
-	return ""
+	return 0
 }
 
-func (x *AuditLog) GetActorId() string {
+func (x *AuditLog) GetActorId() int64 {
 	if x != nil {
 		return x.ActorId
 	}
-	return ""
+	return 0
 }
 
 func (x *AuditLog) GetActorType() string {
@@ -1346,11 +1346,11 @@ func (x *AuditLog) GetTargetType() string {
 	return ""
 }
 
-func (x *AuditLog) GetTargetId() string {
+func (x *AuditLog) GetTargetId() int64 {
 	if x != nil {
 		return x.TargetId
 	}
-	return ""
+	return 0
 }
 
 func (x *AuditLog) GetMetadata() string {
@@ -1387,7 +1387,7 @@ const file_proto_schema_schema_proto_rawDesc = "" +
 	"\n" +
 	"\x19proto/schema/schema.proto\x12\x0frival.schema.v1\"\x95\x03\n" +
 	"\x04User\x12\x0e\n" +
-	"\x02id\x18\x01 \x01(\tR\x02id\x12\x14\n" +
+	"\x02id\x18\x01 \x01(\x03R\x02id\x12\x14\n" +
 	"\x05email\x18\x02 \x01(\tR\x05email\x12#\n" +
 	"\rpassword_hash\x18\x03 \x01(\tR\fpasswordHash\x12\x14\n" +
 	"\x05phone\x18\x04 \x01(\tR\x05phone\x12\x12\n" +
@@ -1406,10 +1406,10 @@ const file_proto_schema_schema_proto_rawDesc = "" +
 	"\n" +
 	"updated_at\x18\r \x01(\x03R\tupdatedAt\"\x80\x02\n" +
 	"\x0eReferralReward\x12\x0e\n" +
-	"\x02id\x18\x01 \x01(\tR\x02id\x12\x1f\n" +
-	"\vreferrer_id\x18\x02 \x01(\tR\n" +
+	"\x02id\x18\x01 \x01(\x03R\x02id\x12\x1f\n" +
+	"\vreferrer_id\x18\x02 \x01(\x03R\n" +
 	"referrerId\x12\x1f\n" +
-	"\vreferred_id\x18\x03 \x01(\tR\n" +
+	"\vreferred_id\x18\x03 \x01(\x03R\n" +
 	"referredId\x12#\n" +
 	"\rreward_amount\x18\x04 \x01(\x01R\frewardAmount\x12\x1f\n" +
 	"\vreward_type\x18\x05 \x01(\tR\n" +
@@ -1420,7 +1420,7 @@ const file_proto_schema_schema_proto_rawDesc = "" +
 	"\n" +
 	"created_at\x18\b \x01(\x03R\tcreatedAt\"\xa7\x02\n" +
 	"\bMerchant\x12\x0e\n" +
-	"\x02id\x18\x01 \x01(\tR\x02id\x12\x12\n" +
+	"\x02id\x18\x01 \x01(\x03R\x02id\x12\x12\n" +
 	"\x04name\x18\x02 \x01(\tR\x04name\x12\x14\n" +
 	"\x05email\x18\x03 \x01(\tR\x05email\x12#\n" +
 	"\rpassword_hash\x18\x04 \x01(\tR\fpasswordHash\x12\x14\n" +
@@ -1434,8 +1434,8 @@ const file_proto_schema_schema_proto_rawDesc = "" +
 	"updated_at\x18\n" +
 	" \x01(\x03R\tupdatedAt\"\xd6\x02\n" +
 	"\x0fMerchantAddress\x12\x0e\n" +
-	"\x02id\x18\x01 \x01(\tR\x02id\x12\x1f\n" +
-	"\vmerchant_id\x18\x02 \x01(\tR\n" +
+	"\x02id\x18\x01 \x01(\x03R\x02id\x12\x1f\n" +
+	"\vmerchant_id\x18\x02 \x01(\x03R\n" +
 	"merchantId\x12\x16\n" +
 	"\x06street\x18\x03 \x01(\tR\x06street\x12\x12\n" +
 	"\x04city\x18\x04 \x01(\tR\x04city\x12\x14\n" +
@@ -1453,8 +1453,8 @@ const file_proto_schema_schema_proto_rawDesc = "" +
 	"\n" +
 	"updated_at\x18\f \x01(\x03R\tupdatedAt\"\xf3\x01\n" +
 	"\fCoinPurchase\x12\x0e\n" +
-	"\x02id\x18\x01 \x01(\tR\x02id\x12\x17\n" +
-	"\auser_id\x18\x02 \x01(\tR\x06userId\x12\x16\n" +
+	"\x02id\x18\x01 \x01(\x03R\x02id\x12\x17\n" +
+	"\auser_id\x18\x02 \x01(\x03R\x06userId\x12\x16\n" +
 	"\x06amount\x18\x03 \x01(\x01R\x06amount\x12%\n" +
 	"\x0ecoins_received\x18\x04 \x01(\x01R\rcoinsReceived\x12%\n" +
 	"\x0epayment_method\x18\x05 \x01(\tR\rpaymentMethod\x12\x1d\n" +
@@ -1465,8 +1465,8 @@ const file_proto_schema_schema_proto_rawDesc = "" +
 	"created_at\x18\b \x01(\x03R\tcreatedAt\"\xdf\x01\n" +
 	"\n" +
 	"JwtSession\x12\x0e\n" +
-	"\x02id\x18\x01 \x01(\tR\x02id\x12\x17\n" +
-	"\auser_id\x18\x02 \x01(\tR\x06userId\x12\x1d\n" +
+	"\x02id\x18\x01 \x01(\x03R\x02id\x12\x17\n" +
+	"\auser_id\x18\x02 \x01(\x03R\x06userId\x12\x1d\n" +
 	"\n" +
 	"token_hash\x18\x03 \x01(\tR\ttokenHash\x12,\n" +
 	"\x12refresh_token_hash\x18\x04 \x01(\tR\x10refreshTokenHash\x12\x1d\n" +
@@ -1477,9 +1477,9 @@ const file_proto_schema_schema_proto_rawDesc = "" +
 	"\n" +
 	"created_at\x18\a \x01(\x03R\tcreatedAt\"\xcf\x02\n" +
 	"\vTransaction\x12\x0e\n" +
-	"\x02id\x18\x01 \x01(\tR\x02id\x12\x17\n" +
-	"\auser_id\x18\x02 \x01(\tR\x06userId\x12\x1f\n" +
-	"\vmerchant_id\x18\x03 \x01(\tR\n" +
+	"\x02id\x18\x01 \x01(\x03R\x02id\x12\x17\n" +
+	"\auser_id\x18\x02 \x01(\x03R\x06userId\x12\x1f\n" +
+	"\vmerchant_id\x18\x03 \x01(\x03R\n" +
 	"merchantId\x12\x1f\n" +
 	"\vcoins_spent\x18\x04 \x01(\x01R\n" +
 	"coinsSpent\x12'\n" +
@@ -1493,8 +1493,8 @@ const file_proto_schema_schema_proto_rawDesc = "" +
 	" \x01(\x03R\tcreatedAt\"\xdf\x02\n" +
 	"\n" +
 	"Settlement\x12\x0e\n" +
-	"\x02id\x18\x01 \x01(\tR\x02id\x12\x1f\n" +
-	"\vmerchant_id\x18\x02 \x01(\tR\n" +
+	"\x02id\x18\x01 \x01(\x03R\x02id\x12\x1f\n" +
+	"\vmerchant_id\x18\x02 \x01(\x03R\n" +
 	"merchantId\x12!\n" +
 	"\fperiod_start\x18\x03 \x01(\tR\vperiodStart\x12\x1d\n" +
 	"\n" +
@@ -1508,8 +1508,8 @@ const file_proto_schema_schema_proto_rawDesc = "" +
 	"created_at\x18\n" +
 	" \x01(\x03R\tcreatedAt\"\xfe\x02\n" +
 	"\x05Offer\x12\x0e\n" +
-	"\x02id\x18\x01 \x01(\tR\x02id\x12\x1f\n" +
-	"\vmerchant_id\x18\x02 \x01(\tR\n" +
+	"\x02id\x18\x01 \x01(\x03R\x02id\x12\x1f\n" +
+	"\vmerchant_id\x18\x02 \x01(\x03R\n" +
 	"merchantId\x12\x14\n" +
 	"\x05title\x18\x03 \x01(\tR\x05title\x12 \n" +
 	"\vdescription\x18\x04 \x01(\tR\vdescription\x12/\n" +
@@ -1528,11 +1528,11 @@ const file_proto_schema_schema_proto_rawDesc = "" +
 	"\n" +
 	"updated_at\x18\f \x01(\x03R\tupdatedAt\"\x98\x03\n" +
 	"\x05Order\x12\x0e\n" +
-	"\x02id\x18\x01 \x01(\tR\x02id\x12\x1f\n" +
-	"\vmerchant_id\x18\x02 \x01(\tR\n" +
+	"\x02id\x18\x01 \x01(\x03R\x02id\x12\x1f\n" +
+	"\vmerchant_id\x18\x02 \x01(\x03R\n" +
 	"merchantId\x12\x17\n" +
-	"\auser_id\x18\x03 \x01(\tR\x06userId\x12\x19\n" +
-	"\boffer_id\x18\x04 \x01(\tR\aofferId\x12!\n" +
+	"\auser_id\x18\x03 \x01(\x03R\x06userId\x12\x19\n" +
+	"\boffer_id\x18\x04 \x01(\x03R\aofferId\x12!\n" +
 	"\forder_number\x18\x05 \x01(\tR\vorderNumber\x12\x14\n" +
 	"\x05items\x18\x06 \x01(\tR\x05items\x12\x1a\n" +
 	"\bsubtotal\x18\a \x01(\x01R\bsubtotal\x12'\n" +
@@ -1548,14 +1548,14 @@ const file_proto_schema_schema_proto_rawDesc = "" +
 	"\n" +
 	"updated_at\x18\x0e \x01(\x03R\tupdatedAt\"\xa3\x02\n" +
 	"\bAuditLog\x12\x0e\n" +
-	"\x02id\x18\x01 \x01(\tR\x02id\x12\x19\n" +
-	"\bactor_id\x18\x02 \x01(\tR\aactorId\x12\x1d\n" +
+	"\x02id\x18\x01 \x01(\x03R\x02id\x12\x19\n" +
+	"\bactor_id\x18\x02 \x01(\x03R\aactorId\x12\x1d\n" +
 	"\n" +
 	"actor_type\x18\x03 \x01(\tR\tactorType\x12\x16\n" +
 	"\x06action\x18\x04 \x01(\tR\x06action\x12\x1f\n" +
 	"\vtarget_type\x18\x05 \x01(\tR\n" +
 	"targetType\x12\x1b\n" +
-	"\ttarget_id\x18\x06 \x01(\tR\btargetId\x12\x1a\n" +
+	"\ttarget_id\x18\x06 \x01(\x03R\btargetId\x12\x1a\n" +
 	"\bmetadata\x18\a \x01(\tR\bmetadata\x12\x1d\n" +
 	"\n" +
 	"ip_address\x18\b \x01(\tR\tipAddress\x12\x1d\n" +
@@ -1568,7 +1568,7 @@ const file_proto_schema_schema_proto_rawDesc = "" +
 	"\x15USER_ROLE_UNSPECIFIED\x10\x00\x12\x16\n" +
 	"\x12USER_ROLE_CUSTOMER\x10\x01\x12\x16\n" +
 	"\x12USER_ROLE_MERCHANT\x10\x02\x12\x13\n" +
-	"\x0fUSER_ROLE_ADMIN\x10\x03B#Z!encore.app/gen/proto/proto/schemab\x06proto3"
+	"\x0fUSER_ROLE_ADMIN\x10\x03B\x1eZ\x1crival/gen/proto/proto/schemab\x06proto3"
 
 var (
 	file_proto_schema_schema_proto_rawDescOnce sync.Once

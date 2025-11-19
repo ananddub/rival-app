@@ -6,11 +6,12 @@ import (
 	"strings"
 	"time"
 
-	authpb "encore.app/gen/proto/proto/api"
-	"encore.app/internal/auth/service"
-	"encore.app/internal/auth/repo"
-	"encore.app/internal/auth/util"
-	"encore.app/config"
+	"rival/config"
+	authpb "rival/gen/proto/proto/api"
+	"rival/internal/auth/repo"
+	"rival/internal/auth/service"
+	"rival/internal/auth/util"
+
 	"google.golang.org/grpc/metadata"
 )
 
@@ -28,21 +29,21 @@ func NewAuthHandler() (*AuthHandler, error) {
 
 	// Initialize JWT util
 	cfg := config.GetConfig()
-	jwtUtil := util.NewJWTUtil(cfg.JWT.Secret, 
-		time.Duration(cfg.JWT.ExpiryHour)*time.Hour, 
+	jwtUtil := util.NewJWTUtil(cfg.JWT.Secret,
+		time.Duration(cfg.JWT.ExpiryHour)*time.Hour,
 		24*time.Hour)
 
 	// Initialize email service
 	emailService := util.NewEmailService()
 
-	// Initialize Firebase service
-	firebaseService, err := util.NewFirebaseService(cfg.Firebase.CredentialsPath)
-	if err != nil {
-		return nil, err
-	}
+	//uInitialize Firebase service
+	//firebaseService, err := util.NewFirebaseService(cfg.Firebase.CredentialsPath)
+	//	if err != nil {
+	//		return nil, err
+	//	}
 
 	// Initialize service
-	authService := service.NewAuthService(repository, jwtUtil, emailService, firebaseService)
+	authService := service.NewAuthService(repository, jwtUtil, emailService, nil)
 
 	return &AuthHandler{
 		service: authService,
@@ -151,42 +152,41 @@ func (h *AuthHandler) Logout(ctx context.Context, req *authpb.LogoutRequest) (*a
 func (h *AuthHandler) WhoAmI(ctx context.Context, req *authpb.WhoAmIRequest) (*authpb.WhoAmIResponse, error) {
 	// Extract user ID from JWT token in metadata/context
 	userID := extractUserIDFromContext(ctx)
-	if userID == "" {
-		return nil, errors.New("unauthorized")
+	if userID == -1 {
+		return nil, errors.New("unauthenticated: invalid or missing token")
 	}
-
-	return h.service.WhoAmI(ctx, userID)
+	return h.service.WhoAmI(ctx, int(userID))
 }
 
-func extractUserIDFromContext(ctx context.Context) string {
+func extractUserIDFromContext(ctx context.Context) int {
 	// Extract JWT token from gRPC metadata
 	md, ok := metadata.FromIncomingContext(ctx)
 	if !ok {
-		return ""
+		return -1
 	}
-	
+
 	// Get authorization header
 	authHeaders := md.Get("authorization")
 	if len(authHeaders) == 0 {
-		return ""
+		return -1
 	}
-	
+
 	// Extract token from "Bearer <token>" format
 	authHeader := authHeaders[0]
 	if !strings.HasPrefix(authHeader, "Bearer ") {
-		return ""
+		return -1
 	}
-	
+
 	token := strings.TrimPrefix(authHeader, "Bearer ")
-	
+
 	// Create JWT util instance (should be injected in real implementation)
 	jwtUtil := util.NewJWTUtil("your-secret-key", time.Hour, 24*time.Hour)
-	
+
 	// Validate and extract claims
 	claims, err := jwtUtil.ValidateToken(token)
 	if err != nil {
-		return ""
+		return -1
 	}
-	
+
 	return claims.UserID
 }

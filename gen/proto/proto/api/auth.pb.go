@@ -7,10 +7,10 @@
 package api
 
 import (
-	schema "encore.app/gen/proto/proto/schema"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 	reflect "reflect"
+	schema "rival/gen/proto/proto/schema"
 	sync "sync"
 	unsafe "unsafe"
 )
@@ -1159,7 +1159,7 @@ const file_proto_api_auth_proto_rawDesc = "" +
 	"\rResetPassword\x12\".rival.api.v1.ResetPasswordRequest\x1a#.rival.api.v1.ResetPasswordResponse\x12U\n" +
 	"\fRefreshToken\x12!.rival.api.v1.RefreshTokenRequest\x1a\".rival.api.v1.RefreshTokenResponse\x12C\n" +
 	"\x06Logout\x12\x1b.rival.api.v1.LogoutRequest\x1a\x1c.rival.api.v1.LogoutResponse\x12C\n" +
-	"\x06WhoAmI\x12\x1b.rival.api.v1.WhoAmIRequest\x1a\x1c.rival.api.v1.WhoAmIResponseB Z\x1eencore.app/gen/proto/proto/apib\x06proto3"
+	"\x06WhoAmI\x12\x1b.rival.api.v1.WhoAmIRequest\x1a\x1c.rival.api.v1.WhoAmIResponseB\x1bZ\x19rival/gen/proto/proto/apib\x06proto3"
 
 var (
 	file_proto_api_auth_proto_rawDescOnce sync.Once

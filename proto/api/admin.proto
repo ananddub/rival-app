@@ -2,7 +2,7 @@ syntax = "proto3";
 
 package rival.api.v1;
 
-option go_package = "encore.app/gen/proto/proto/api";
+option go_package = "rival/gen/proto/proto/api";
 
 import "proto/schema/schema.proto";
 
@@ -40,7 +40,7 @@ message GetAllMerchantsResponse {
 }
 
 message ApproveMerchantRequest {
-  string merchant_id = 1;
+  int64 merchant_id = 1;
 }
 
 message ApproveMerchantResponse {
@@ -48,7 +48,7 @@ message ApproveMerchantResponse {
 }
 
 message SuspendMerchantRequest {
-  string merchant_id = 1;
+  int64 merchant_id = 1;
   string reason = 2;
 }
 
@@ -68,7 +68,7 @@ message GetAllUsersResponse {
 }
 
 message SuspendUserRequest {
-  string user_id = 1;
+  int64 user_id = 1;
   string reason = 2;
 }
 
@@ -79,8 +79,8 @@ message SuspendUserResponse {
 message GetAllTransactionsRequest {
   int32 page = 1;
   int32 limit = 2;
-  string merchant_id = 3;
-  string user_id = 4;
+  int64 merchant_id = 3;
+  int64 user_id = 4;
   int64 start_date = 5;
   int64 end_date = 6;
 }

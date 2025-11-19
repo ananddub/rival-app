@@ -8,14 +8,20 @@ import (
 )
 
 type Config struct {
-	Database DatabaseConfig `yaml:"database"`
-	Redis    RedisConfig    `yaml:"redis"`
-	JWT      JWTConfig      `yaml:"jwt"`
-	Server   ServerConfig   `yaml:"server"`
-	Tb       TbConfig       `yaml:"tb"`
-	S3       S3Config       `yaml:"s3"`
-	MailHog  MailHogConfig  `yaml:"mail"`
-	Firebase FirebaseConfig `yaml:"firebase"`
+	Database       DatabaseConfig       `yaml:"database"`
+	Redis          RedisConfig          `yaml:"redis"`
+	JWT            JWTConfig            `yaml:"jwt"`
+	Server         ServerConfig         `yaml:"server"`
+	Tb             TbConfig             `yaml:"tb"`
+	S3             S3Config             `yaml:"s3"`
+	MailHog        MailHogConfig        `yaml:"mail"`
+	Firebase       FirebaseConfig       `yaml:"firebase"`
+	PaymentGateway PaymentGatewayConfig `yaml:"payment_gateway"`
+}
+
+type PaymentGatewayConfig struct {
+	BaseURL string `yaml:"base_url"`
+	APIKey  string `yaml:"api_key"`
 }
 
 type FirebaseConfig struct {
@@ -83,7 +89,7 @@ func Load(path string) *Config {
 
 func GetConfig() *Config {
 	if appConfig == nil {
-		return Load("config.yaml")
+		return Load("/media/sf_Devloper/rival/rival/config.yaml")
 	}
 	return appConfig
 }

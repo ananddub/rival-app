@@ -1,7 +1,7 @@
 package connection
 
 import (
-	"encore.app/config"
+	"rival/config"
 	"github.com/minio/minio-go/v7"
 	"github.com/minio/minio-go/v7/pkg/credentials"
 )

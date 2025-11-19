@@ -1,15 +1,16 @@
-module encore.app
+module rival
 
 go 1.24.0
 
 require (
-	encore.dev v1.48.13
 	firebase.google.com/go/v4 v4.18.0
+	github.com/golang-jwt/jwt/v5 v5.3.0
 	github.com/google/uuid v1.6.0
 	github.com/jackc/pgx/v5 v5.2.0
 	github.com/minio/minio-go/v7 v7.0.97
 	github.com/redis/go-redis/v9 v9.14.0
 	github.com/tigerbeetle/tigerbeetle-go v0.16.64
+	github.com/xwb1989/sqlparser v0.0.0-20180606152119-120387863bf2
 	golang.org/x/crypto v0.40.0
 	google.golang.org/api v0.231.0
 	google.golang.org/grpc v1.76.0
@@ -44,7 +45,6 @@ require (
 	github.com/go-logr/logr v1.4.3 // indirect
 	github.com/go-logr/stdr v1.2.2 // indirect
 	github.com/golang-jwt/jwt/v4 v4.5.2 // indirect
-	github.com/golang-jwt/jwt/v5 v5.3.0 // indirect
 	github.com/golang/protobuf v1.5.4 // indirect
 	github.com/google/s2a-go v0.1.9 // indirect
 	github.com/googleapis/enterprise-certificate-proxy v0.3.6 // indirect

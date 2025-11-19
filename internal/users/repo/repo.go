@@ -4,15 +4,16 @@ import (
 	"context"
 	"time"
 
-	"encore.app/config"
-	"encore.app/connection"
-	schema "encore.app/gen/sql"
-	"encore.app/pkg/tigerbeetle"
+	"rival/config"
+	"rival/connection"
+	schema "rival/gen/sql"
+	"rival/pkg/tb"
+
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/jackc/pgx/v5/pgxpool"
-	"github.com/redis/go-redis/v9"
 	"github.com/minio/minio-go/v7"
+	"github.com/redis/go-redis/v9"
 )
 
 type UserRepository interface {
@@ -27,6 +28,7 @@ type UserRepository interface {
 	CreateReferralReward(ctx context.Context, params schema.CreateReferralRewardParams) error
 	UpdateReferralRewardStatus(ctx context.Context, params schema.UpdateReferralRewardStatusParams) error
 	GenerateUploadURL(ctx context.Context, userID, fileName, contentType string) (uploadURL, fileURL string, err error)
+	GenerateViewURL(ctx context.Context, userID, fileName string) (string, error)
 }
 
 type userRepository struct {
@@ -34,29 +36,29 @@ type userRepository struct {
 	queries *schema.Queries
 	redis   *redis.Client
 	minio   *minio.Client
-	tb      tigerbeetle.Service
+	tb      *tb.TbService
 }
 
 func NewUserRepository() (UserRepository, error) {
 	cfg := config.GetConfig()
-	
+
 	db, err := connection.GetPgConnection(&cfg.Database)
 	if err != nil {
 		return nil, err
 	}
-	
+
 	redisClient := connection.GetRedisClient(&cfg.Redis)
-	
+
 	minioClient, err := connection.NewMinioClient()
 	if err != nil {
 		return nil, err
 	}
-	
-	tbService, err := tigerbeetle.NewService()
+
+	tbService, err := tb.NewService()
 	if err != nil {
 		return nil, err
 	}
-	
+
 	return &userRepository{
 		db:      db,
 		queries: schema.New(db),
@@ -130,15 +132,27 @@ func (r *userRepository) UpdateReferralRewardStatus(ctx context.Context, params 
 func (r *userRepository) GenerateUploadURL(ctx context.Context, userID, fileName, contentType string) (uploadURL, fileURL string, err error) {
 	cfg := config.GetConfig()
 	objectName := "profiles/" + userID + "/" + fileName
-	
+
 	// Generate presigned URL for upload
 	url, err := r.minio.PresignedPutObject(ctx, cfg.S3.BucketName, objectName, time.Hour)
 	if err != nil {
 		return "", "", err
 	}
-	
+
 	uploadURL = url.String()
 	fileURL = "https://" + cfg.S3.Endpoint + "/" + cfg.S3.BucketName + "/" + objectName
-	
+
 	return uploadURL, fileURL, nil
+}
+func (r *userRepository) GenerateViewURL(ctx context.Context, userID, fileName string) (string, error) {
+	cfg := config.GetConfig()
+	objectName := "profiles/" + userID + "/" + fileName
+
+	// Generate presigned URL for viewing (GET request)
+	url, err := r.minio.PresignedGetObject(ctx, cfg.S3.BucketName, objectName, time.Hour*24, nil)
+	if err != nil {
+		return "", err
+	}
+
+	return url.String(), nil
 }

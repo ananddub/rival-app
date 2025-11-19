@@ -1,0 +1,5 @@
+Starting the application...
+go run cmd/grpc/main.go
+# runtime/cgo
+cgo: C compiler "gcc" not found: exec: "gcc": executable file not found in $PATH
+make: *** [Makefile:43: run] Error 1

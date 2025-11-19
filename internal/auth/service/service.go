@@ -4,29 +4,29 @@ import (
 	"context"
 	"crypto/rand"
 	"fmt"
-	"time"
 	"math/big"
-	
-	authpb "encore.app/gen/proto/proto/api"
-	schemapb "encore.app/gen/proto/proto/schema"
-	schema "encore.app/gen/sql"
-	"encore.app/config"
-	"encore.app/connection"
-	"encore.app/internal/auth/repo"
-	"encore.app/internal/auth/util"
-	"encore.app/pkg/referral"
-	"encore.app/pkg/tigerbeetle"
-	"github.com/google/uuid"
+	"time"
+
+	"rival/config"
+	"rival/connection"
+	authpb "rival/gen/proto/proto/api"
+	schemapb "rival/gen/proto/proto/schema"
+	schema "rival/gen/sql"
+	"rival/internal/auth/repo"
+	"rival/internal/auth/util"
+	"rival/pkg/referral"
+	"rival/pkg/tb"
+
 	"github.com/jackc/pgx/v5/pgtype"
 	"golang.org/x/crypto/bcrypt"
 )
 
 type SignupParams struct {
-	Email       string
-	Password    string
-	Name        string
-	Phone       string
-	Role        schemapb.UserRole
+	Email        string
+	Password     string
+	Name         string
+	Phone        string
+	Role         schemapb.UserRole
 	ReferralCode string // Optional referral code
 }
 
@@ -56,27 +56,27 @@ type AuthService interface {
 	ResetPassword(ctx context.Context, params ResetPasswordParams) (*authpb.ResetPasswordResponse, error)
 	RefreshToken(ctx context.Context, refreshToken string) (*authpb.RefreshTokenResponse, error)
 	Logout(ctx context.Context, token string) (*authpb.LogoutResponse, error)
-	WhoAmI(ctx context.Context, userID string) (*authpb.WhoAmIResponse, error)
+	WhoAmI(ctx context.Context, userID int) (*authpb.WhoAmIResponse, error)
 }
 
 type authService struct {
 	repo     repo.AuthRepository
 	jwt      util.JWTUtil
-	email    util.EmailService
-	firebase util.FirebaseService
-	tb       tigerbeetle.Service
+	email    util.Service
+	firebase *util.FirebaseService
+	tb       *tb.TbService
 	referral *referral.Service
 }
 
-func NewAuthService(authRepo repo.AuthRepository, jwt util.JWTUtil, email util.EmailService, firebase util.FirebaseService) AuthService {
+func NewAuthService(authRepo repo.AuthRepository, jwt util.JWTUtil, email util.Service, firebase *util.FirebaseService) AuthService {
 	// Initialize TigerBeetle service
-	tbService, _ := tigerbeetle.NewService()
-	
+	tbService, _ := tb.NewService()
+
 	// Initialize referral service
 	cfg := config.GetConfig()
 	db, _ := connection.GetPgConnection(&cfg.Database)
 	referralService := referral.NewService(db, tbService)
-	
+
 	return &authService{
 		repo:     authRepo,
 		jwt:      jwt,
@@ -118,7 +118,7 @@ func (s *authService) Signup(ctx context.Context, params SignupParams) (*authpb.
 	}
 
 	// Give initial signup bonus coins (e.g., 10 coins)
-	err = s.giveInitialCoins(user.ID, 10.0)
+	err = s.giveInitialCoins(int(user.ID), 10.0)
 	if err != nil {
 		// Log error but don't fail signup
 		fmt.Printf("Failed to give initial coins: %v\n", err)
@@ -126,8 +126,7 @@ func (s *authService) Signup(ctx context.Context, params SignupParams) (*authpb.
 
 	// Process referral if provided
 	if params.ReferralCode != "" && s.referral != nil {
-		userIDStr, _ := user.ID.Value()
-		err = s.referral.ProcessReferral(ctx, params.ReferralCode, userIDStr.(string))
+		err = s.referral.ProcessReferral(ctx, params.ReferralCode, int(user.ID))
 		if err != nil {
 			// Log error but don't fail signup
 			fmt.Printf("Failed to process referral: %v\n", err)
@@ -177,7 +176,7 @@ func (s *authService) VerifyOTP(ctx context.Context, params VerifyOTPParams) (*a
 
 	// Store session
 	sessionParams := schema.CreateJWTSessionParams{
-		UserID:           user.ID,
+		UserID:           pgtype.Int8{Int64: user.ID, Valid: true},
 		TokenHash:        s.jwt.HashToken(accessToken),
 		RefreshTokenHash: pgtype.Text{String: s.jwt.HashToken(refreshToken), Valid: true},
 		ExpiresAt:        pgtype.Timestamp{Time: time.Now().Add(24 * time.Hour), Valid: true},
@@ -236,7 +235,6 @@ func (s *authService) Login(ctx context.Context, params LoginParams) (*authpb.Lo
 	if err != nil {
 		return nil, fmt.Errorf("invalid credentials")
 	}
-
 	// Generate tokens
 	protoUser := convertToProtoUser(user)
 	accessToken, refreshToken, err := s.jwt.GenerateTokens(protoUser)
@@ -246,13 +244,14 @@ func (s *authService) Login(ctx context.Context, params LoginParams) (*authpb.Lo
 
 	// Store session
 	sessionParams := schema.CreateJWTSessionParams{
-		UserID:           user.ID,
+		UserID:           pgtype.Int8{Int64: user.ID, Valid: true},
 		TokenHash:        s.jwt.HashToken(accessToken),
 		RefreshTokenHash: pgtype.Text{String: s.jwt.HashToken(refreshToken), Valid: true},
 		ExpiresAt:        pgtype.Timestamp{Time: time.Now().Add(24 * time.Hour), Valid: true},
 	}
 
 	err = s.repo.CreateSession(ctx, sessionParams)
+
 	if err != nil {
 		return nil, err
 	}
@@ -267,7 +266,7 @@ func (s *authService) Login(ctx context.Context, params LoginParams) (*authpb.Lo
 
 func (s *authService) FirebaseLogin(ctx context.Context, firebaseToken string) (*authpb.FirebaseLoginResponse, error) {
 	// Verify Firebase token
-	firebaseUser, err := s.firebase.VerifyToken(ctx, firebaseToken)
+	firebaseUser, err := (*s.firebase).VerifyToken(ctx, firebaseToken)
 	if err != nil {
 		return nil, fmt.Errorf("invalid firebase token: %v", err)
 	}
@@ -303,7 +302,7 @@ func (s *authService) FirebaseLogin(ctx context.Context, firebaseToken string) (
 
 	// Store session
 	sessionParams := schema.CreateJWTSessionParams{
-		UserID:           user.ID,
+		UserID:           pgtype.Int8{Int64: user.ID, Valid: true},
 		TokenHash:        s.jwt.HashToken(accessToken),
 		RefreshTokenHash: pgtype.Text{String: s.jwt.HashToken(refreshToken), Valid: true},
 		ExpiresAt:        pgtype.Timestamp{Time: time.Now().Add(24 * time.Hour), Valid: true},
@@ -382,7 +381,6 @@ func (s *authService) ResetPassword(ctx context.Context, params ResetPasswordPar
 	if err != nil {
 		return nil, err
 	}
-
 	return &authpb.ResetPasswordResponse{
 		Message: "Password reset successfully",
 		Success: true,
@@ -414,14 +412,8 @@ func (s *authService) Logout(ctx context.Context, token string) (*authpb.LogoutR
 	return &authpb.LogoutResponse{Success: true}, nil
 }
 
-func (s *authService) WhoAmI(ctx context.Context, userID string) (*authpb.WhoAmIResponse, error) {
-	// Get user by ID
-	id, err := uuid.Parse(userID)
-	if err != nil {
-		return nil, err
-	}
-
-	user, err := s.repo.GetUserByID(ctx, id)
+func (s *authService) WhoAmI(ctx context.Context, userID int) (*authpb.WhoAmIResponse, error) {
+	user, err := s.repo.GetUserByID(ctx, userID)
 	if err != nil {
 		return nil, err
 	}
@@ -431,16 +423,8 @@ func (s *authService) WhoAmI(ctx context.Context, userID string) (*authpb.WhoAmI
 	}, nil
 }
 
-func (s *authService) giveInitialCoins(userID pgtype.UUID, amount float64) error {
-	// Convert pgtype.UUID to uuid.UUID
-	userIDVal, _ := userID.Value()
-	userUUID, err := uuid.Parse(userIDVal.(string))
-	if err != nil {
-		return err
-	}
-
-	// Use TigerBeetle service to add coins
-	return s.tb.AddCoins(userUUID, amount)
+func (s *authService) giveInitialCoins(userID int, amount float64) error {
+	return s.tb.AddCoins(userID, amount)
 }
 
 func generateOTP() string {
@@ -450,8 +434,8 @@ func generateOTP() string {
 }
 
 func convertToProtoUser(user schema.User) *schemapb.User {
-	userID, _ := user.ID.Value()
-	
+	userID := int(user.ID)
+
 	// Handle coin balance
 	var coinBalance float64
 	if user.CoinBalance.Valid {
@@ -460,7 +444,7 @@ func convertToProtoUser(user schema.User) *schemapb.User {
 			coinBalance = val.(float64)
 		}
 	}
-	
+
 	// Handle role
 	var role schemapb.UserRole
 	if user.Role.Valid {
@@ -468,16 +452,16 @@ func convertToProtoUser(user schema.User) *schemapb.User {
 			role = schemapb.UserRole(val)
 		}
 	}
-	
+
 	// Handle referred by
 	var referredBy string
 	if user.ReferredBy.Valid {
 		referredByVal, _ := user.ReferredBy.Value()
 		referredBy = referredByVal.(string)
 	}
-	
+
 	return &schemapb.User{
-		Id:           userID.(string),
+		Id:           int64(userID),
 		Email:        user.Email,
 		PasswordHash: user.PasswordHash.String,
 		Phone:        user.Phone.String,

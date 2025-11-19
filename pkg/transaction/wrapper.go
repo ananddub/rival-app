@@ -4,10 +4,10 @@ import (
 	"context"
 	"fmt"
 
-	schema "encore.app/gen/sql"
-	"encore.app/pkg/tigerbeetle"
-	"encore.app/pkg/utils"
-	"github.com/google/uuid"
+	schema "rival/gen/sql"
+	"rival/pkg/tb"
+	"rival/pkg/utils"
+
 	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
@@ -15,10 +15,10 @@ import (
 type TransactionWrapper struct {
 	db      *pgxpool.Pool
 	queries *schema.Queries
-	tb      tigerbeetle.Service
+	tb      tb.Service
 }
 
-func NewTransactionWrapper(db *pgxpool.Pool, tb tigerbeetle.Service) *TransactionWrapper {
+func NewTransactionWrapper(db *pgxpool.Pool, tb tb.Service) *TransactionWrapper {
 	return &TransactionWrapper{
 		db:      db,
 		queries: schema.New(db),
@@ -26,7 +26,7 @@ func NewTransactionWrapper(db *pgxpool.Pool, tb tigerbeetle.Service) *Transactio
 	}
 }
 
-func (tw *TransactionWrapper) ProcessPaymentWithRecord(ctx context.Context, userID, merchantID uuid.UUID, amount float64, paymentType string) error {
+func (tw *TransactionWrapper) ProcessPaymentWithRecord(ctx context.Context, userID, merchantID int, amount float64, paymentType string) error {
 	// Start PostgreSQL transaction
 	tx, err := tw.db.Begin(ctx)
 	if err != nil {
@@ -51,15 +51,10 @@ func (tw *TransactionWrapper) ProcessPaymentWithRecord(ctx context.Context, user
 
 	// Record transaction in PostgreSQL using sqlc
 	qtx := tw.queries.WithTx(tx)
-	
-	userPgUUID := pgtype.UUID{}
-	userPgUUID.Scan(userID)
-	merchantPgUUID := pgtype.UUID{}
-	merchantPgUUID.Scan(merchantID)
-	
+
 	_, err = qtx.CreateTransaction(ctx, schema.CreateTransactionParams{
-		UserID:          userPgUUID,
-		MerchantID:      pgtype.UUID{Bytes: merchantPgUUID.Bytes, Valid: true},
+		UserID:          pgtype.Int8{Int64: int64(userID), Valid: true},
+		MerchantID:      pgtype.Int8{Int64: int64(merchantID), Valid: true},
 		CoinsSpent:      utils.Float64ToNumeric(amount),
 		OriginalAmount:  utils.Float64ToNumeric(amount),
 		TransactionType: pgtype.Text{String: paymentType, Valid: true},
@@ -78,7 +73,7 @@ func (tw *TransactionWrapper) ProcessPaymentWithRecord(ctx context.Context, user
 	return nil
 }
 
-func (tw *TransactionWrapper) AddCoinsWithRecord(ctx context.Context, userID uuid.UUID, amount float64, source string) error {
+func (tw *TransactionWrapper) AddCoinsWithRecord(ctx context.Context, userID int, amount float64, source string) error {
 	tx, err := tw.db.Begin(ctx)
 	if err != nil {
 		return fmt.Errorf("failed to start transaction: %v", err)
@@ -93,12 +88,9 @@ func (tw *TransactionWrapper) AddCoinsWithRecord(ctx context.Context, userID uui
 
 	// Record coin purchase using sqlc
 	qtx := tw.queries.WithTx(tx)
-	
-	userPgUUID := pgtype.UUID{}
-	userPgUUID.Scan(userID)
-	
+
 	_, err = qtx.CreateCoinPurchase(ctx, schema.CreateCoinPurchaseParams{
-		UserID:        userPgUUID,
+		UserID:        pgtype.Int8{Int64: int64(userID), Valid: true},
 		Amount:        utils.Float64ToNumeric(amount),
 		CoinsReceived: utils.Float64ToNumeric(amount),
 		PaymentMethod: pgtype.Text{String: source, Valid: true},

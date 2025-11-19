@@ -20,8 +20,8 @@ INSERT INTO referral_rewards (
 `
 
 type CreateReferralRewardParams struct {
-	ReferrerID   pgtype.UUID    `json:"referrer_id"`
-	ReferredID   pgtype.UUID    `json:"referred_id"`
+	ReferrerID   pgtype.Int8    `json:"referrer_id"`
+	ReferredID   pgtype.Int8    `json:"referred_id"`
 	RewardAmount pgtype.Numeric `json:"reward_amount"`
 	RewardType   pgtype.Text    `json:"reward_type"`
 	Status       pgtype.Text    `json:"status"`
@@ -98,7 +98,7 @@ type GetUserReferralStatsRow struct {
 	TotalEarned    interface{} `json:"total_earned"`
 }
 
-func (q *Queries) GetUserReferralStats(ctx context.Context, referrerID pgtype.UUID) (GetUserReferralStatsRow, error) {
+func (q *Queries) GetUserReferralStats(ctx context.Context, referrerID pgtype.Int8) (GetUserReferralStatsRow, error) {
 	row := q.db.QueryRow(ctx, getUserReferralStats, referrerID)
 	var i GetUserReferralStatsRow
 	err := row.Scan(&i.TotalReferrals, &i.TotalEarned)
@@ -112,7 +112,7 @@ UPDATE referral_rewards SET
 WHERE id = $1
 `
 
-func (q *Queries) ProcessReferralBonus(ctx context.Context, id pgtype.UUID) error {
+func (q *Queries) ProcessReferralBonus(ctx context.Context, id int64) error {
 	_, err := q.db.Exec(ctx, processReferralBonus, id)
 	return err
 }

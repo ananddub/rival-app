@@ -7,10 +7,10 @@
 package api
 
 import (
-	schema "encore.app/gen/proto/proto/schema"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 	reflect "reflect"
+	schema "rival/gen/proto/proto/schema"
 	sync "sync"
 	unsafe "unsafe"
 )
@@ -24,7 +24,7 @@ const (
 
 type GetMerchantRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	MerchantId    string                 `protobuf:"bytes,1,opt,name=merchant_id,json=merchantId,proto3" json:"merchant_id,omitempty"`
+	MerchantId    int64                  `protobuf:"varint,1,opt,name=merchant_id,json=merchantId,proto3" json:"merchant_id,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -59,11 +59,11 @@ func (*GetMerchantRequest) Descriptor() ([]byte, []int) {
 	return file_proto_api_merchants_proto_rawDescGZIP(), []int{0}
 }
 
-func (x *GetMerchantRequest) GetMerchantId() string {
+func (x *GetMerchantRequest) GetMerchantId() int64 {
 	if x != nil {
 		return x.MerchantId
 	}
-	return ""
+	return 0
 }
 
 type GetMerchantResponse struct {
@@ -112,7 +112,7 @@ func (x *GetMerchantResponse) GetMerchant() *schema.Merchant {
 
 type UpdateMerchantRequest struct {
 	state              protoimpl.MessageState `protogen:"open.v1"`
-	MerchantId         string                 `protobuf:"bytes,1,opt,name=merchant_id,json=merchantId,proto3" json:"merchant_id,omitempty"`
+	MerchantId         int64                  `protobuf:"varint,1,opt,name=merchant_id,json=merchantId,proto3" json:"merchant_id,omitempty"`
 	Name               string                 `protobuf:"bytes,2,opt,name=name,proto3" json:"name,omitempty"`
 	Phone              string                 `protobuf:"bytes,3,opt,name=phone,proto3" json:"phone,omitempty"`
 	Category           string                 `protobuf:"bytes,4,opt,name=category,proto3" json:"category,omitempty"`
@@ -151,11 +151,11 @@ func (*UpdateMerchantRequest) Descriptor() ([]byte, []int) {
 	return file_proto_api_merchants_proto_rawDescGZIP(), []int{2}
 }
 
-func (x *UpdateMerchantRequest) GetMerchantId() string {
+func (x *UpdateMerchantRequest) GetMerchantId() int64 {
 	if x != nil {
 		return x.MerchantId
 	}
-	return ""
+	return 0
 }
 
 func (x *UpdateMerchantRequest) GetName() string {
@@ -232,7 +232,7 @@ func (x *UpdateMerchantResponse) GetMerchant() *schema.Merchant {
 
 type GetMerchantAddressRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	MerchantId    string                 `protobuf:"bytes,1,opt,name=merchant_id,json=merchantId,proto3" json:"merchant_id,omitempty"`
+	MerchantId    int64                  `protobuf:"varint,1,opt,name=merchant_id,json=merchantId,proto3" json:"merchant_id,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -267,11 +267,11 @@ func (*GetMerchantAddressRequest) Descriptor() ([]byte, []int) {
 	return file_proto_api_merchants_proto_rawDescGZIP(), []int{4}
 }
 
-func (x *GetMerchantAddressRequest) GetMerchantId() string {
+func (x *GetMerchantAddressRequest) GetMerchantId() int64 {
 	if x != nil {
 		return x.MerchantId
 	}
-	return ""
+	return 0
 }
 
 type GetMerchantAddressResponse struct {
@@ -320,7 +320,7 @@ func (x *GetMerchantAddressResponse) GetAddresses() []*schema.MerchantAddress {
 
 type UpdateMerchantAddressRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	MerchantId    string                 `protobuf:"bytes,1,opt,name=merchant_id,json=merchantId,proto3" json:"merchant_id,omitempty"`
+	MerchantId    int64                  `protobuf:"varint,1,opt,name=merchant_id,json=merchantId,proto3" json:"merchant_id,omitempty"`
 	Street        string                 `protobuf:"bytes,2,opt,name=street,proto3" json:"street,omitempty"`
 	City          string                 `protobuf:"bytes,3,opt,name=city,proto3" json:"city,omitempty"`
 	State         string                 `protobuf:"bytes,4,opt,name=state,proto3" json:"state,omitempty"`
@@ -362,11 +362,11 @@ func (*UpdateMerchantAddressRequest) Descriptor() ([]byte, []int) {
 	return file_proto_api_merchants_proto_rawDescGZIP(), []int{6}
 }
 
-func (x *UpdateMerchantAddressRequest) GetMerchantId() string {
+func (x *UpdateMerchantAddressRequest) GetMerchantId() int64 {
 	if x != nil {
 		return x.MerchantId
 	}
-	return ""
+	return 0
 }
 
 func (x *UpdateMerchantAddressRequest) GetStreet() string {
@@ -464,7 +464,7 @@ func (x *UpdateMerchantAddressResponse) GetAddress() *schema.MerchantAddress {
 
 type GetOrdersRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	MerchantId    string                 `protobuf:"bytes,1,opt,name=merchant_id,json=merchantId,proto3" json:"merchant_id,omitempty"`
+	MerchantId    int64                  `protobuf:"varint,1,opt,name=merchant_id,json=merchantId,proto3" json:"merchant_id,omitempty"`
 	Page          int32                  `protobuf:"varint,2,opt,name=page,proto3" json:"page,omitempty"`
 	Limit         int32                  `protobuf:"varint,3,opt,name=limit,proto3" json:"limit,omitempty"`
 	Status        string                 `protobuf:"bytes,4,opt,name=status,proto3" json:"status,omitempty"`
@@ -502,11 +502,11 @@ func (*GetOrdersRequest) Descriptor() ([]byte, []int) {
 	return file_proto_api_merchants_proto_rawDescGZIP(), []int{8}
 }
 
-func (x *GetOrdersRequest) GetMerchantId() string {
+func (x *GetOrdersRequest) GetMerchantId() int64 {
 	if x != nil {
 		return x.MerchantId
 	}
-	return ""
+	return 0
 }
 
 func (x *GetOrdersRequest) GetPage() int32 {
@@ -584,7 +584,7 @@ func (x *GetOrdersResponse) GetTotalCount() int32 {
 
 type UpdateOrderStatusRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	OrderId       string                 `protobuf:"bytes,1,opt,name=order_id,json=orderId,proto3" json:"order_id,omitempty"`
+	OrderId       int64                  `protobuf:"varint,1,opt,name=order_id,json=orderId,proto3" json:"order_id,omitempty"`
 	Status        string                 `protobuf:"bytes,2,opt,name=status,proto3" json:"status,omitempty"`
 	Notes         string                 `protobuf:"bytes,3,opt,name=notes,proto3" json:"notes,omitempty"`
 	unknownFields protoimpl.UnknownFields
@@ -621,11 +621,11 @@ func (*UpdateOrderStatusRequest) Descriptor() ([]byte, []int) {
 	return file_proto_api_merchants_proto_rawDescGZIP(), []int{10}
 }
 
-func (x *UpdateOrderStatusRequest) GetOrderId() string {
+func (x *UpdateOrderStatusRequest) GetOrderId() int64 {
 	if x != nil {
 		return x.OrderId
 	}
-	return ""
+	return 0
 }
 
 func (x *UpdateOrderStatusRequest) GetStatus() string {
@@ -688,7 +688,7 @@ func (x *UpdateOrderStatusResponse) GetOrder() *schema.Order {
 
 type GetCustomersRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	MerchantId    string                 `protobuf:"bytes,1,opt,name=merchant_id,json=merchantId,proto3" json:"merchant_id,omitempty"`
+	MerchantId    int64                  `protobuf:"varint,1,opt,name=merchant_id,json=merchantId,proto3" json:"merchant_id,omitempty"`
 	Page          int32                  `protobuf:"varint,2,opt,name=page,proto3" json:"page,omitempty"`
 	Limit         int32                  `protobuf:"varint,3,opt,name=limit,proto3" json:"limit,omitempty"`
 	unknownFields protoimpl.UnknownFields
@@ -725,11 +725,11 @@ func (*GetCustomersRequest) Descriptor() ([]byte, []int) {
 	return file_proto_api_merchants_proto_rawDescGZIP(), []int{12}
 }
 
-func (x *GetCustomersRequest) GetMerchantId() string {
+func (x *GetCustomersRequest) GetMerchantId() int64 {
 	if x != nil {
 		return x.MerchantId
 	}
-	return ""
+	return 0
 }
 
 func (x *GetCustomersRequest) GetPage() int32 {
@@ -800,7 +800,7 @@ func (x *GetCustomersResponse) GetTotalCount() int32 {
 
 type GetPayoutsRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	MerchantId    string                 `protobuf:"bytes,1,opt,name=merchant_id,json=merchantId,proto3" json:"merchant_id,omitempty"`
+	MerchantId    int64                  `protobuf:"varint,1,opt,name=merchant_id,json=merchantId,proto3" json:"merchant_id,omitempty"`
 	Page          int32                  `protobuf:"varint,2,opt,name=page,proto3" json:"page,omitempty"`
 	Limit         int32                  `protobuf:"varint,3,opt,name=limit,proto3" json:"limit,omitempty"`
 	unknownFields protoimpl.UnknownFields
@@ -837,11 +837,11 @@ func (*GetPayoutsRequest) Descriptor() ([]byte, []int) {
 	return file_proto_api_merchants_proto_rawDescGZIP(), []int{14}
 }
 
-func (x *GetPayoutsRequest) GetMerchantId() string {
+func (x *GetPayoutsRequest) GetMerchantId() int64 {
 	if x != nil {
 		return x.MerchantId
 	}
-	return ""
+	return 0
 }
 
 func (x *GetPayoutsRequest) GetPage() int32 {
@@ -912,7 +912,7 @@ func (x *GetPayoutsResponse) GetTotalCount() int32 {
 
 type CreateOfferRequest struct {
 	state              protoimpl.MessageState `protogen:"open.v1"`
-	MerchantId         string                 `protobuf:"bytes,1,opt,name=merchant_id,json=merchantId,proto3" json:"merchant_id,omitempty"`
+	MerchantId         int64                  `protobuf:"varint,1,opt,name=merchant_id,json=merchantId,proto3" json:"merchant_id,omitempty"`
 	Title              string                 `protobuf:"bytes,2,opt,name=title,proto3" json:"title,omitempty"`
 	Description        string                 `protobuf:"bytes,3,opt,name=description,proto3" json:"description,omitempty"`
 	DiscountPercentage float64                `protobuf:"fixed64,4,opt,name=discount_percentage,json=discountPercentage,proto3" json:"discount_percentage,omitempty"`
@@ -953,11 +953,11 @@ func (*CreateOfferRequest) Descriptor() ([]byte, []int) {
 	return file_proto_api_merchants_proto_rawDescGZIP(), []int{16}
 }
 
-func (x *CreateOfferRequest) GetMerchantId() string {
+func (x *CreateOfferRequest) GetMerchantId() int64 {
 	if x != nil {
 		return x.MerchantId
 	}
-	return ""
+	return 0
 }
 
 func (x *CreateOfferRequest) GetTitle() string {
@@ -1048,7 +1048,7 @@ func (x *CreateOfferResponse) GetOffer() *schema.Offer {
 
 type GetOffersRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	MerchantId    string                 `protobuf:"bytes,1,opt,name=merchant_id,json=merchantId,proto3" json:"merchant_id,omitempty"`
+	MerchantId    int64                  `protobuf:"varint,1,opt,name=merchant_id,json=merchantId,proto3" json:"merchant_id,omitempty"`
 	ActiveOnly    bool                   `protobuf:"varint,2,opt,name=active_only,json=activeOnly,proto3" json:"active_only,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
@@ -1084,11 +1084,11 @@ func (*GetOffersRequest) Descriptor() ([]byte, []int) {
 	return file_proto_api_merchants_proto_rawDescGZIP(), []int{18}
 }
 
-func (x *GetOffersRequest) GetMerchantId() string {
+func (x *GetOffersRequest) GetMerchantId() int64 {
 	if x != nil {
 		return x.MerchantId
 	}
-	return ""
+	return 0
 }
 
 func (x *GetOffersRequest) GetActiveOnly() bool {
@@ -1144,7 +1144,7 @@ func (x *GetOffersResponse) GetOffers() []*schema.Offer {
 
 type UpdateOfferRequest struct {
 	state              protoimpl.MessageState `protogen:"open.v1"`
-	OfferId            string                 `protobuf:"bytes,1,opt,name=offer_id,json=offerId,proto3" json:"offer_id,omitempty"`
+	OfferId            int64                  `protobuf:"varint,1,opt,name=offer_id,json=offerId,proto3" json:"offer_id,omitempty"`
 	Title              string                 `protobuf:"bytes,2,opt,name=title,proto3" json:"title,omitempty"`
 	Description        string                 `protobuf:"bytes,3,opt,name=description,proto3" json:"description,omitempty"`
 	DiscountPercentage float64                `protobuf:"fixed64,4,opt,name=discount_percentage,json=discountPercentage,proto3" json:"discount_percentage,omitempty"`
@@ -1186,11 +1186,11 @@ func (*UpdateOfferRequest) Descriptor() ([]byte, []int) {
 	return file_proto_api_merchants_proto_rawDescGZIP(), []int{20}
 }
 
-func (x *UpdateOfferRequest) GetOfferId() string {
+func (x *UpdateOfferRequest) GetOfferId() int64 {
 	if x != nil {
 		return x.OfferId
 	}
-	return ""
+	return 0
 }
 
 func (x *UpdateOfferRequest) GetTitle() string {
@@ -1288,7 +1288,7 @@ func (x *UpdateOfferResponse) GetOffer() *schema.Offer {
 
 type GetDashboardStatsRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	MerchantId    string                 `protobuf:"bytes,1,opt,name=merchant_id,json=merchantId,proto3" json:"merchant_id,omitempty"`
+	MerchantId    int64                  `protobuf:"varint,1,opt,name=merchant_id,json=merchantId,proto3" json:"merchant_id,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -1323,11 +1323,11 @@ func (*GetDashboardStatsRequest) Descriptor() ([]byte, []int) {
 	return file_proto_api_merchants_proto_rawDescGZIP(), []int{22}
 }
 
-func (x *GetDashboardStatsRequest) GetMerchantId() string {
+func (x *GetDashboardStatsRequest) GetMerchantId() int64 {
 	if x != nil {
 		return x.MerchantId
 	}
-	return ""
+	return 0
 }
 
 type GetDashboardStatsResponse struct {
@@ -1408,7 +1408,7 @@ func (x *GetDashboardStatsResponse) GetPendingPayout() float64 {
 
 type StreamOrdersRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	MerchantId    string                 `protobuf:"bytes,1,opt,name=merchant_id,json=merchantId,proto3" json:"merchant_id,omitempty"`
+	MerchantId    int64                  `protobuf:"varint,1,opt,name=merchant_id,json=merchantId,proto3" json:"merchant_id,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -1443,11 +1443,11 @@ func (*StreamOrdersRequest) Descriptor() ([]byte, []int) {
 	return file_proto_api_merchants_proto_rawDescGZIP(), []int{24}
 }
 
-func (x *StreamOrdersRequest) GetMerchantId() string {
+func (x *StreamOrdersRequest) GetMerchantId() int64 {
 	if x != nil {
 		return x.MerchantId
 	}
-	return ""
+	return 0
 }
 
 type StreamOrdersResponse struct {
@@ -1504,7 +1504,7 @@ func (x *StreamOrdersResponse) GetEventType() string {
 
 type StreamNotificationsRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	MerchantId    string                 `protobuf:"bytes,1,opt,name=merchant_id,json=merchantId,proto3" json:"merchant_id,omitempty"`
+	MerchantId    int64                  `protobuf:"varint,1,opt,name=merchant_id,json=merchantId,proto3" json:"merchant_id,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -1539,11 +1539,11 @@ func (*StreamNotificationsRequest) Descriptor() ([]byte, []int) {
 	return file_proto_api_merchants_proto_rawDescGZIP(), []int{26}
 }
 
-func (x *StreamNotificationsRequest) GetMerchantId() string {
+func (x *StreamNotificationsRequest) GetMerchantId() int64 {
 	if x != nil {
 		return x.MerchantId
 	}
-	return ""
+	return 0
 }
 
 type StreamNotificationsResponse struct {
@@ -1628,12 +1628,12 @@ const file_proto_api_merchants_proto_rawDesc = "" +
 	"\n" +
 	"\x19proto/api/merchants.proto\x12\frival.api.v1\x1a\x19proto/schema/schema.proto\"5\n" +
 	"\x12GetMerchantRequest\x12\x1f\n" +
-	"\vmerchant_id\x18\x01 \x01(\tR\n" +
+	"\vmerchant_id\x18\x01 \x01(\x03R\n" +
 	"merchantId\"L\n" +
 	"\x13GetMerchantResponse\x125\n" +
 	"\bmerchant\x18\x01 \x01(\v2\x19.rival.schema.v1.MerchantR\bmerchant\"\xaf\x01\n" +
 	"\x15UpdateMerchantRequest\x12\x1f\n" +
-	"\vmerchant_id\x18\x01 \x01(\tR\n" +
+	"\vmerchant_id\x18\x01 \x01(\x03R\n" +
 	"merchantId\x12\x12\n" +
 	"\x04name\x18\x02 \x01(\tR\x04name\x12\x14\n" +
 	"\x05phone\x18\x03 \x01(\tR\x05phone\x12\x1a\n" +
@@ -1642,12 +1642,12 @@ const file_proto_api_merchants_proto_rawDesc = "" +
 	"\x16UpdateMerchantResponse\x125\n" +
 	"\bmerchant\x18\x01 \x01(\v2\x19.rival.schema.v1.MerchantR\bmerchant\"<\n" +
 	"\x19GetMerchantAddressRequest\x12\x1f\n" +
-	"\vmerchant_id\x18\x01 \x01(\tR\n" +
+	"\vmerchant_id\x18\x01 \x01(\x03R\n" +
 	"merchantId\"\\\n" +
 	"\x1aGetMerchantAddressResponse\x12>\n" +
 	"\taddresses\x18\x01 \x03(\v2 .rival.schema.v1.MerchantAddressR\taddresses\"\xf6\x01\n" +
 	"\x1cUpdateMerchantAddressRequest\x12\x1f\n" +
-	"\vmerchant_id\x18\x01 \x01(\tR\n" +
+	"\vmerchant_id\x18\x01 \x01(\x03R\n" +
 	"merchantId\x12\x16\n" +
 	"\x06street\x18\x02 \x01(\tR\x06street\x12\x12\n" +
 	"\x04city\x18\x03 \x01(\tR\x04city\x12\x14\n" +
@@ -1660,7 +1660,7 @@ const file_proto_api_merchants_proto_rawDesc = "" +
 	"\x1dUpdateMerchantAddressResponse\x12:\n" +
 	"\aaddress\x18\x01 \x01(\v2 .rival.schema.v1.MerchantAddressR\aaddress\"u\n" +
 	"\x10GetOrdersRequest\x12\x1f\n" +
-	"\vmerchant_id\x18\x01 \x01(\tR\n" +
+	"\vmerchant_id\x18\x01 \x01(\x03R\n" +
 	"merchantId\x12\x12\n" +
 	"\x04page\x18\x02 \x01(\x05R\x04page\x12\x14\n" +
 	"\x05limit\x18\x03 \x01(\x05R\x05limit\x12\x16\n" +
@@ -1670,13 +1670,13 @@ const file_proto_api_merchants_proto_rawDesc = "" +
 	"\vtotal_count\x18\x02 \x01(\x05R\n" +
 	"totalCount\"c\n" +
 	"\x18UpdateOrderStatusRequest\x12\x19\n" +
-	"\border_id\x18\x01 \x01(\tR\aorderId\x12\x16\n" +
+	"\border_id\x18\x01 \x01(\x03R\aorderId\x12\x16\n" +
 	"\x06status\x18\x02 \x01(\tR\x06status\x12\x14\n" +
 	"\x05notes\x18\x03 \x01(\tR\x05notes\"I\n" +
 	"\x19UpdateOrderStatusResponse\x12,\n" +
 	"\x05order\x18\x01 \x01(\v2\x16.rival.schema.v1.OrderR\x05order\"`\n" +
 	"\x13GetCustomersRequest\x12\x1f\n" +
-	"\vmerchant_id\x18\x01 \x01(\tR\n" +
+	"\vmerchant_id\x18\x01 \x01(\x03R\n" +
 	"merchantId\x12\x12\n" +
 	"\x04page\x18\x02 \x01(\x05R\x04page\x12\x14\n" +
 	"\x05limit\x18\x03 \x01(\x05R\x05limit\"l\n" +
@@ -1685,7 +1685,7 @@ const file_proto_api_merchants_proto_rawDesc = "" +
 	"\vtotal_count\x18\x02 \x01(\x05R\n" +
 	"totalCount\"^\n" +
 	"\x11GetPayoutsRequest\x12\x1f\n" +
-	"\vmerchant_id\x18\x01 \x01(\tR\n" +
+	"\vmerchant_id\x18\x01 \x01(\x03R\n" +
 	"merchantId\x12\x12\n" +
 	"\x04page\x18\x02 \x01(\x05R\x04page\x12\x14\n" +
 	"\x05limit\x18\x03 \x01(\x05R\x05limit\"l\n" +
@@ -1694,7 +1694,7 @@ const file_proto_api_merchants_proto_rawDesc = "" +
 	"\vtotal_count\x18\x02 \x01(\x05R\n" +
 	"totalCount\"\x81\x02\n" +
 	"\x12CreateOfferRequest\x12\x1f\n" +
-	"\vmerchant_id\x18\x01 \x01(\tR\n" +
+	"\vmerchant_id\x18\x01 \x01(\x03R\n" +
 	"merchantId\x12\x14\n" +
 	"\x05title\x18\x02 \x01(\tR\x05title\x12 \n" +
 	"\vdescription\x18\x03 \x01(\tR\vdescription\x12/\n" +
@@ -1707,14 +1707,14 @@ const file_proto_api_merchants_proto_rawDesc = "" +
 	"\x13CreateOfferResponse\x12,\n" +
 	"\x05offer\x18\x01 \x01(\v2\x16.rival.schema.v1.OfferR\x05offer\"T\n" +
 	"\x10GetOffersRequest\x12\x1f\n" +
-	"\vmerchant_id\x18\x01 \x01(\tR\n" +
+	"\vmerchant_id\x18\x01 \x01(\x03R\n" +
 	"merchantId\x12\x1f\n" +
 	"\vactive_only\x18\x02 \x01(\bR\n" +
 	"activeOnly\"C\n" +
 	"\x11GetOffersResponse\x12.\n" +
 	"\x06offers\x18\x01 \x03(\v2\x16.rival.schema.v1.OfferR\x06offers\"\x98\x02\n" +
 	"\x12UpdateOfferRequest\x12\x19\n" +
-	"\boffer_id\x18\x01 \x01(\tR\aofferId\x12\x14\n" +
+	"\boffer_id\x18\x01 \x01(\x03R\aofferId\x12\x14\n" +
 	"\x05title\x18\x02 \x01(\tR\x05title\x12 \n" +
 	"\vdescription\x18\x03 \x01(\tR\vdescription\x12/\n" +
 	"\x13discount_percentage\x18\x04 \x01(\x01R\x12discountPercentage\x12\x1d\n" +
@@ -1727,7 +1727,7 @@ const file_proto_api_merchants_proto_rawDesc = "" +
 	"\x13UpdateOfferResponse\x12,\n" +
 	"\x05offer\x18\x01 \x01(\v2\x16.rival.schema.v1.OfferR\x05offer\";\n" +
 	"\x18GetDashboardStatsRequest\x12\x1f\n" +
-	"\vmerchant_id\x18\x01 \x01(\tR\n" +
+	"\vmerchant_id\x18\x01 \x01(\x03R\n" +
 	"merchantId\"\xd8\x01\n" +
 	"\x19GetDashboardStatsResponse\x12#\n" +
 	"\rtoday_revenue\x18\x01 \x01(\x01R\ftodayRevenue\x12!\n" +
@@ -1736,14 +1736,14 @@ const file_proto_api_merchants_proto_rawDesc = "" +
 	"\x0ftotal_customers\x18\x04 \x01(\x05R\x0etotalCustomers\x12%\n" +
 	"\x0epending_payout\x18\x05 \x01(\x01R\rpendingPayout\"6\n" +
 	"\x13StreamOrdersRequest\x12\x1f\n" +
-	"\vmerchant_id\x18\x01 \x01(\tR\n" +
+	"\vmerchant_id\x18\x01 \x01(\x03R\n" +
 	"merchantId\"c\n" +
 	"\x14StreamOrdersResponse\x12,\n" +
 	"\x05order\x18\x01 \x01(\v2\x16.rival.schema.v1.OrderR\x05order\x12\x1d\n" +
 	"\n" +
 	"event_type\x18\x02 \x01(\tR\teventType\"=\n" +
 	"\x1aStreamNotificationsRequest\x12\x1f\n" +
-	"\vmerchant_id\x18\x01 \x01(\tR\n" +
+	"\vmerchant_id\x18\x01 \x01(\x03R\n" +
 	"merchantId\"\x8f\x01\n" +
 	"\x1bStreamNotificationsResponse\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12\x14\n" +
@@ -1767,7 +1767,7 @@ const file_proto_api_merchants_proto_rawDesc = "" +
 	"\vUpdateOffer\x12 .rival.api.v1.UpdateOfferRequest\x1a!.rival.api.v1.UpdateOfferResponse\x12d\n" +
 	"\x11GetDashboardStats\x12&.rival.api.v1.GetDashboardStatsRequest\x1a'.rival.api.v1.GetDashboardStatsResponse\x12W\n" +
 	"\fStreamOrders\x12!.rival.api.v1.StreamOrdersRequest\x1a\".rival.api.v1.StreamOrdersResponse0\x01\x12l\n" +
-	"\x13StreamNotifications\x12(.rival.api.v1.StreamNotificationsRequest\x1a).rival.api.v1.StreamNotificationsResponse0\x01B Z\x1eencore.app/gen/proto/proto/apib\x06proto3"
+	"\x13StreamNotifications\x12(.rival.api.v1.StreamNotificationsRequest\x1a).rival.api.v1.StreamNotificationsResponse0\x01B\x1bZ\x19rival/gen/proto/proto/apib\x06proto3"
 
 var (
 	file_proto_api_merchants_proto_rawDescOnce sync.Once

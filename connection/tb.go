@@ -1,7 +1,7 @@
 package connection
 
 import (
-	"encore.app/config"
+	"rival/config"
 	tigerbeetle_go "github.com/tigerbeetle/tigerbeetle-go"
 	"github.com/tigerbeetle/tigerbeetle-go/pkg/types"
 )

@@ -7,10 +7,10 @@
 package api
 
 import (
-	schema "encore.app/gen/proto/proto/schema"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 	reflect "reflect"
+	schema "rival/gen/proto/proto/schema"
 	sync "sync"
 	unsafe "unsafe"
 )
@@ -24,9 +24,9 @@ const (
 
 type CreateOrderRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	UserId        string                 `protobuf:"bytes,1,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
-	MerchantId    string                 `protobuf:"bytes,2,opt,name=merchant_id,json=merchantId,proto3" json:"merchant_id,omitempty"`
-	OfferId       string                 `protobuf:"bytes,3,opt,name=offer_id,json=offerId,proto3" json:"offer_id,omitempty"`
+	UserId        int64                  `protobuf:"varint,1,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
+	MerchantId    int64                  `protobuf:"varint,2,opt,name=merchant_id,json=merchantId,proto3" json:"merchant_id,omitempty"`
+	OfferId       int64                  `protobuf:"varint,3,opt,name=offer_id,json=offerId,proto3" json:"offer_id,omitempty"`
 	Items         string                 `protobuf:"bytes,4,opt,name=items,proto3" json:"items,omitempty"` // JSON string
 	Subtotal      float64                `protobuf:"fixed64,5,opt,name=subtotal,proto3" json:"subtotal,omitempty"`
 	CoinsUsed     float64                `protobuf:"fixed64,6,opt,name=coins_used,json=coinsUsed,proto3" json:"coins_used,omitempty"`
@@ -65,25 +65,25 @@ func (*CreateOrderRequest) Descriptor() ([]byte, []int) {
 	return file_proto_api_orders_proto_rawDescGZIP(), []int{0}
 }
 
-func (x *CreateOrderRequest) GetUserId() string {
+func (x *CreateOrderRequest) GetUserId() int64 {
 	if x != nil {
 		return x.UserId
 	}
-	return ""
+	return 0
 }
 
-func (x *CreateOrderRequest) GetMerchantId() string {
+func (x *CreateOrderRequest) GetMerchantId() int64 {
 	if x != nil {
 		return x.MerchantId
 	}
-	return ""
+	return 0
 }
 
-func (x *CreateOrderRequest) GetOfferId() string {
+func (x *CreateOrderRequest) GetOfferId() int64 {
 	if x != nil {
 		return x.OfferId
 	}
-	return ""
+	return 0
 }
 
 func (x *CreateOrderRequest) GetItems() string {
@@ -160,7 +160,7 @@ func (x *CreateOrderResponse) GetOrder() *schema.Order {
 
 type GetOrderRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	OrderId       string                 `protobuf:"bytes,1,opt,name=order_id,json=orderId,proto3" json:"order_id,omitempty"`
+	OrderId       int64                  `protobuf:"varint,1,opt,name=order_id,json=orderId,proto3" json:"order_id,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -195,11 +195,11 @@ func (*GetOrderRequest) Descriptor() ([]byte, []int) {
 	return file_proto_api_orders_proto_rawDescGZIP(), []int{2}
 }
 
-func (x *GetOrderRequest) GetOrderId() string {
+func (x *GetOrderRequest) GetOrderId() int64 {
 	if x != nil {
 		return x.OrderId
 	}
-	return ""
+	return 0
 }
 
 type GetOrderResponse struct {
@@ -248,7 +248,7 @@ func (x *GetOrderResponse) GetOrder() *schema.Order {
 
 type GetUserOrdersRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	UserId        string                 `protobuf:"bytes,1,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
+	UserId        int64                  `protobuf:"varint,1,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
 	Page          int32                  `protobuf:"varint,2,opt,name=page,proto3" json:"page,omitempty"`
 	Limit         int32                  `protobuf:"varint,3,opt,name=limit,proto3" json:"limit,omitempty"`
 	Status        string                 `protobuf:"bytes,4,opt,name=status,proto3" json:"status,omitempty"`
@@ -286,11 +286,11 @@ func (*GetUserOrdersRequest) Descriptor() ([]byte, []int) {
 	return file_proto_api_orders_proto_rawDescGZIP(), []int{4}
 }
 
-func (x *GetUserOrdersRequest) GetUserId() string {
+func (x *GetUserOrdersRequest) GetUserId() int64 {
 	if x != nil {
 		return x.UserId
 	}
-	return ""
+	return 0
 }
 
 func (x *GetUserOrdersRequest) GetPage() int32 {
@@ -368,7 +368,7 @@ func (x *GetUserOrdersResponse) GetTotalCount() int32 {
 
 type CancelOrderRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	OrderId       string                 `protobuf:"bytes,1,opt,name=order_id,json=orderId,proto3" json:"order_id,omitempty"`
+	OrderId       int64                  `protobuf:"varint,1,opt,name=order_id,json=orderId,proto3" json:"order_id,omitempty"`
 	Reason        string                 `protobuf:"bytes,2,opt,name=reason,proto3" json:"reason,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
@@ -404,11 +404,11 @@ func (*CancelOrderRequest) Descriptor() ([]byte, []int) {
 	return file_proto_api_orders_proto_rawDescGZIP(), []int{6}
 }
 
-func (x *CancelOrderRequest) GetOrderId() string {
+func (x *CancelOrderRequest) GetOrderId() int64 {
 	if x != nil {
 		return x.OrderId
 	}
-	return ""
+	return 0
 }
 
 func (x *CancelOrderRequest) GetReason() string {
@@ -464,7 +464,7 @@ func (x *CancelOrderResponse) GetSuccess() bool {
 
 type StreamOrderUpdatesRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	UserId        string                 `protobuf:"bytes,1,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
+	UserId        int64                  `protobuf:"varint,1,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -499,11 +499,11 @@ func (*StreamOrderUpdatesRequest) Descriptor() ([]byte, []int) {
 	return file_proto_api_orders_proto_rawDescGZIP(), []int{8}
 }
 
-func (x *StreamOrderUpdatesRequest) GetUserId() string {
+func (x *StreamOrderUpdatesRequest) GetUserId() int64 {
 	if x != nil {
 		return x.UserId
 	}
-	return ""
+	return 0
 }
 
 type StreamOrderUpdatesResponse struct {
@@ -564,10 +564,10 @@ const file_proto_api_orders_proto_rawDesc = "" +
 	"\n" +
 	"\x16proto/api/orders.proto\x12\frival.api.v1\x1a\x19proto/schema/schema.proto\"\xd0\x01\n" +
 	"\x12CreateOrderRequest\x12\x17\n" +
-	"\auser_id\x18\x01 \x01(\tR\x06userId\x12\x1f\n" +
-	"\vmerchant_id\x18\x02 \x01(\tR\n" +
+	"\auser_id\x18\x01 \x01(\x03R\x06userId\x12\x1f\n" +
+	"\vmerchant_id\x18\x02 \x01(\x03R\n" +
 	"merchantId\x12\x19\n" +
-	"\boffer_id\x18\x03 \x01(\tR\aofferId\x12\x14\n" +
+	"\boffer_id\x18\x03 \x01(\x03R\aofferId\x12\x14\n" +
 	"\x05items\x18\x04 \x01(\tR\x05items\x12\x1a\n" +
 	"\bsubtotal\x18\x05 \x01(\x01R\bsubtotal\x12\x1d\n" +
 	"\n" +
@@ -576,11 +576,11 @@ const file_proto_api_orders_proto_rawDesc = "" +
 	"\x13CreateOrderResponse\x12,\n" +
 	"\x05order\x18\x01 \x01(\v2\x16.rival.schema.v1.OrderR\x05order\",\n" +
 	"\x0fGetOrderRequest\x12\x19\n" +
-	"\border_id\x18\x01 \x01(\tR\aorderId\"@\n" +
+	"\border_id\x18\x01 \x01(\x03R\aorderId\"@\n" +
 	"\x10GetOrderResponse\x12,\n" +
 	"\x05order\x18\x01 \x01(\v2\x16.rival.schema.v1.OrderR\x05order\"q\n" +
 	"\x14GetUserOrdersRequest\x12\x17\n" +
-	"\auser_id\x18\x01 \x01(\tR\x06userId\x12\x12\n" +
+	"\auser_id\x18\x01 \x01(\x03R\x06userId\x12\x12\n" +
 	"\x04page\x18\x02 \x01(\x05R\x04page\x12\x14\n" +
 	"\x05limit\x18\x03 \x01(\x05R\x05limit\x12\x16\n" +
 	"\x06status\x18\x04 \x01(\tR\x06status\"h\n" +
@@ -589,12 +589,12 @@ const file_proto_api_orders_proto_rawDesc = "" +
 	"\vtotal_count\x18\x02 \x01(\x05R\n" +
 	"totalCount\"G\n" +
 	"\x12CancelOrderRequest\x12\x19\n" +
-	"\border_id\x18\x01 \x01(\tR\aorderId\x12\x16\n" +
+	"\border_id\x18\x01 \x01(\x03R\aorderId\x12\x16\n" +
 	"\x06reason\x18\x02 \x01(\tR\x06reason\"/\n" +
 	"\x13CancelOrderResponse\x12\x18\n" +
 	"\asuccess\x18\x01 \x01(\bR\asuccess\"4\n" +
 	"\x19StreamOrderUpdatesRequest\x12\x17\n" +
-	"\auser_id\x18\x01 \x01(\tR\x06userId\"i\n" +
+	"\auser_id\x18\x01 \x01(\x03R\x06userId\"i\n" +
 	"\x1aStreamOrderUpdatesResponse\x12,\n" +
 	"\x05order\x18\x01 \x01(\v2\x16.rival.schema.v1.OrderR\x05order\x12\x1d\n" +
 	"\n" +
@@ -604,7 +604,7 @@ const file_proto_api_orders_proto_rawDesc = "" +
 	"\bGetOrder\x12\x1d.rival.api.v1.GetOrderRequest\x1a\x1e.rival.api.v1.GetOrderResponse\x12X\n" +
 	"\rGetUserOrders\x12\".rival.api.v1.GetUserOrdersRequest\x1a#.rival.api.v1.GetUserOrdersResponse\x12R\n" +
 	"\vCancelOrder\x12 .rival.api.v1.CancelOrderRequest\x1a!.rival.api.v1.CancelOrderResponse\x12i\n" +
-	"\x12StreamOrderUpdates\x12'.rival.api.v1.StreamOrderUpdatesRequest\x1a(.rival.api.v1.StreamOrderUpdatesResponse0\x01B Z\x1eencore.app/gen/proto/proto/apib\x06proto3"
+	"\x12StreamOrderUpdates\x12'.rival.api.v1.StreamOrderUpdatesRequest\x1a(.rival.api.v1.StreamOrderUpdatesResponse0\x01B\x1bZ\x19rival/gen/proto/proto/apib\x06proto3"
 
 var (
 	file_proto_api_orders_proto_rawDescOnce sync.Once

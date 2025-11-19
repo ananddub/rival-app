@@ -6,7 +6,8 @@ import (
 	"fmt"
 	"time"
 
-	schemapb "encore.app/gen/proto/proto/schema"
+	schemapb "rival/gen/proto/proto/schema"
+
 	"github.com/golang-jwt/jwt/v5"
 )
 
@@ -18,17 +19,17 @@ type JWTUtil interface {
 }
 
 type TokenClaims struct {
-	UserID string             `json:"user_id"`
-	Email  string             `json:"email"`
-	Role   schemapb.UserRole  `json:"role"`
-	Exp    int64              `json:"exp"`
+	UserID int               `json:"user_id"`
+	Email  string            `json:"email"`
+	Role   schemapb.UserRole `json:"role"`
+	Exp    int64             `json:"exp"`
 	jwt.RegisteredClaims
 }
 
 type jwtUtil struct {
-	secretKey        string
-	accessTokenTTL   time.Duration
-	refreshTokenTTL  time.Duration
+	secretKey       string
+	accessTokenTTL  time.Duration
+	refreshTokenTTL time.Duration
 }
 
 func NewJWTUtil(secretKey string, accessTTL, refreshTTL time.Duration) JWTUtil {
@@ -42,14 +43,14 @@ func NewJWTUtil(secretKey string, accessTTL, refreshTTL time.Duration) JWTUtil {
 func (j *jwtUtil) GenerateTokens(user *schemapb.User) (accessToken, refreshToken string, err error) {
 	// Access token claims
 	accessClaims := TokenClaims{
-		UserID: user.Id,
+		UserID: int(user.Id),
 		Email:  user.Email,
 		Role:   user.Role,
 		Exp:    time.Now().Add(j.accessTokenTTL).Unix(),
 		RegisteredClaims: jwt.RegisteredClaims{
 			ExpiresAt: jwt.NewNumericDate(time.Now().Add(j.accessTokenTTL)),
 			IssuedAt:  jwt.NewNumericDate(time.Now()),
-			Subject:   user.Id,
+			Subject:   fmt.Sprintf("%d", user.Id),
 		},
 	}
 
@@ -62,14 +63,14 @@ func (j *jwtUtil) GenerateTokens(user *schemapb.User) (accessToken, refreshToken
 
 	// Refresh token claims
 	refreshClaims := TokenClaims{
-		UserID: user.Id,
+		UserID: int(user.Id),
 		Email:  user.Email,
 		Role:   user.Role,
 		Exp:    time.Now().Add(j.refreshTokenTTL).Unix(),
 		RegisteredClaims: jwt.RegisteredClaims{
 			ExpiresAt: jwt.NewNumericDate(time.Now().Add(j.refreshTokenTTL)),
 			IssuedAt:  jwt.NewNumericDate(time.Now()),
-			Subject:   user.Id,
+			Subject:   fmt.Sprintf("%d", user.Id),
 		},
 	}
 
@@ -117,7 +118,7 @@ func (j *jwtUtil) RefreshAccessToken(refreshToken string) (string, error) {
 		RegisteredClaims: jwt.RegisteredClaims{
 			ExpiresAt: jwt.NewNumericDate(time.Now().Add(j.accessTokenTTL)),
 			IssuedAt:  jwt.NewNumericDate(time.Now()),
-			Subject:   claims.UserID,
+			Subject:   fmt.Sprintf("%d", claims.UserID),
 		},
 	}
 

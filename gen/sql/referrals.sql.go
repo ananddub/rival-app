@@ -19,7 +19,7 @@ LIMIT $2 OFFSET $3
 `
 
 type GetReferralRewardsParams struct {
-	ReferrerID pgtype.UUID `json:"referrer_id"`
+	ReferrerID pgtype.Int8 `json:"referrer_id"`
 	Limit      int32       `json:"limit"`
 	Offset     int32       `json:"offset"`
 }
@@ -59,7 +59,7 @@ WHERE referrer_id = $1 AND status = 'pending'
 ORDER BY created_at DESC
 `
 
-func (q *Queries) GetUserPendingReferrals(ctx context.Context, referrerID pgtype.UUID) ([]ReferralReward, error) {
+func (q *Queries) GetUserPendingReferrals(ctx context.Context, referrerID pgtype.Int8) ([]ReferralReward, error) {
 	rows, err := q.db.Query(ctx, getUserPendingReferrals, referrerID)
 	if err != nil {
 		return nil, err

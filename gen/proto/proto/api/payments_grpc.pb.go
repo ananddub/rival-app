@@ -19,22 +19,42 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	PaymentService_InitiateCoinPurchase_FullMethodName = "/rival.api.v1.PaymentService/InitiateCoinPurchase"
-	PaymentService_VerifyPayment_FullMethodName        = "/rival.api.v1.PaymentService/VerifyPayment"
-	PaymentService_GetPaymentHistory_FullMethodName    = "/rival.api.v1.PaymentService/GetPaymentHistory"
-	PaymentService_RefundPayment_FullMethodName        = "/rival.api.v1.PaymentService/RefundPayment"
-	PaymentService_StreamPaymentUpdates_FullMethodName = "/rival.api.v1.PaymentService/StreamPaymentUpdates"
+	PaymentService_InitiateCoinPurchase_FullMethodName     = "/rival.api.v1.PaymentService/InitiateCoinPurchase"
+	PaymentService_VerifyPayment_FullMethodName            = "/rival.api.v1.PaymentService/VerifyPayment"
+	PaymentService_GetPaymentHistory_FullMethodName        = "/rival.api.v1.PaymentService/GetPaymentHistory"
+	PaymentService_RefundPayment_FullMethodName            = "/rival.api.v1.PaymentService/RefundPayment"
+	PaymentService_PayToMerchant_FullMethodName            = "/rival.api.v1.PaymentService/PayToMerchant"
+	PaymentService_TransferToUser_FullMethodName           = "/rival.api.v1.PaymentService/TransferToUser"
+	PaymentService_GetBalance_FullMethodName               = "/rival.api.v1.PaymentService/GetBalance"
+	PaymentService_GetTransactionHistory_FullMethodName    = "/rival.api.v1.PaymentService/GetTransactionHistory"
+	PaymentService_ProcessRefund_FullMethodName            = "/rival.api.v1.PaymentService/ProcessRefund"
+	PaymentService_InitiateSettlement_FullMethodName       = "/rival.api.v1.PaymentService/InitiateSettlement"
+	PaymentService_GetSettlements_FullMethodName           = "/rival.api.v1.PaymentService/GetSettlements"
+	PaymentService_StreamPaymentUpdates_FullMethodName     = "/rival.api.v1.PaymentService/StreamPaymentUpdates"
+	PaymentService_StreamTransactionUpdates_FullMethodName = "/rival.api.v1.PaymentService/StreamTransactionUpdates"
 )
 
 // PaymentServiceClient is the client API for PaymentService service.
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type PaymentServiceClient interface {
+	// Coin Purchase
 	InitiateCoinPurchase(ctx context.Context, in *InitiateCoinPurchaseRequest, opts ...grpc.CallOption) (*InitiateCoinPurchaseResponse, error)
 	VerifyPayment(ctx context.Context, in *VerifyPaymentRequest, opts ...grpc.CallOption) (*VerifyPaymentResponse, error)
 	GetPaymentHistory(ctx context.Context, in *GetPaymentHistoryRequest, opts ...grpc.CallOption) (*GetPaymentHistoryResponse, error)
 	RefundPayment(ctx context.Context, in *RefundPaymentRequest, opts ...grpc.CallOption) (*RefundPaymentResponse, error)
+	// Payment Transfers
+	PayToMerchant(ctx context.Context, in *PayToMerchantRequest, opts ...grpc.CallOption) (*PayToMerchantResponse, error)
+	TransferToUser(ctx context.Context, in *TransferToUserRequest, opts ...grpc.CallOption) (*TransferToUserResponse, error)
+	GetBalance(ctx context.Context, in *GetBalanceRequest, opts ...grpc.CallOption) (*GetBalanceResponse, error)
+	GetTransactionHistory(ctx context.Context, in *GetTransactionHistoryRequest, opts ...grpc.CallOption) (*GetTransactionHistoryResponse, error)
+	ProcessRefund(ctx context.Context, in *ProcessRefundRequest, opts ...grpc.CallOption) (*ProcessRefundResponse, error)
+	// Merchant Settlements
+	InitiateSettlement(ctx context.Context, in *InitiateSettlementRequest, opts ...grpc.CallOption) (*InitiateSettlementResponse, error)
+	GetSettlements(ctx context.Context, in *GetSettlementsRequest, opts ...grpc.CallOption) (*GetSettlementsResponse, error)
+	// Streaming
 	StreamPaymentUpdates(ctx context.Context, in *StreamPaymentUpdatesRequest, opts ...grpc.CallOption) (grpc.ServerStreamingClient[StreamPaymentUpdatesResponse], error)
+	StreamTransactionUpdates(ctx context.Context, in *StreamTransactionUpdatesRequest, opts ...grpc.CallOption) (grpc.ServerStreamingClient[StreamTransactionUpdatesResponse], error)
 }
 
 type paymentServiceClient struct {
@@ -85,6 +105,76 @@ func (c *paymentServiceClient) RefundPayment(ctx context.Context, in *RefundPaym
 	return out, nil
 }
 
+func (c *paymentServiceClient) PayToMerchant(ctx context.Context, in *PayToMerchantRequest, opts ...grpc.CallOption) (*PayToMerchantResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(PayToMerchantResponse)
+	err := c.cc.Invoke(ctx, PaymentService_PayToMerchant_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *paymentServiceClient) TransferToUser(ctx context.Context, in *TransferToUserRequest, opts ...grpc.CallOption) (*TransferToUserResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(TransferToUserResponse)
+	err := c.cc.Invoke(ctx, PaymentService_TransferToUser_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *paymentServiceClient) GetBalance(ctx context.Context, in *GetBalanceRequest, opts ...grpc.CallOption) (*GetBalanceResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(GetBalanceResponse)
+	err := c.cc.Invoke(ctx, PaymentService_GetBalance_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *paymentServiceClient) GetTransactionHistory(ctx context.Context, in *GetTransactionHistoryRequest, opts ...grpc.CallOption) (*GetTransactionHistoryResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(GetTransactionHistoryResponse)
+	err := c.cc.Invoke(ctx, PaymentService_GetTransactionHistory_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *paymentServiceClient) ProcessRefund(ctx context.Context, in *ProcessRefundRequest, opts ...grpc.CallOption) (*ProcessRefundResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(ProcessRefundResponse)
+	err := c.cc.Invoke(ctx, PaymentService_ProcessRefund_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *paymentServiceClient) InitiateSettlement(ctx context.Context, in *InitiateSettlementRequest, opts ...grpc.CallOption) (*InitiateSettlementResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(InitiateSettlementResponse)
+	err := c.cc.Invoke(ctx, PaymentService_InitiateSettlement_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *paymentServiceClient) GetSettlements(ctx context.Context, in *GetSettlementsRequest, opts ...grpc.CallOption) (*GetSettlementsResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(GetSettlementsResponse)
+	err := c.cc.Invoke(ctx, PaymentService_GetSettlements_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *paymentServiceClient) StreamPaymentUpdates(ctx context.Context, in *StreamPaymentUpdatesRequest, opts ...grpc.CallOption) (grpc.ServerStreamingClient[StreamPaymentUpdatesResponse], error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	stream, err := c.cc.NewStream(ctx, &PaymentService_ServiceDesc.Streams[0], PaymentService_StreamPaymentUpdates_FullMethodName, cOpts...)
@@ -104,15 +194,46 @@ func (c *paymentServiceClient) StreamPaymentUpdates(ctx context.Context, in *Str
 // This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
 type PaymentService_StreamPaymentUpdatesClient = grpc.ServerStreamingClient[StreamPaymentUpdatesResponse]
 
+func (c *paymentServiceClient) StreamTransactionUpdates(ctx context.Context, in *StreamTransactionUpdatesRequest, opts ...grpc.CallOption) (grpc.ServerStreamingClient[StreamTransactionUpdatesResponse], error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	stream, err := c.cc.NewStream(ctx, &PaymentService_ServiceDesc.Streams[1], PaymentService_StreamTransactionUpdates_FullMethodName, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	x := &grpc.GenericClientStream[StreamTransactionUpdatesRequest, StreamTransactionUpdatesResponse]{ClientStream: stream}
+	if err := x.ClientStream.SendMsg(in); err != nil {
+		return nil, err
+	}
+	if err := x.ClientStream.CloseSend(); err != nil {
+		return nil, err
+	}
+	return x, nil
+}
+
+// This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
+type PaymentService_StreamTransactionUpdatesClient = grpc.ServerStreamingClient[StreamTransactionUpdatesResponse]
+
 // PaymentServiceServer is the server API for PaymentService service.
 // All implementations must embed UnimplementedPaymentServiceServer
 // for forward compatibility.
 type PaymentServiceServer interface {
+	// Coin Purchase
 	InitiateCoinPurchase(context.Context, *InitiateCoinPurchaseRequest) (*InitiateCoinPurchaseResponse, error)
 	VerifyPayment(context.Context, *VerifyPaymentRequest) (*VerifyPaymentResponse, error)
 	GetPaymentHistory(context.Context, *GetPaymentHistoryRequest) (*GetPaymentHistoryResponse, error)
 	RefundPayment(context.Context, *RefundPaymentRequest) (*RefundPaymentResponse, error)
+	// Payment Transfers
+	PayToMerchant(context.Context, *PayToMerchantRequest) (*PayToMerchantResponse, error)
+	TransferToUser(context.Context, *TransferToUserRequest) (*TransferToUserResponse, error)
+	GetBalance(context.Context, *GetBalanceRequest) (*GetBalanceResponse, error)
+	GetTransactionHistory(context.Context, *GetTransactionHistoryRequest) (*GetTransactionHistoryResponse, error)
+	ProcessRefund(context.Context, *ProcessRefundRequest) (*ProcessRefundResponse, error)
+	// Merchant Settlements
+	InitiateSettlement(context.Context, *InitiateSettlementRequest) (*InitiateSettlementResponse, error)
+	GetSettlements(context.Context, *GetSettlementsRequest) (*GetSettlementsResponse, error)
+	// Streaming
 	StreamPaymentUpdates(*StreamPaymentUpdatesRequest, grpc.ServerStreamingServer[StreamPaymentUpdatesResponse]) error
+	StreamTransactionUpdates(*StreamTransactionUpdatesRequest, grpc.ServerStreamingServer[StreamTransactionUpdatesResponse]) error
 	mustEmbedUnimplementedPaymentServiceServer()
 }
 
@@ -135,8 +256,32 @@ func (UnimplementedPaymentServiceServer) GetPaymentHistory(context.Context, *Get
 func (UnimplementedPaymentServiceServer) RefundPayment(context.Context, *RefundPaymentRequest) (*RefundPaymentResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method RefundPayment not implemented")
 }
+func (UnimplementedPaymentServiceServer) PayToMerchant(context.Context, *PayToMerchantRequest) (*PayToMerchantResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method PayToMerchant not implemented")
+}
+func (UnimplementedPaymentServiceServer) TransferToUser(context.Context, *TransferToUserRequest) (*TransferToUserResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method TransferToUser not implemented")
+}
+func (UnimplementedPaymentServiceServer) GetBalance(context.Context, *GetBalanceRequest) (*GetBalanceResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetBalance not implemented")
+}
+func (UnimplementedPaymentServiceServer) GetTransactionHistory(context.Context, *GetTransactionHistoryRequest) (*GetTransactionHistoryResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetTransactionHistory not implemented")
+}
+func (UnimplementedPaymentServiceServer) ProcessRefund(context.Context, *ProcessRefundRequest) (*ProcessRefundResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ProcessRefund not implemented")
+}
+func (UnimplementedPaymentServiceServer) InitiateSettlement(context.Context, *InitiateSettlementRequest) (*InitiateSettlementResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method InitiateSettlement not implemented")
+}
+func (UnimplementedPaymentServiceServer) GetSettlements(context.Context, *GetSettlementsRequest) (*GetSettlementsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetSettlements not implemented")
+}
 func (UnimplementedPaymentServiceServer) StreamPaymentUpdates(*StreamPaymentUpdatesRequest, grpc.ServerStreamingServer[StreamPaymentUpdatesResponse]) error {
 	return status.Errorf(codes.Unimplemented, "method StreamPaymentUpdates not implemented")
+}
+func (UnimplementedPaymentServiceServer) StreamTransactionUpdates(*StreamTransactionUpdatesRequest, grpc.ServerStreamingServer[StreamTransactionUpdatesResponse]) error {
+	return status.Errorf(codes.Unimplemented, "method StreamTransactionUpdates not implemented")
 }
 func (UnimplementedPaymentServiceServer) mustEmbedUnimplementedPaymentServiceServer() {}
 func (UnimplementedPaymentServiceServer) testEmbeddedByValue()                        {}
@@ -231,6 +376,132 @@ func _PaymentService_RefundPayment_Handler(srv interface{}, ctx context.Context,
 	return interceptor(ctx, in, info, handler)
 }
 
+func _PaymentService_PayToMerchant_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(PayToMerchantRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(PaymentServiceServer).PayToMerchant(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: PaymentService_PayToMerchant_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(PaymentServiceServer).PayToMerchant(ctx, req.(*PayToMerchantRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _PaymentService_TransferToUser_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(TransferToUserRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(PaymentServiceServer).TransferToUser(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: PaymentService_TransferToUser_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(PaymentServiceServer).TransferToUser(ctx, req.(*TransferToUserRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _PaymentService_GetBalance_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetBalanceRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(PaymentServiceServer).GetBalance(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: PaymentService_GetBalance_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(PaymentServiceServer).GetBalance(ctx, req.(*GetBalanceRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _PaymentService_GetTransactionHistory_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetTransactionHistoryRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(PaymentServiceServer).GetTransactionHistory(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: PaymentService_GetTransactionHistory_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(PaymentServiceServer).GetTransactionHistory(ctx, req.(*GetTransactionHistoryRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _PaymentService_ProcessRefund_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ProcessRefundRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(PaymentServiceServer).ProcessRefund(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: PaymentService_ProcessRefund_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(PaymentServiceServer).ProcessRefund(ctx, req.(*ProcessRefundRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _PaymentService_InitiateSettlement_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(InitiateSettlementRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(PaymentServiceServer).InitiateSettlement(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: PaymentService_InitiateSettlement_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(PaymentServiceServer).InitiateSettlement(ctx, req.(*InitiateSettlementRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _PaymentService_GetSettlements_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetSettlementsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(PaymentServiceServer).GetSettlements(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: PaymentService_GetSettlements_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(PaymentServiceServer).GetSettlements(ctx, req.(*GetSettlementsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _PaymentService_StreamPaymentUpdates_Handler(srv interface{}, stream grpc.ServerStream) error {
 	m := new(StreamPaymentUpdatesRequest)
 	if err := stream.RecvMsg(m); err != nil {
@@ -241,6 +512,17 @@ func _PaymentService_StreamPaymentUpdates_Handler(srv interface{}, stream grpc.S
 
 // This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
 type PaymentService_StreamPaymentUpdatesServer = grpc.ServerStreamingServer[StreamPaymentUpdatesResponse]
+
+func _PaymentService_StreamTransactionUpdates_Handler(srv interface{}, stream grpc.ServerStream) error {
+	m := new(StreamTransactionUpdatesRequest)
+	if err := stream.RecvMsg(m); err != nil {
+		return err
+	}
+	return srv.(PaymentServiceServer).StreamTransactionUpdates(m, &grpc.GenericServerStream[StreamTransactionUpdatesRequest, StreamTransactionUpdatesResponse]{ServerStream: stream})
+}
+
+// This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
+type PaymentService_StreamTransactionUpdatesServer = grpc.ServerStreamingServer[StreamTransactionUpdatesResponse]
 
 // PaymentService_ServiceDesc is the grpc.ServiceDesc for PaymentService service.
 // It's only intended for direct use with grpc.RegisterService,
@@ -265,11 +547,44 @@ var PaymentService_ServiceDesc = grpc.ServiceDesc{
 			MethodName: "RefundPayment",
 			Handler:    _PaymentService_RefundPayment_Handler,
 		},
+		{
+			MethodName: "PayToMerchant",
+			Handler:    _PaymentService_PayToMerchant_Handler,
+		},
+		{
+			MethodName: "TransferToUser",
+			Handler:    _PaymentService_TransferToUser_Handler,
+		},
+		{
+			MethodName: "GetBalance",
+			Handler:    _PaymentService_GetBalance_Handler,
+		},
+		{
+			MethodName: "GetTransactionHistory",
+			Handler:    _PaymentService_GetTransactionHistory_Handler,
+		},
+		{
+			MethodName: "ProcessRefund",
+			Handler:    _PaymentService_ProcessRefund_Handler,
+		},
+		{
+			MethodName: "InitiateSettlement",
+			Handler:    _PaymentService_InitiateSettlement_Handler,
+		},
+		{
+			MethodName: "GetSettlements",
+			Handler:    _PaymentService_GetSettlements_Handler,
+		},
 	},
 	Streams: []grpc.StreamDesc{
 		{
 			StreamName:    "StreamPaymentUpdates",
 			Handler:       _PaymentService_StreamPaymentUpdates_Handler,
+			ServerStreams: true,
+		},
+		{
+			StreamName:    "StreamTransactionUpdates",
+			Handler:       _PaymentService_StreamTransactionUpdates_Handler,
 			ServerStreams: true,
 		},
 	},

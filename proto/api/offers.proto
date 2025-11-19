@@ -2,7 +2,7 @@ syntax = "proto3";
 
 package rival.api.v1;
 
-option go_package = "encore.app/gen/proto/proto/api";
+option go_package = "rival/gen/proto/proto/api";
 
 import "proto/schema/schema.proto";
 
@@ -15,7 +15,7 @@ service OfferService {
 }
 
 message GetNearbyOffersRequest {
-  string user_id = 1;
+  int64 user_id = 1;
   double latitude = 2;
   double longitude = 3;
   double radius_km = 4;
@@ -26,7 +26,7 @@ message GetNearbyOffersResponse {
 }
 
 message GetOfferDetailsRequest {
-  string offer_id = 1;
+  int64 offer_id = 1;
 }
 
 message GetOfferDetailsResponse {
@@ -35,8 +35,8 @@ message GetOfferDetailsResponse {
 }
 
 message RedeemOfferRequest {
-  string user_id = 1;
-  string offer_id = 2;
+  int64 user_id = 1;
+  int64 offer_id = 2;
   double order_amount = 3;
 }
 
@@ -48,7 +48,7 @@ message RedeemOfferResponse {
 }
 
 message GetUserOffersRequest {
-  string user_id = 1;
+  int64 user_id = 1;
   int32 page = 2;
   int32 limit = 3;
 }
@@ -59,7 +59,7 @@ message GetUserOffersResponse {
 }
 
 message StreamNewOffersRequest {
-  string user_id = 1;
+  int64 user_id = 1;
   double latitude = 2;
   double longitude = 3;
 }

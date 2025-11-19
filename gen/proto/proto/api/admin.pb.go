@@ -7,10 +7,10 @@
 package api
 
 import (
-	schema "encore.app/gen/proto/proto/schema"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 	reflect "reflect"
+	schema "rival/gen/proto/proto/schema"
 	sync "sync"
 	unsafe "unsafe"
 )
@@ -248,7 +248,7 @@ func (x *GetAllMerchantsResponse) GetTotalCount() int32 {
 
 type ApproveMerchantRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	MerchantId    string                 `protobuf:"bytes,1,opt,name=merchant_id,json=merchantId,proto3" json:"merchant_id,omitempty"`
+	MerchantId    int64                  `protobuf:"varint,1,opt,name=merchant_id,json=merchantId,proto3" json:"merchant_id,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -283,11 +283,11 @@ func (*ApproveMerchantRequest) Descriptor() ([]byte, []int) {
 	return file_proto_api_admin_proto_rawDescGZIP(), []int{4}
 }
 
-func (x *ApproveMerchantRequest) GetMerchantId() string {
+func (x *ApproveMerchantRequest) GetMerchantId() int64 {
 	if x != nil {
 		return x.MerchantId
 	}
-	return ""
+	return 0
 }
 
 type ApproveMerchantResponse struct {
@@ -336,7 +336,7 @@ func (x *ApproveMerchantResponse) GetSuccess() bool {
 
 type SuspendMerchantRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	MerchantId    string                 `protobuf:"bytes,1,opt,name=merchant_id,json=merchantId,proto3" json:"merchant_id,omitempty"`
+	MerchantId    int64                  `protobuf:"varint,1,opt,name=merchant_id,json=merchantId,proto3" json:"merchant_id,omitempty"`
 	Reason        string                 `protobuf:"bytes,2,opt,name=reason,proto3" json:"reason,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
@@ -372,11 +372,11 @@ func (*SuspendMerchantRequest) Descriptor() ([]byte, []int) {
 	return file_proto_api_admin_proto_rawDescGZIP(), []int{6}
 }
 
-func (x *SuspendMerchantRequest) GetMerchantId() string {
+func (x *SuspendMerchantRequest) GetMerchantId() int64 {
 	if x != nil {
 		return x.MerchantId
 	}
-	return ""
+	return 0
 }
 
 func (x *SuspendMerchantRequest) GetReason() string {
@@ -544,7 +544,7 @@ func (x *GetAllUsersResponse) GetTotalCount() int32 {
 
 type SuspendUserRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	UserId        string                 `protobuf:"bytes,1,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
+	UserId        int64                  `protobuf:"varint,1,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
 	Reason        string                 `protobuf:"bytes,2,opt,name=reason,proto3" json:"reason,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
@@ -580,11 +580,11 @@ func (*SuspendUserRequest) Descriptor() ([]byte, []int) {
 	return file_proto_api_admin_proto_rawDescGZIP(), []int{10}
 }
 
-func (x *SuspendUserRequest) GetUserId() string {
+func (x *SuspendUserRequest) GetUserId() int64 {
 	if x != nil {
 		return x.UserId
 	}
-	return ""
+	return 0
 }
 
 func (x *SuspendUserRequest) GetReason() string {
@@ -642,8 +642,8 @@ type GetAllTransactionsRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Page          int32                  `protobuf:"varint,1,opt,name=page,proto3" json:"page,omitempty"`
 	Limit         int32                  `protobuf:"varint,2,opt,name=limit,proto3" json:"limit,omitempty"`
-	MerchantId    string                 `protobuf:"bytes,3,opt,name=merchant_id,json=merchantId,proto3" json:"merchant_id,omitempty"`
-	UserId        string                 `protobuf:"bytes,4,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
+	MerchantId    int64                  `protobuf:"varint,3,opt,name=merchant_id,json=merchantId,proto3" json:"merchant_id,omitempty"`
+	UserId        int64                  `protobuf:"varint,4,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
 	StartDate     int64                  `protobuf:"varint,5,opt,name=start_date,json=startDate,proto3" json:"start_date,omitempty"`
 	EndDate       int64                  `protobuf:"varint,6,opt,name=end_date,json=endDate,proto3" json:"end_date,omitempty"`
 	unknownFields protoimpl.UnknownFields
@@ -694,18 +694,18 @@ func (x *GetAllTransactionsRequest) GetLimit() int32 {
 	return 0
 }
 
-func (x *GetAllTransactionsRequest) GetMerchantId() string {
+func (x *GetAllTransactionsRequest) GetMerchantId() int64 {
 	if x != nil {
 		return x.MerchantId
 	}
-	return ""
+	return 0
 }
 
-func (x *GetAllTransactionsRequest) GetUserId() string {
+func (x *GetAllTransactionsRequest) GetUserId() int64 {
 	if x != nil {
 		return x.UserId
 	}
-	return ""
+	return 0
 }
 
 func (x *GetAllTransactionsRequest) GetStartDate() int64 {
@@ -1036,12 +1036,12 @@ const file_proto_api_admin_proto_rawDesc = "" +
 	"\vtotal_count\x18\x02 \x01(\x05R\n" +
 	"totalCount\"9\n" +
 	"\x16ApproveMerchantRequest\x12\x1f\n" +
-	"\vmerchant_id\x18\x01 \x01(\tR\n" +
+	"\vmerchant_id\x18\x01 \x01(\x03R\n" +
 	"merchantId\"3\n" +
 	"\x17ApproveMerchantResponse\x12\x18\n" +
 	"\asuccess\x18\x01 \x01(\bR\asuccess\"Q\n" +
 	"\x16SuspendMerchantRequest\x12\x1f\n" +
-	"\vmerchant_id\x18\x01 \x01(\tR\n" +
+	"\vmerchant_id\x18\x01 \x01(\x03R\n" +
 	"merchantId\x12\x16\n" +
 	"\x06reason\x18\x02 \x01(\tR\x06reason\"3\n" +
 	"\x17SuspendMerchantResponse\x12\x18\n" +
@@ -1055,16 +1055,16 @@ const file_proto_api_admin_proto_rawDesc = "" +
 	"\vtotal_count\x18\x02 \x01(\x05R\n" +
 	"totalCount\"E\n" +
 	"\x12SuspendUserRequest\x12\x17\n" +
-	"\auser_id\x18\x01 \x01(\tR\x06userId\x12\x16\n" +
+	"\auser_id\x18\x01 \x01(\x03R\x06userId\x12\x16\n" +
 	"\x06reason\x18\x02 \x01(\tR\x06reason\"/\n" +
 	"\x13SuspendUserResponse\x12\x18\n" +
 	"\asuccess\x18\x01 \x01(\bR\asuccess\"\xb9\x01\n" +
 	"\x19GetAllTransactionsRequest\x12\x12\n" +
 	"\x04page\x18\x01 \x01(\x05R\x04page\x12\x14\n" +
 	"\x05limit\x18\x02 \x01(\x05R\x05limit\x12\x1f\n" +
-	"\vmerchant_id\x18\x03 \x01(\tR\n" +
+	"\vmerchant_id\x18\x03 \x01(\x03R\n" +
 	"merchantId\x12\x17\n" +
-	"\auser_id\x18\x04 \x01(\tR\x06userId\x12\x1d\n" +
+	"\auser_id\x18\x04 \x01(\x03R\x06userId\x12\x1d\n" +
 	"\n" +
 	"start_date\x18\x05 \x01(\x03R\tstartDate\x12\x19\n" +
 	"\bend_date\x18\x06 \x01(\x03R\aendDate\"\x7f\n" +
@@ -1099,7 +1099,7 @@ const file_proto_api_admin_proto_rawDesc = "" +
 	"\vSuspendUser\x12 .rival.api.v1.SuspendUserRequest\x1a!.rival.api.v1.SuspendUserResponse\x12g\n" +
 	"\x12GetAllTransactions\x12'.rival.api.v1.GetAllTransactionsRequest\x1a(.rival.api.v1.GetAllTransactionsResponse\x12U\n" +
 	"\fGetAuditLogs\x12!.rival.api.v1.GetAuditLogsRequest\x1a\".rival.api.v1.GetAuditLogsResponse\x12i\n" +
-	"\x12StreamSystemAlerts\x12'.rival.api.v1.StreamSystemAlertsRequest\x1a(.rival.api.v1.StreamSystemAlertsResponse0\x01B Z\x1eencore.app/gen/proto/proto/apib\x06proto3"
+	"\x12StreamSystemAlerts\x12'.rival.api.v1.StreamSystemAlertsRequest\x1a(.rival.api.v1.StreamSystemAlertsResponse0\x01B\x1bZ\x19rival/gen/proto/proto/apib\x06proto3"
 
 var (
 	file_proto_api_admin_proto_rawDescOnce sync.Once

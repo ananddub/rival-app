@@ -3,16 +3,14 @@ package handler
 import (
 	"context"
 
-	userspb "encore.app/gen/proto/proto/api"
-	"encore.app/internal/users/repo"
-	"encore.app/internal/users/service"
-	"encore.app/internal/users/util"
+	userspb "rival/gen/proto/proto/api"
+	"rival/internal/users/repo"
+	"rival/internal/users/service"
 )
 
 type UserHandler struct {
 	userspb.UnimplementedUserServiceServer
 	service service.UserService
-	pubsub  util.UserPubSubService
 }
 
 func NewUserHandler() (*UserHandler, error) {
@@ -22,11 +20,9 @@ func NewUserHandler() (*UserHandler, error) {
 	}
 
 	userService := service.NewUserService(repository)
-	pubsubService := util.NewUserPubSubService()
 
 	return &UserHandler{
 		service: userService,
-		pubsub:  pubsubService,
 	}, nil
 }
 

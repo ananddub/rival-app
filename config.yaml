@@ -3,7 +3,7 @@ database:
   port: 5432
   user: user
   password: pass
-  dbname: mydb
+  dbname: test
   sslmode: disable
 
 redis:
@@ -33,3 +33,6 @@ jwt:
 server:
   port: 8080
   host: 69.62.75.204
+payment_gateway:
+  base_url: https://api.razorpay.com/v1
+  api_key: your-razorpay-api-key

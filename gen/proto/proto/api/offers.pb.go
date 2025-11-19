@@ -7,10 +7,10 @@
 package api
 
 import (
-	schema "encore.app/gen/proto/proto/schema"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 	reflect "reflect"
+	schema "rival/gen/proto/proto/schema"
 	sync "sync"
 	unsafe "unsafe"
 )
@@ -24,7 +24,7 @@ const (
 
 type GetNearbyOffersRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	UserId        string                 `protobuf:"bytes,1,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
+	UserId        int64                  `protobuf:"varint,1,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
 	Latitude      float64                `protobuf:"fixed64,2,opt,name=latitude,proto3" json:"latitude,omitempty"`
 	Longitude     float64                `protobuf:"fixed64,3,opt,name=longitude,proto3" json:"longitude,omitempty"`
 	RadiusKm      float64                `protobuf:"fixed64,4,opt,name=radius_km,json=radiusKm,proto3" json:"radius_km,omitempty"`
@@ -62,11 +62,11 @@ func (*GetNearbyOffersRequest) Descriptor() ([]byte, []int) {
 	return file_proto_api_offers_proto_rawDescGZIP(), []int{0}
 }
 
-func (x *GetNearbyOffersRequest) GetUserId() string {
+func (x *GetNearbyOffersRequest) GetUserId() int64 {
 	if x != nil {
 		return x.UserId
 	}
-	return ""
+	return 0
 }
 
 func (x *GetNearbyOffersRequest) GetLatitude() float64 {
@@ -136,7 +136,7 @@ func (x *GetNearbyOffersResponse) GetOffers() []*schema.Offer {
 
 type GetOfferDetailsRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	OfferId       string                 `protobuf:"bytes,1,opt,name=offer_id,json=offerId,proto3" json:"offer_id,omitempty"`
+	OfferId       int64                  `protobuf:"varint,1,opt,name=offer_id,json=offerId,proto3" json:"offer_id,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -171,11 +171,11 @@ func (*GetOfferDetailsRequest) Descriptor() ([]byte, []int) {
 	return file_proto_api_offers_proto_rawDescGZIP(), []int{2}
 }
 
-func (x *GetOfferDetailsRequest) GetOfferId() string {
+func (x *GetOfferDetailsRequest) GetOfferId() int64 {
 	if x != nil {
 		return x.OfferId
 	}
-	return ""
+	return 0
 }
 
 type GetOfferDetailsResponse struct {
@@ -232,8 +232,8 @@ func (x *GetOfferDetailsResponse) GetMerchant() *schema.Merchant {
 
 type RedeemOfferRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	UserId        string                 `protobuf:"bytes,1,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
-	OfferId       string                 `protobuf:"bytes,2,opt,name=offer_id,json=offerId,proto3" json:"offer_id,omitempty"`
+	UserId        int64                  `protobuf:"varint,1,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
+	OfferId       int64                  `protobuf:"varint,2,opt,name=offer_id,json=offerId,proto3" json:"offer_id,omitempty"`
 	OrderAmount   float64                `protobuf:"fixed64,3,opt,name=order_amount,json=orderAmount,proto3" json:"order_amount,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
@@ -269,18 +269,18 @@ func (*RedeemOfferRequest) Descriptor() ([]byte, []int) {
 	return file_proto_api_offers_proto_rawDescGZIP(), []int{4}
 }
 
-func (x *RedeemOfferRequest) GetUserId() string {
+func (x *RedeemOfferRequest) GetUserId() int64 {
 	if x != nil {
 		return x.UserId
 	}
-	return ""
+	return 0
 }
 
-func (x *RedeemOfferRequest) GetOfferId() string {
+func (x *RedeemOfferRequest) GetOfferId() int64 {
 	if x != nil {
 		return x.OfferId
 	}
-	return ""
+	return 0
 }
 
 func (x *RedeemOfferRequest) GetOrderAmount() float64 {
@@ -360,7 +360,7 @@ func (x *RedeemOfferResponse) GetOrderId() string {
 
 type GetUserOffersRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	UserId        string                 `protobuf:"bytes,1,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
+	UserId        int64                  `protobuf:"varint,1,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
 	Page          int32                  `protobuf:"varint,2,opt,name=page,proto3" json:"page,omitempty"`
 	Limit         int32                  `protobuf:"varint,3,opt,name=limit,proto3" json:"limit,omitempty"`
 	unknownFields protoimpl.UnknownFields
@@ -397,11 +397,11 @@ func (*GetUserOffersRequest) Descriptor() ([]byte, []int) {
 	return file_proto_api_offers_proto_rawDescGZIP(), []int{6}
 }
 
-func (x *GetUserOffersRequest) GetUserId() string {
+func (x *GetUserOffersRequest) GetUserId() int64 {
 	if x != nil {
 		return x.UserId
 	}
-	return ""
+	return 0
 }
 
 func (x *GetUserOffersRequest) GetPage() int32 {
@@ -472,7 +472,7 @@ func (x *GetUserOffersResponse) GetTotalCount() int32 {
 
 type StreamNewOffersRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	UserId        string                 `protobuf:"bytes,1,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
+	UserId        int64                  `protobuf:"varint,1,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
 	Latitude      float64                `protobuf:"fixed64,2,opt,name=latitude,proto3" json:"latitude,omitempty"`
 	Longitude     float64                `protobuf:"fixed64,3,opt,name=longitude,proto3" json:"longitude,omitempty"`
 	unknownFields protoimpl.UnknownFields
@@ -509,11 +509,11 @@ func (*StreamNewOffersRequest) Descriptor() ([]byte, []int) {
 	return file_proto_api_offers_proto_rawDescGZIP(), []int{8}
 }
 
-func (x *StreamNewOffersRequest) GetUserId() string {
+func (x *StreamNewOffersRequest) GetUserId() int64 {
 	if x != nil {
 		return x.UserId
 	}
-	return ""
+	return 0
 }
 
 func (x *StreamNewOffersRequest) GetLatitude() float64 {
@@ -596,20 +596,20 @@ const file_proto_api_offers_proto_rawDesc = "" +
 	"\n" +
 	"\x16proto/api/offers.proto\x12\frival.api.v1\x1a\x19proto/schema/schema.proto\"\x88\x01\n" +
 	"\x16GetNearbyOffersRequest\x12\x17\n" +
-	"\auser_id\x18\x01 \x01(\tR\x06userId\x12\x1a\n" +
+	"\auser_id\x18\x01 \x01(\x03R\x06userId\x12\x1a\n" +
 	"\blatitude\x18\x02 \x01(\x01R\blatitude\x12\x1c\n" +
 	"\tlongitude\x18\x03 \x01(\x01R\tlongitude\x12\x1b\n" +
 	"\tradius_km\x18\x04 \x01(\x01R\bradiusKm\"I\n" +
 	"\x17GetNearbyOffersResponse\x12.\n" +
 	"\x06offers\x18\x01 \x03(\v2\x16.rival.schema.v1.OfferR\x06offers\"3\n" +
 	"\x16GetOfferDetailsRequest\x12\x19\n" +
-	"\boffer_id\x18\x01 \x01(\tR\aofferId\"~\n" +
+	"\boffer_id\x18\x01 \x01(\x03R\aofferId\"~\n" +
 	"\x17GetOfferDetailsResponse\x12,\n" +
 	"\x05offer\x18\x01 \x01(\v2\x16.rival.schema.v1.OfferR\x05offer\x125\n" +
 	"\bmerchant\x18\x02 \x01(\v2\x19.rival.schema.v1.MerchantR\bmerchant\"k\n" +
 	"\x12RedeemOfferRequest\x12\x17\n" +
-	"\auser_id\x18\x01 \x01(\tR\x06userId\x12\x19\n" +
-	"\boffer_id\x18\x02 \x01(\tR\aofferId\x12!\n" +
+	"\auser_id\x18\x01 \x01(\x03R\x06userId\x12\x19\n" +
+	"\boffer_id\x18\x02 \x01(\x03R\aofferId\x12!\n" +
 	"\forder_amount\x18\x03 \x01(\x01R\vorderAmount\"\x96\x01\n" +
 	"\x13RedeemOfferResponse\x12\x18\n" +
 	"\asuccess\x18\x01 \x01(\bR\asuccess\x12'\n" +
@@ -617,7 +617,7 @@ const file_proto_api_offers_proto_rawDesc = "" +
 	"\ffinal_amount\x18\x03 \x01(\x01R\vfinalAmount\x12\x19\n" +
 	"\border_id\x18\x04 \x01(\tR\aorderId\"Y\n" +
 	"\x14GetUserOffersRequest\x12\x17\n" +
-	"\auser_id\x18\x01 \x01(\tR\x06userId\x12\x12\n" +
+	"\auser_id\x18\x01 \x01(\x03R\x06userId\x12\x12\n" +
 	"\x04page\x18\x02 \x01(\x05R\x04page\x12\x14\n" +
 	"\x05limit\x18\x03 \x01(\x05R\x05limit\"h\n" +
 	"\x15GetUserOffersResponse\x12.\n" +
@@ -625,7 +625,7 @@ const file_proto_api_offers_proto_rawDesc = "" +
 	"\vtotal_count\x18\x02 \x01(\x05R\n" +
 	"totalCount\"k\n" +
 	"\x16StreamNewOffersRequest\x12\x17\n" +
-	"\auser_id\x18\x01 \x01(\tR\x06userId\x12\x1a\n" +
+	"\auser_id\x18\x01 \x01(\x03R\x06userId\x12\x1a\n" +
 	"\blatitude\x18\x02 \x01(\x01R\blatitude\x12\x1c\n" +
 	"\tlongitude\x18\x03 \x01(\x01R\tlongitude\"\x9d\x01\n" +
 	"\x17StreamNewOffersResponse\x12,\n" +
@@ -638,7 +638,7 @@ const file_proto_api_offers_proto_rawDesc = "" +
 	"\x0fGetOfferDetails\x12$.rival.api.v1.GetOfferDetailsRequest\x1a%.rival.api.v1.GetOfferDetailsResponse\x12R\n" +
 	"\vRedeemOffer\x12 .rival.api.v1.RedeemOfferRequest\x1a!.rival.api.v1.RedeemOfferResponse\x12X\n" +
 	"\rGetUserOffers\x12\".rival.api.v1.GetUserOffersRequest\x1a#.rival.api.v1.GetUserOffersResponse\x12`\n" +
-	"\x0fStreamNewOffers\x12$.rival.api.v1.StreamNewOffersRequest\x1a%.rival.api.v1.StreamNewOffersResponse0\x01B Z\x1eencore.app/gen/proto/proto/apib\x06proto3"
+	"\x0fStreamNewOffers\x12$.rival.api.v1.StreamNewOffersRequest\x1a%.rival.api.v1.StreamNewOffersResponse0\x01B\x1bZ\x19rival/gen/proto/proto/apib\x06proto3"
 
 var (
 	file_proto_api_offers_proto_rawDescOnce sync.Once

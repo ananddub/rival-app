@@ -2,7 +2,7 @@ syntax = "proto3";
 
 package rival.api.v1;
 
-option go_package = "encore.app/gen/proto/proto/api";
+option go_package = "rival/gen/proto/proto/api";
 
 import "proto/schema/schema.proto";
 
@@ -12,7 +12,7 @@ service UserService {
   rpc GetUploadURL(GetUploadURLRequest) returns (GetUploadURLResponse);
   rpc UpdateCoinBalance(UpdateCoinBalanceRequest) returns (UpdateCoinBalanceResponse);
   rpc GetCoinBalance(GetCoinBalanceRequest) returns (GetCoinBalanceResponse);
-  rpc GetTransactionHistory(GetTransactionHistoryRequest) returns (GetTransactionHistoryResponse);
+  rpc GetUserTransactionHistory(GetUserTransactionHistoryRequest) returns (GetUserTransactionHistoryResponse);
   rpc GetReferralCode(GetReferralCodeRequest) returns (GetReferralCodeResponse);
   rpc ApplyReferralCode(ApplyReferralCodeRequest) returns (ApplyReferralCodeResponse);
   rpc GetReferralRewards(GetReferralRewardsRequest) returns (GetReferralRewardsResponse);
@@ -21,7 +21,7 @@ service UserService {
 }
 
 message GetUserRequest {
-  string user_id = 1;
+  int64 user_id = 1;
 }
 
 message GetUserResponse {
@@ -29,7 +29,7 @@ message GetUserResponse {
 }
 
 message UpdateUserRequest {
-  string user_id = 1;
+  int64 user_id = 1;
   string name = 2;
   string phone = 3;
   string profile_pic = 4;
@@ -40,7 +40,7 @@ message UpdateUserResponse {
 }
 
 message GetUploadURLRequest {
-  string user_id = 1;
+  int64 user_id = 1;
   string file_name = 2;
   string content_type = 3;
 }
@@ -52,7 +52,7 @@ message GetUploadURLResponse {
 }
 
 message UpdateCoinBalanceRequest {
-  string user_id = 1;
+  int64 user_id = 1;
   double amount = 2;
   string operation = 3; // add, subtract
 }
@@ -62,26 +62,26 @@ message UpdateCoinBalanceResponse {
 }
 
 message GetCoinBalanceRequest {
-  string user_id = 1;
+  int64 user_id = 1;
 }
 
 message GetCoinBalanceResponse {
   double balance = 1;
 }
 
-message GetTransactionHistoryRequest {
-  string user_id = 1;
+message GetUserTransactionHistoryRequest {
+  int64 user_id = 1;
   int32 page = 2;
   int32 limit = 3;
 }
 
-message GetTransactionHistoryResponse {
+message GetUserTransactionHistoryResponse {
   repeated rival.schema.v1.Transaction transactions = 1;
   int32 total_count = 2;
 }
 
 message StreamWalletUpdatesRequest {
-  string user_id = 1;
+  int64 user_id = 1;
 }
 
 message StreamWalletUpdatesResponse {
@@ -91,7 +91,7 @@ message StreamWalletUpdatesResponse {
 }
 
 message StreamUserNotificationsRequest {
-  string user_id = 1;
+  int64 user_id = 1;
 }
 
 message StreamUserNotificationsResponse {
@@ -103,7 +103,7 @@ message StreamUserNotificationsResponse {
 }
 
 message GetReferralCodeRequest {
-  string user_id = 1;
+  int64 user_id = 1;
 }
 
 message GetReferralCodeResponse {
@@ -111,7 +111,7 @@ message GetReferralCodeResponse {
 }
 
 message ApplyReferralCodeRequest {
-  string user_id = 1;
+  int64 user_id = 1;
   string referral_code = 2;
 }
 
@@ -122,7 +122,7 @@ message ApplyReferralCodeResponse {
 }
 
 message GetReferralRewardsRequest {
-  string user_id = 1;
+  int64 user_id = 1;
   int32 page = 2;
   int32 limit = 3;
 }

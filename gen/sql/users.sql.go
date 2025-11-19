@@ -11,15 +11,91 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
+const countUsers = `-- name: CountUsers :one
+SELECT COUNT(*) FROM users
+`
+
+func (q *Queries) CountUsers(ctx context.Context) (int64, error) {
+	row := q.db.QueryRow(ctx, countUsers)
+	var count int64
+	err := row.Scan(&count)
+	return count, err
+}
+
+const deleteByEmail = `-- name: DeleteByEmail :exec
+DELETE FROM users WHERE email = $1
+`
+
+func (q *Queries) DeleteByEmail(ctx context.Context, email string) error {
+	_, err := q.db.Exec(ctx, deleteByEmail, email)
+	return err
+}
+
+const dleteUser = `-- name: DleteUser :exec
+DELETE FROM users WHERE id = $1
+`
+
+func (q *Queries) DleteUser(ctx context.Context, id int64) error {
+	_, err := q.db.Exec(ctx, dleteUser, id)
+	return err
+}
+
+const getAllUsers = `-- name: GetAllUsers :many
+SELECT id, email, password_hash, phone, name, profile_pic, firebase_uid, coin_balance, role, referral_code, referred_by, created_at, updated_at FROM users ORDER BY created_at DESC LIMIT $1 OFFSET $2
+`
+
+type GetAllUsersParams struct {
+	Limit  int32 `json:"limit"`
+	Offset int32 `json:"offset"`
+}
+
+func (q *Queries) GetAllUsers(ctx context.Context, arg GetAllUsersParams) ([]User, error) {
+	rows, err := q.db.Query(ctx, getAllUsers, arg.Limit, arg.Offset)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []User
+	for rows.Next() {
+		var i User
+		if err := rows.Scan(
+			&i.ID,
+			&i.Email,
+			&i.PasswordHash,
+			&i.Phone,
+			&i.Name,
+			&i.ProfilePic,
+			&i.FirebaseUid,
+			&i.CoinBalance,
+			&i.Role,
+			&i.ReferralCode,
+			&i.ReferredBy,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const getUserCoinPurchases = `-- name: GetUserCoinPurchases :many
-SELECT id, user_id, amount, coins_received, payment_method, payment_id, status, created_at FROM coin_purchases 
-WHERE user_id = $1 
+SELECT id, user_id, amount, coins_received, payment_method, payment_id, status, created_at
+FROM coin_purchases
+WHERE
+    user_id = $1
 ORDER BY created_at DESC
-LIMIT $2 OFFSET $3
+LIMIT $2
+OFFSET
+    $3
 `
 
 type GetUserCoinPurchasesParams struct {
-	UserID pgtype.UUID `json:"user_id"`
+	UserID pgtype.Int8 `json:"user_id"`
 	Limit  int32       `json:"limit"`
 	Offset int32       `json:"offset"`
 }
@@ -57,7 +133,7 @@ const getUserProfile = `-- name: GetUserProfile :one
 SELECT id, email, password_hash, phone, name, profile_pic, firebase_uid, coin_balance, role, referral_code, referred_by, created_at, updated_at FROM users WHERE id = $1
 `
 
-func (q *Queries) GetUserProfile(ctx context.Context, id pgtype.UUID) (User, error) {
+func (q *Queries) GetUserProfile(ctx context.Context, id int64) (User, error) {
 	row := q.db.QueryRow(ctx, getUserProfile, id)
 	var i User
 	err := row.Scan(
@@ -79,14 +155,18 @@ func (q *Queries) GetUserProfile(ctx context.Context, id pgtype.UUID) (User, err
 }
 
 const getUserReferralRewards = `-- name: GetUserReferralRewards :many
-SELECT id, referrer_id, referred_id, reward_amount, reward_type, status, credited_at, created_at FROM referral_rewards 
-WHERE referrer_id = $1 
+SELECT id, referrer_id, referred_id, reward_amount, reward_type, status, credited_at, created_at
+FROM referral_rewards
+WHERE
+    referrer_id = $1
 ORDER BY created_at DESC
-LIMIT $2 OFFSET $3
+LIMIT $2
+OFFSET
+    $3
 `
 
 type GetUserReferralRewardsParams struct {
-	ReferrerID pgtype.UUID `json:"referrer_id"`
+	ReferrerID pgtype.Int8 `json:"referrer_id"`
 	Limit      int32       `json:"limit"`
 	Offset     int32       `json:"offset"`
 }
@@ -121,14 +201,18 @@ func (q *Queries) GetUserReferralRewards(ctx context.Context, arg GetUserReferra
 }
 
 const getUserTransactions = `-- name: GetUserTransactions :many
-SELECT id, user_id, merchant_id, coins_spent, original_amount, discount_amount, final_amount, transaction_type, status, created_at FROM transactions 
-WHERE user_id = $1 
+SELECT id, user_id, merchant_id, coins_spent, original_amount, discount_amount, final_amount, transaction_type, status, created_at
+FROM transactions
+WHERE
+    user_id = $1
 ORDER BY created_at DESC
-LIMIT $2 OFFSET $3
+LIMIT $2
+OFFSET
+    $3
 `
 
 type GetUserTransactionsParams struct {
-	UserID pgtype.UUID `json:"user_id"`
+	UserID pgtype.Int8 `json:"user_id"`
 	Limit  int32       `json:"limit"`
 	Offset int32       `json:"offset"`
 }
@@ -165,14 +249,16 @@ func (q *Queries) GetUserTransactions(ctx context.Context, arg GetUserTransactio
 }
 
 const updateCoinBalance = `-- name: UpdateCoinBalance :exec
-UPDATE users SET 
+UPDATE users
+SET
     coin_balance = $2,
     updated_at = NOW()
-WHERE id = $1
+WHERE
+    id = $1
 `
 
 type UpdateCoinBalanceParams struct {
-	ID          pgtype.UUID    `json:"id"`
+	ID          int64          `json:"id"`
 	CoinBalance pgtype.Numeric `json:"coin_balance"`
 }
 
@@ -182,14 +268,19 @@ func (q *Queries) UpdateCoinBalance(ctx context.Context, arg UpdateCoinBalancePa
 }
 
 const updateReferralRewardStatus = `-- name: UpdateReferralRewardStatus :exec
-UPDATE referral_rewards SET 
+UPDATE referral_rewards
+SET
     status = $2,
-    credited_at = CASE WHEN $2 = 'credited' THEN NOW() ELSE credited_at END
-WHERE id = $1
+    credited_at = CASE
+        WHEN $2 = 'credited' THEN NOW()
+        ELSE credited_at
+    END
+WHERE
+    id = $1
 `
 
 type UpdateReferralRewardStatusParams struct {
-	ID     pgtype.UUID `json:"id"`
+	ID     int64       `json:"id"`
 	Status pgtype.Text `json:"status"`
 }
 
@@ -199,16 +290,18 @@ func (q *Queries) UpdateReferralRewardStatus(ctx context.Context, arg UpdateRefe
 }
 
 const updateUserProfile = `-- name: UpdateUserProfile :exec
-UPDATE users SET 
+UPDATE users
+SET
     name = $2,
     phone = $3,
     profile_pic = $4,
     updated_at = NOW()
-WHERE id = $1
+WHERE
+    id = $1
 `
 
 type UpdateUserProfileParams struct {
-	ID         pgtype.UUID `json:"id"`
+	ID         int64       `json:"id"`
 	Name       string      `json:"name"`
 	Phone      pgtype.Text `json:"phone"`
 	ProfilePic pgtype.Text `json:"profile_pic"`

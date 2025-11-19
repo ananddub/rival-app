@@ -1,0 +1,8 @@
+-- +goose Up
+ALTER TYPE user_role ADD VALUE 'USER_ROLE_CUSTOMER';
+
+ALTER TYPE user_role ADD VALUE 'USER_ROLE_MERCHANT';
+
+ALTER TYPE user_role ADD VALUE 'USER_ROLE_ADMIN';
+
+-- +goose Down

@@ -2,7 +2,7 @@ syntax = "proto3";
 
 package rival.api.v1;
 
-option go_package = "encore.app/gen/proto/proto/api";
+option go_package = "rival/gen/proto/proto/api";
 
 import "proto/schema/schema.proto";
 
@@ -24,7 +24,7 @@ service MerchantService {
 }
 
 message GetMerchantRequest {
-  string merchant_id = 1;
+  int64 merchant_id = 1;
 }
 
 message GetMerchantResponse {
@@ -32,7 +32,7 @@ message GetMerchantResponse {
 }
 
 message UpdateMerchantRequest {
-  string merchant_id = 1;
+  int64 merchant_id = 1;
   string name = 2;
   string phone = 3;
   string category = 4;
@@ -44,7 +44,7 @@ message UpdateMerchantResponse {
 }
 
 message GetMerchantAddressRequest {
-  string merchant_id = 1;
+  int64 merchant_id = 1;
 }
 
 message GetMerchantAddressResponse {
@@ -52,7 +52,7 @@ message GetMerchantAddressResponse {
 }
 
 message UpdateMerchantAddressRequest {
-  string merchant_id = 1;
+  int64 merchant_id = 1;
   string street = 2;
   string city = 3;
   string state = 4;
@@ -67,7 +67,7 @@ message UpdateMerchantAddressResponse {
 }
 
 message GetOrdersRequest {
-  string merchant_id = 1;
+  int64 merchant_id = 1;
   int32 page = 2;
   int32 limit = 3;
   string status = 4;
@@ -79,7 +79,7 @@ message GetOrdersResponse {
 }
 
 message UpdateOrderStatusRequest {
-  string order_id = 1;
+  int64 order_id = 1;
   string status = 2;
   string notes = 3;
 }
@@ -89,7 +89,7 @@ message UpdateOrderStatusResponse {
 }
 
 message GetCustomersRequest {
-  string merchant_id = 1;
+  int64 merchant_id = 1;
   int32 page = 2;
   int32 limit = 3;
 }
@@ -100,7 +100,7 @@ message GetCustomersResponse {
 }
 
 message GetPayoutsRequest {
-  string merchant_id = 1;
+  int64 merchant_id = 1;
   int32 page = 2;
   int32 limit = 3;
 }
@@ -111,7 +111,7 @@ message GetPayoutsResponse {
 }
 
 message CreateOfferRequest {
-  string merchant_id = 1;
+  int64 merchant_id = 1;
   string title = 2;
   string description = 3;
   double discount_percentage = 4;
@@ -125,7 +125,7 @@ message CreateOfferResponse {
 }
 
 message GetOffersRequest {
-  string merchant_id = 1;
+  int64 merchant_id = 1;
   bool active_only = 2;
 }
 
@@ -134,7 +134,7 @@ message GetOffersResponse {
 }
 
 message UpdateOfferRequest {
-  string offer_id = 1;
+  int64 offer_id = 1;
   string title = 2;
   string description = 3;
   double discount_percentage = 4;
@@ -149,7 +149,7 @@ message UpdateOfferResponse {
 }
 
 message GetDashboardStatsRequest {
-  string merchant_id = 1;
+  int64 merchant_id = 1;
 }
 
 message GetDashboardStatsResponse {
@@ -161,7 +161,7 @@ message GetDashboardStatsResponse {
 }
 
 message StreamOrdersRequest {
-  string merchant_id = 1;
+  int64 merchant_id = 1;
 }
 
 message StreamOrdersResponse {
@@ -170,7 +170,7 @@ message StreamOrdersResponse {
 }
 
 message StreamNotificationsRequest {
-  string merchant_id = 1;
+  int64 merchant_id = 1;
 }
 
 message StreamNotificationsResponse {

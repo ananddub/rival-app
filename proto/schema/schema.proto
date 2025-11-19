@@ -2,7 +2,7 @@ syntax = "proto3";
 
 package rival.schema.v1;
 
-option go_package = "encore.app/gen/proto/proto/schema";
+option go_package = "rival/gen/proto/proto/schema";
 
 enum UserRole {
   USER_ROLE_UNSPECIFIED = 0;
@@ -12,7 +12,7 @@ enum UserRole {
 }
 
 message User {
-  string id = 1;
+  int64 id = 1;
   string email = 2;
   string password_hash = 3;
   string phone = 4;
@@ -28,9 +28,9 @@ message User {
 }
 
 message ReferralReward {
-  string id = 1;
-  string referrer_id = 2;
-  string referred_id = 3;
+  int64 id = 1;
+  int64 referrer_id = 2;
+  int64 referred_id = 3;
   double reward_amount = 4;
   string reward_type = 5;
   string status = 6;
@@ -39,7 +39,7 @@ message ReferralReward {
 }
 
 message Merchant {
-  string id = 1;
+  int64 id = 1;
   string name = 2;
   string email = 3;
   string password_hash = 4;
@@ -52,8 +52,8 @@ message Merchant {
 }
 
 message MerchantAddress {
-  string id = 1;
-  string merchant_id = 2;
+  int64 id = 1;
+  int64 merchant_id = 2;
   string street = 3;
   string city = 4;
   string state = 5;
@@ -67,8 +67,8 @@ message MerchantAddress {
 }
 
 message CoinPurchase {
-  string id = 1;
-  string user_id = 2;
+  int64 id = 1;
+  int64 user_id = 2;
   double amount = 3;
   double coins_received = 4;
   string payment_method = 5;
@@ -78,8 +78,8 @@ message CoinPurchase {
 }
 
 message JwtSession {
-  string id = 1;
-  string user_id = 2;
+  int64 id = 1;
+  int64 user_id = 2;
   string token_hash = 3;
   string refresh_token_hash = 4;
   int64 expires_at = 5;
@@ -88,9 +88,9 @@ message JwtSession {
 }
 
 message Transaction {
-  string id = 1;
-  string user_id = 2;
-  string merchant_id = 3;
+  int64 id = 1;
+  int64 user_id = 2;
+  int64 merchant_id = 3;
   double coins_spent = 4;
   double original_amount = 5;
   double discount_amount = 6;
@@ -101,8 +101,8 @@ message Transaction {
 }
 
 message Settlement {
-  string id = 1;
-  string merchant_id = 2;
+  int64 id = 1;
+  int64 merchant_id = 2;
   string period_start = 3;
   string period_end = 4;
   int32 total_transactions = 5;
@@ -114,8 +114,8 @@ message Settlement {
 }
 
 message Offer {
-  string id = 1;
-  string merchant_id = 2;
+  int64 id = 1;
+  int64 merchant_id = 2;
   string title = 3;
   string description = 4;
   double discount_percentage = 5;
@@ -129,12 +129,12 @@ message Offer {
 }
 
 message Order {
-  string id = 1;
-  string merchant_id = 2;
-  string user_id = 3;
-  string offer_id = 4;
+  int64 id = 1;
+  int64 merchant_id = 2;
+  int64 user_id = 3;
+  int64 offer_id = 4;
   string order_number = 5;
-  string items = 6; // JSON string
+  string items = 6;
   double subtotal = 7;
   double discount_amount = 8;
   double total_amount = 9;
@@ -146,13 +146,13 @@ message Order {
 }
 
 message AuditLog {
-  string id = 1;
-  string actor_id = 2;
+  int64 id = 1;
+  int64 actor_id = 2;
   string actor_type = 3;
   string action = 4;
   string target_type = 5;
-  string target_id = 6;
-  string metadata = 7; // JSON string
+  int64 target_id = 6;
+  string metadata = 7;
   string ip_address = 8;
   string user_agent = 9;
   int64 created_at = 10;

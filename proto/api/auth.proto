@@ -2,7 +2,7 @@ syntax = "proto3";
 
 package rival.api.v1;
 
-option go_package = "encore.app/gen/proto/proto/api";
+option go_package = "rival/gen/proto/proto/api";
 
 import "proto/schema/schema.proto";
 

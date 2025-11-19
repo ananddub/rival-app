@@ -9,5 +9,11 @@
             "request": "launch",
             "type": "dart"
         }
-    ]
+    ],
+    "go.testFlags": [
+        "-v"
+    ],
+    "go.testEnvVars": {
+        "CONFIG_PATH": "${workspaceFolder}/config.yaml"
+    }
 }

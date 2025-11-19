@@ -12,12 +12,18 @@ import (
 )
 
 const createJWTSession = `-- name: CreateJWTSession :exec
-INSERT INTO jwt_sessions (user_id, token_hash, refresh_token_hash, expires_at)
+INSERT INTO
+    jwt_sessions (
+        user_id,
+        token_hash,
+        refresh_token_hash,
+        expires_at
+    )
 VALUES ($1, $2, $3, $4)
 `
 
 type CreateJWTSessionParams struct {
-	UserID           pgtype.UUID      `json:"user_id"`
+	UserID           pgtype.Int8      `json:"user_id"`
 	TokenHash        string           `json:"token_hash"`
 	RefreshTokenHash pgtype.Text      `json:"refresh_token_hash"`
 	ExpiresAt        pgtype.Timestamp `json:"expires_at"`
@@ -34,9 +40,33 @@ func (q *Queries) CreateJWTSession(ctx context.Context, arg CreateJWTSessionPara
 }
 
 const createUser = `-- name: CreateUser :one
-INSERT INTO users (email, password_hash, phone, name, profile_pic, firebase_uid, coin_balance, role, referral_code, referred_by)
-VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
-RETURNING id, email, password_hash, phone, name, profile_pic, firebase_uid, coin_balance, role, referral_code, referred_by, created_at, updated_at
+INSERT INTO
+    users (
+        email,
+        password_hash,
+        phone,
+        name,
+        profile_pic,
+        firebase_uid,
+        coin_balance,
+        role,
+        referral_code,
+        referred_by
+    )
+VALUES (
+        $1,
+        $2,
+        $3,
+        $4,
+        $5,
+        $6,
+        $7,
+        $8,
+        $9,
+        $10
+    )
+RETURNING
+    id, email, password_hash, phone, name, profile_pic, firebase_uid, coin_balance, role, referral_code, referred_by, created_at, updated_at
 `
 
 type CreateUserParams struct {
@@ -49,7 +79,7 @@ type CreateUserParams struct {
 	CoinBalance  pgtype.Numeric `json:"coin_balance"`
 	Role         NullUserRole   `json:"role"`
 	ReferralCode pgtype.Text    `json:"referral_code"`
-	ReferredBy   pgtype.UUID    `json:"referred_by"`
+	ReferredBy   pgtype.Int8    `json:"referred_by"`
 }
 
 func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (User, error) {
@@ -85,7 +115,11 @@ func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (User, e
 }
 
 const getJWTSession = `-- name: GetJWTSession :one
-SELECT id, user_id, token_hash, refresh_token_hash, expires_at, is_revoked, created_at FROM jwt_sessions WHERE token_hash = $1 AND is_revoked = false
+SELECT id, user_id, token_hash, refresh_token_hash, expires_at, is_revoked, created_at
+FROM jwt_sessions
+WHERE
+    token_hash = $1
+    AND is_revoked = false
 `
 
 func (q *Queries) GetJWTSession(ctx context.Context, tokenHash string) (JwtSession, error) {
@@ -132,7 +166,7 @@ const getUserByID = `-- name: GetUserByID :one
 SELECT id, email, password_hash, phone, name, profile_pic, firebase_uid, coin_balance, role, referral_code, referred_by, created_at, updated_at FROM users WHERE id = $1
 `
 
-func (q *Queries) GetUserByID(ctx context.Context, id pgtype.UUID) (User, error) {
+func (q *Queries) GetUserByID(ctx context.Context, id int64) (User, error) {
 	row := q.db.QueryRow(ctx, getUserByID, id)
 	var i User
 	err := row.Scan(
@@ -182,7 +216,7 @@ const revokeAllUserSessions = `-- name: RevokeAllUserSessions :exec
 UPDATE jwt_sessions SET is_revoked = true WHERE user_id = $1
 `
 
-func (q *Queries) RevokeAllUserSessions(ctx context.Context, userID pgtype.UUID) error {
+func (q *Queries) RevokeAllUserSessions(ctx context.Context, userID pgtype.Int8) error {
 	_, err := q.db.Exec(ctx, revokeAllUserSessions, userID)
 	return err
 }
@@ -197,16 +231,18 @@ func (q *Queries) RevokeJWTSession(ctx context.Context, tokenHash string) error 
 }
 
 const updateUser = `-- name: UpdateUser :exec
-UPDATE users SET 
+UPDATE users
+SET
     name = $2,
     phone = $3,
     profile_pic = $4,
     updated_at = NOW()
-WHERE id = $1
+WHERE
+    id = $1
 `
 
 type UpdateUserParams struct {
-	ID         pgtype.UUID `json:"id"`
+	ID         int64       `json:"id"`
 	Name       string      `json:"name"`
 	Phone      pgtype.Text `json:"phone"`
 	ProfilePic pgtype.Text `json:"profile_pic"`
@@ -223,14 +259,16 @@ func (q *Queries) UpdateUser(ctx context.Context, arg UpdateUserParams) error {
 }
 
 const updateUserPassword = `-- name: UpdateUserPassword :exec
-UPDATE users SET 
+UPDATE users
+SET
     password_hash = $2,
     updated_at = NOW()
-WHERE id = $1
+WHERE
+    id = $1
 `
 
 type UpdateUserPasswordParams struct {
-	ID           pgtype.UUID `json:"id"`
+	ID           int64       `json:"id"`
 	PasswordHash pgtype.Text `json:"password_hash"`
 }
 

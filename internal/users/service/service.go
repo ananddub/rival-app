@@ -4,11 +4,11 @@ import (
 	"context"
 	"fmt"
 
-	userspb "encore.app/gen/proto/proto/api"
-	schemapb "encore.app/gen/proto/proto/schema"
-	schema "encore.app/gen/sql"
-	"encore.app/internal/users/repo"
-	"encore.app/pkg/utils"
+	userspb "rival/gen/proto/proto/api"
+	schemapb "rival/gen/proto/proto/schema"
+	schema "rival/gen/sql"
+	"rival/internal/users/repo"
+	"rival/pkg/utils"
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgtype"
 )
@@ -59,8 +59,18 @@ func (s *userService) GetUser(ctx context.Context, userID string) (*userspb.GetU
 		return nil, err
 	}
 
+	protoUser := convertToProtoUser(user)
+	
+	// Generate signed URL for profile image if exists
+	if user.ProfilePic.Valid && user.ProfilePic.String != "" {
+		signedURL, err := s.generateProfileImageURL(ctx, userID, user.ProfilePic.String)
+		if err == nil {
+			protoUser.ProfilePic = signedURL
+		}
+	}
+
 	return &userspb.GetUserResponse{
-		User: convertToProtoUser(user),
+		User: protoUser,
 	}, nil
 }
 
@@ -496,6 +506,14 @@ func (s *userService) GetUserStats(ctx context.Context, userID string) (*userspb
 
 	protoUser := convertToProtoUser(user)
 	protoUser.CoinBalance = balance
+	
+	// Generate signed URL for profile image if exists
+	if user.ProfilePic.Valid && user.ProfilePic.String != "" {
+		signedURL, err := s.generateProfileImageURL(ctx, userID, user.ProfilePic.String)
+		if err == nil {
+			protoUser.ProfilePic = signedURL
+		}
+	}
 
 	return &userspb.GetUserResponse{
 		User: protoUser,
@@ -562,4 +580,8 @@ func convertRewardToTransaction(reward schema.ReferralReward) *schemapb.Transact
 		Status:          reward.Status.String,
 		CreatedAt:       reward.CreatedAt.Time.Unix(),
 	}
+}
+func (s *userService) generateProfileImageURL(ctx context.Context, userID, fileName string) (string, error) {
+	// Generate signed URL for viewing the profile image
+	return s.repo.GenerateViewURL(ctx, userID, fileName)
 }

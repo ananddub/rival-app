@@ -22,8 +22,6 @@ cloud.google.com/go/storage v1.53.0 h1:gg0ERZwL17pJ+Cz3cD2qS60w1WMDnwcm5YPAIQBHU
 cloud.google.com/go/storage v1.53.0/go.mod h1:7/eO2a/srr9ImZW9k5uufcNahT2+fPb8w5it1i5boaA=
 cloud.google.com/go/trace v1.11.6 h1:2O2zjPzqPYAHrn3OKl029qlqG6W8ZdYaOWRyr8NgMT4=
 cloud.google.com/go/trace v1.11.6/go.mod h1:GA855OeDEBiBMzcckLPE2kDunIpC72N+Pq8WFieFjnI=
-encore.dev v1.48.13 h1:4NFpO6C4Nenb6UE3Ci5mEk2/Z5ZvGGRTpPpBrhsTpiI=
-encore.dev v1.48.13/go.mod h1:XdWK6bKKAVzutmOKpC5qzalDQJLNfRCF/YCgA7OUZ3E=
 firebase.google.com/go/v4 v4.18.0 h1:S+g0P72oDGqOaG4wlLErX3zQmU9plVdu7j+Bc3R1qFw=
 firebase.google.com/go/v4 v4.18.0/go.mod h1:P7UfBpzc8+Z3MckX79+zsWzKVfpGryr6HLbAe7gCWfs=
 github.com/GoogleCloudPlatform/opentelemetry-operations-go/detectors/gcp v1.29.0 h1:UQUsRi8WTzhZntp5313l+CHIAT95ojUI2lpP/ExlZa4=
@@ -140,6 +138,8 @@ github.com/tigerbeetle/tigerbeetle-go v0.16.64 h1:aBAwTB+80F5RNEdh5mNq6Gt88aDUA5
 github.com/tigerbeetle/tigerbeetle-go v0.16.64/go.mod h1:d6G7n4OlD7GLHd62x0VlWPXeI/L0SoNNTfm/ee24GJI=
 github.com/tinylib/msgp v1.3.0 h1:ULuf7GPooDaIlbyvgAxBV/FI7ynli6LZ1/nVUNu+0ww=
 github.com/tinylib/msgp v1.3.0/go.mod h1:ykjzy2wzgrlvpDCRc4LA8UXy6D8bzMSuAF3WD57Gok0=
+github.com/xwb1989/sqlparser v0.0.0-20180606152119-120387863bf2 h1:zzrxE1FKn5ryBNl9eKOeqQ58Y/Qpo3Q9QNxKHX5uzzQ=
+github.com/xwb1989/sqlparser v0.0.0-20180606152119-120387863bf2/go.mod h1:hzfGeIUDq/j97IG+FhNqkowIyEcD88LrW6fyU3K3WqY=
 github.com/yuin/goldmark v1.4.13/go.mod h1:6yULJ656Px+3vBD8DxQVa3kxgyrAnzto9xy5taEt/CY=
 github.com/zeebo/errs v1.4.0 h1:XNdoD/RRMKP7HD0UhJnIzUy74ISdGGxURlYG8HSWSfM=
 github.com/zeebo/errs v1.4.0/go.mod h1:sgbWHsvVuTPHcqJJGQ1WhI5KbWlHYz+2+2C/LSEtCw4=

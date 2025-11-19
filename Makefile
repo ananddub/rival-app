@@ -7,7 +7,7 @@ proto-gen:
 	protoc --go_out=gen/proto --go_opt=paths=source_relative \
 		--go-grpc_out=gen/proto --go-grpc_opt=paths=source_relative \
 		proto/schema/*.proto proto/api/*.proto
-
+	@echo "Protobuf files generated in gen/proto"
 # Clean generated files
 proto-clean:
 	@echo "Cleaning generated protobuf files..."
@@ -37,3 +37,7 @@ sqlc-gen:
 # Run all generations
 gen-all: proto-gen sqlc-gen
 	@echo "All code generation complete!"
+
+run:
+	@echo "Starting the application..."
+	go run cmd/grpc/main.go

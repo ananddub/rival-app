@@ -15,9 +15,12 @@ import (
 type UserRole string
 
 const (
-	UserRoleCustomer UserRole = "customer"
-	UserRoleMerchant UserRole = "merchant"
-	UserRoleAdmin    UserRole = "admin"
+	UserRoleCustomer         UserRole = "customer"
+	UserRoleMerchant         UserRole = "merchant"
+	UserRoleAdmin            UserRole = "admin"
+	UserRoleUSERROLECUSTOMER UserRole = "USER_ROLE_CUSTOMER"
+	UserRoleUSERROLEMERCHANT UserRole = "USER_ROLE_MERCHANT"
+	UserRoleUSERROLEADMIN    UserRole = "USER_ROLE_ADMIN"
 )
 
 func (e *UserRole) Scan(src interface{}) error {
@@ -56,12 +59,12 @@ func (ns NullUserRole) Value() (driver.Value, error) {
 }
 
 type AuditLog struct {
-	ID         pgtype.UUID      `json:"id"`
-	ActorID    pgtype.UUID      `json:"actor_id"`
+	ID         int64            `json:"id"`
+	ActorID    pgtype.Int8      `json:"actor_id"`
 	ActorType  string           `json:"actor_type"`
 	Action     string           `json:"action"`
 	TargetType pgtype.Text      `json:"target_type"`
-	TargetID   pgtype.UUID      `json:"target_id"`
+	TargetID   pgtype.Int8      `json:"target_id"`
 	Metadata   []byte           `json:"metadata"`
 	IpAddress  *netip.Addr      `json:"ip_address"`
 	UserAgent  pgtype.Text      `json:"user_agent"`
@@ -69,8 +72,8 @@ type AuditLog struct {
 }
 
 type CoinPurchase struct {
-	ID            pgtype.UUID      `json:"id"`
-	UserID        pgtype.UUID      `json:"user_id"`
+	ID            int64            `json:"id"`
+	UserID        pgtype.Int8      `json:"user_id"`
 	Amount        pgtype.Numeric   `json:"amount"`
 	CoinsReceived pgtype.Numeric   `json:"coins_received"`
 	PaymentMethod pgtype.Text      `json:"payment_method"`
@@ -80,8 +83,8 @@ type CoinPurchase struct {
 }
 
 type JwtSession struct {
-	ID               pgtype.UUID      `json:"id"`
-	UserID           pgtype.UUID      `json:"user_id"`
+	ID               int64            `json:"id"`
+	UserID           pgtype.Int8      `json:"user_id"`
 	TokenHash        string           `json:"token_hash"`
 	RefreshTokenHash pgtype.Text      `json:"refresh_token_hash"`
 	ExpiresAt        pgtype.Timestamp `json:"expires_at"`
@@ -90,7 +93,7 @@ type JwtSession struct {
 }
 
 type Merchant struct {
-	ID                 pgtype.UUID      `json:"id"`
+	ID                 int64            `json:"id"`
 	Name               string           `json:"name"`
 	Email              string           `json:"email"`
 	PasswordHash       pgtype.Text      `json:"password_hash"`
@@ -103,8 +106,8 @@ type Merchant struct {
 }
 
 type MerchantAddress struct {
-	ID         pgtype.UUID      `json:"id"`
-	MerchantID pgtype.UUID      `json:"merchant_id"`
+	ID         int64            `json:"id"`
+	MerchantID pgtype.Int8      `json:"merchant_id"`
 	Street     pgtype.Text      `json:"street"`
 	City       pgtype.Text      `json:"city"`
 	State      pgtype.Text      `json:"state"`
@@ -118,8 +121,8 @@ type MerchantAddress struct {
 }
 
 type Offer struct {
-	ID                 pgtype.UUID      `json:"id"`
-	MerchantID         pgtype.UUID      `json:"merchant_id"`
+	ID                 int64            `json:"id"`
+	MerchantID         pgtype.Int8      `json:"merchant_id"`
 	Title              string           `json:"title"`
 	Description        pgtype.Text      `json:"description"`
 	DiscountPercentage pgtype.Numeric   `json:"discount_percentage"`
@@ -133,10 +136,10 @@ type Offer struct {
 }
 
 type Order struct {
-	ID             pgtype.UUID      `json:"id"`
-	MerchantID     pgtype.UUID      `json:"merchant_id"`
-	UserID         pgtype.UUID      `json:"user_id"`
-	OfferID        pgtype.UUID      `json:"offer_id"`
+	ID             int64            `json:"id"`
+	MerchantID     pgtype.Int8      `json:"merchant_id"`
+	UserID         pgtype.Int8      `json:"user_id"`
+	OfferID        pgtype.Int8      `json:"offer_id"`
 	OrderNumber    string           `json:"order_number"`
 	Items          []byte           `json:"items"`
 	Subtotal       pgtype.Numeric   `json:"subtotal"`
@@ -150,9 +153,9 @@ type Order struct {
 }
 
 type ReferralReward struct {
-	ID           pgtype.UUID      `json:"id"`
-	ReferrerID   pgtype.UUID      `json:"referrer_id"`
-	ReferredID   pgtype.UUID      `json:"referred_id"`
+	ID           int64            `json:"id"`
+	ReferrerID   pgtype.Int8      `json:"referrer_id"`
+	ReferredID   pgtype.Int8      `json:"referred_id"`
 	RewardAmount pgtype.Numeric   `json:"reward_amount"`
 	RewardType   pgtype.Text      `json:"reward_type"`
 	Status       pgtype.Text      `json:"status"`
@@ -161,8 +164,8 @@ type ReferralReward struct {
 }
 
 type Settlement struct {
-	ID                  pgtype.UUID      `json:"id"`
-	MerchantID          pgtype.UUID      `json:"merchant_id"`
+	ID                  int64            `json:"id"`
+	MerchantID          pgtype.Int8      `json:"merchant_id"`
 	PeriodStart         pgtype.Date      `json:"period_start"`
 	PeriodEnd           pgtype.Date      `json:"period_end"`
 	TotalTransactions   pgtype.Int4      `json:"total_transactions"`
@@ -174,9 +177,9 @@ type Settlement struct {
 }
 
 type Transaction struct {
-	ID              pgtype.UUID      `json:"id"`
-	UserID          pgtype.UUID      `json:"user_id"`
-	MerchantID      pgtype.UUID      `json:"merchant_id"`
+	ID              int64            `json:"id"`
+	UserID          pgtype.Int8      `json:"user_id"`
+	MerchantID      pgtype.Int8      `json:"merchant_id"`
 	CoinsSpent      pgtype.Numeric   `json:"coins_spent"`
 	OriginalAmount  pgtype.Numeric   `json:"original_amount"`
 	DiscountAmount  pgtype.Numeric   `json:"discount_amount"`
@@ -187,7 +190,7 @@ type Transaction struct {
 }
 
 type User struct {
-	ID           pgtype.UUID      `json:"id"`
+	ID           int64            `json:"id"`
 	Email        string           `json:"email"`
 	PasswordHash pgtype.Text      `json:"password_hash"`
 	Phone        pgtype.Text      `json:"phone"`
@@ -197,7 +200,7 @@ type User struct {
 	CoinBalance  pgtype.Numeric   `json:"coin_balance"`
 	Role         NullUserRole     `json:"role"`
 	ReferralCode pgtype.Text      `json:"referral_code"`
-	ReferredBy   pgtype.UUID      `json:"referred_by"`
+	ReferredBy   pgtype.Int8      `json:"referred_by"`
 	CreatedAt    pgtype.Timestamp `json:"created_at"`
 	UpdatedAt    pgtype.Timestamp `json:"updated_at"`
 }

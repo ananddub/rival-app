@@ -20,7 +20,7 @@ INSERT INTO coin_purchases (
 `
 
 type CreateCoinPurchaseParams struct {
-	UserID        pgtype.UUID    `json:"user_id"`
+	UserID        pgtype.Int8    `json:"user_id"`
 	Amount        pgtype.Numeric `json:"amount"`
 	CoinsReceived pgtype.Numeric `json:"coins_received"`
 	PaymentMethod pgtype.Text    `json:"payment_method"`
@@ -49,6 +49,50 @@ func (q *Queries) CreateCoinPurchase(ctx context.Context, arg CreateCoinPurchase
 	return i, err
 }
 
+const createSettlement = `-- name: CreateSettlement :one
+INSERT INTO settlements (
+    merchant_id, period_start, period_end, total_transactions, total_discount_amount, settlement_amount, status
+) VALUES (
+    $1, $2, $3, $4, $5, $6, $7
+) RETURNING id, merchant_id, period_start, period_end, total_transactions, total_discount_amount, settlement_amount, status, paid_at, created_at
+`
+
+type CreateSettlementParams struct {
+	MerchantID          pgtype.Int8    `json:"merchant_id"`
+	PeriodStart         pgtype.Date    `json:"period_start"`
+	PeriodEnd           pgtype.Date    `json:"period_end"`
+	TotalTransactions   pgtype.Int4    `json:"total_transactions"`
+	TotalDiscountAmount pgtype.Numeric `json:"total_discount_amount"`
+	SettlementAmount    pgtype.Numeric `json:"settlement_amount"`
+	Status              pgtype.Text    `json:"status"`
+}
+
+func (q *Queries) CreateSettlement(ctx context.Context, arg CreateSettlementParams) (Settlement, error) {
+	row := q.db.QueryRow(ctx, createSettlement,
+		arg.MerchantID,
+		arg.PeriodStart,
+		arg.PeriodEnd,
+		arg.TotalTransactions,
+		arg.TotalDiscountAmount,
+		arg.SettlementAmount,
+		arg.Status,
+	)
+	var i Settlement
+	err := row.Scan(
+		&i.ID,
+		&i.MerchantID,
+		&i.PeriodStart,
+		&i.PeriodEnd,
+		&i.TotalTransactions,
+		&i.TotalDiscountAmount,
+		&i.SettlementAmount,
+		&i.Status,
+		&i.PaidAt,
+		&i.CreatedAt,
+	)
+	return i, err
+}
+
 const createTransaction = `-- name: CreateTransaction :one
 INSERT INTO transactions (
     user_id, merchant_id, coins_spent, original_amount, 
@@ -59,8 +103,8 @@ INSERT INTO transactions (
 `
 
 type CreateTransactionParams struct {
-	UserID          pgtype.UUID    `json:"user_id"`
-	MerchantID      pgtype.UUID    `json:"merchant_id"`
+	UserID          pgtype.Int8    `json:"user_id"`
+	MerchantID      pgtype.Int8    `json:"merchant_id"`
 	CoinsSpent      pgtype.Numeric `json:"coins_spent"`
 	OriginalAmount  pgtype.Numeric `json:"original_amount"`
 	TransactionType pgtype.Text    `json:"transaction_type"`
@@ -92,11 +136,139 @@ func (q *Queries) CreateTransaction(ctx context.Context, arg CreateTransactionPa
 	return i, err
 }
 
+const getAllTransactions = `-- name: GetAllTransactions :many
+SELECT id, user_id, merchant_id, coins_spent, original_amount, discount_amount, final_amount, transaction_type, status, created_at FROM transactions 
+ORDER BY created_at DESC 
+LIMIT $1 OFFSET $2
+`
+
+type GetAllTransactionsParams struct {
+	Limit  int32 `json:"limit"`
+	Offset int32 `json:"offset"`
+}
+
+func (q *Queries) GetAllTransactions(ctx context.Context, arg GetAllTransactionsParams) ([]Transaction, error) {
+	rows, err := q.db.Query(ctx, getAllTransactions, arg.Limit, arg.Offset)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []Transaction
+	for rows.Next() {
+		var i Transaction
+		if err := rows.Scan(
+			&i.ID,
+			&i.UserID,
+			&i.MerchantID,
+			&i.CoinsSpent,
+			&i.OriginalAmount,
+			&i.DiscountAmount,
+			&i.FinalAmount,
+			&i.TransactionType,
+			&i.Status,
+			&i.CreatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const getCoinPurchaseByID = `-- name: GetCoinPurchaseByID :one
+SELECT id, user_id, amount, coins_received, payment_method, payment_id, status, created_at FROM coin_purchases WHERE id = $1
+`
+
+func (q *Queries) GetCoinPurchaseByID(ctx context.Context, id int64) (CoinPurchase, error) {
+	row := q.db.QueryRow(ctx, getCoinPurchaseByID, id)
+	var i CoinPurchase
+	err := row.Scan(
+		&i.ID,
+		&i.UserID,
+		&i.Amount,
+		&i.CoinsReceived,
+		&i.PaymentMethod,
+		&i.PaymentID,
+		&i.Status,
+		&i.CreatedAt,
+	)
+	return i, err
+}
+
+const getMerchantSettlements = `-- name: GetMerchantSettlements :many
+SELECT id, merchant_id, period_start, period_end, total_transactions, total_discount_amount, settlement_amount, status, paid_at, created_at FROM settlements 
+WHERE merchant_id = $1 
+ORDER BY created_at DESC 
+LIMIT $2 OFFSET $3
+`
+
+type GetMerchantSettlementsParams struct {
+	MerchantID pgtype.Int8 `json:"merchant_id"`
+	Limit      int32       `json:"limit"`
+	Offset     int32       `json:"offset"`
+}
+
+func (q *Queries) GetMerchantSettlements(ctx context.Context, arg GetMerchantSettlementsParams) ([]Settlement, error) {
+	rows, err := q.db.Query(ctx, getMerchantSettlements, arg.MerchantID, arg.Limit, arg.Offset)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []Settlement
+	for rows.Next() {
+		var i Settlement
+		if err := rows.Scan(
+			&i.ID,
+			&i.MerchantID,
+			&i.PeriodStart,
+			&i.PeriodEnd,
+			&i.TotalTransactions,
+			&i.TotalDiscountAmount,
+			&i.SettlementAmount,
+			&i.Status,
+			&i.PaidAt,
+			&i.CreatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const getSettlementByID = `-- name: GetSettlementByID :one
+SELECT id, merchant_id, period_start, period_end, total_transactions, total_discount_amount, settlement_amount, status, paid_at, created_at FROM settlements WHERE id = $1
+`
+
+func (q *Queries) GetSettlementByID(ctx context.Context, id int64) (Settlement, error) {
+	row := q.db.QueryRow(ctx, getSettlementByID, id)
+	var i Settlement
+	err := row.Scan(
+		&i.ID,
+		&i.MerchantID,
+		&i.PeriodStart,
+		&i.PeriodEnd,
+		&i.TotalTransactions,
+		&i.TotalDiscountAmount,
+		&i.SettlementAmount,
+		&i.Status,
+		&i.PaidAt,
+		&i.CreatedAt,
+	)
+	return i, err
+}
+
 const getTransactionByID = `-- name: GetTransactionByID :one
 SELECT id, user_id, merchant_id, coins_spent, original_amount, discount_amount, final_amount, transaction_type, status, created_at FROM transactions WHERE id = $1
 `
 
-func (q *Queries) GetTransactionByID(ctx context.Context, id pgtype.UUID) (Transaction, error) {
+func (q *Queries) GetTransactionByID(ctx context.Context, id int64) (Transaction, error) {
 	row := q.db.QueryRow(ctx, getTransactionByID, id)
 	var i Transaction
 	err := row.Scan(
@@ -122,7 +294,7 @@ AND DATE(created_at) = CURRENT_DATE
 AND status = 'completed'
 `
 
-func (q *Queries) GetUserDailySpending(ctx context.Context, userID pgtype.UUID) (interface{}, error) {
+func (q *Queries) GetUserDailySpending(ctx context.Context, userID pgtype.Int8) (interface{}, error) {
 	row := q.db.QueryRow(ctx, getUserDailySpending, userID)
 	var daily_spent interface{}
 	err := row.Scan(&daily_spent)
@@ -138,11 +310,46 @@ AND EXTRACT(MONTH FROM created_at) = EXTRACT(MONTH FROM CURRENT_DATE)
 AND status = 'completed'
 `
 
-func (q *Queries) GetUserMonthlySpending(ctx context.Context, userID pgtype.UUID) (interface{}, error) {
+func (q *Queries) GetUserMonthlySpending(ctx context.Context, userID pgtype.Int8) (interface{}, error) {
 	row := q.db.QueryRow(ctx, getUserMonthlySpending, userID)
 	var monthly_spent interface{}
 	err := row.Scan(&monthly_spent)
 	return monthly_spent, err
+}
+
+const updateCoinPurchaseStatus = `-- name: UpdateCoinPurchaseStatus :exec
+UPDATE coin_purchases SET
+    status = $2,
+    updated_at = NOW()
+WHERE id = $1
+`
+
+type UpdateCoinPurchaseStatusParams struct {
+	ID     int64       `json:"id"`
+	Status pgtype.Text `json:"status"`
+}
+
+func (q *Queries) UpdateCoinPurchaseStatus(ctx context.Context, arg UpdateCoinPurchaseStatusParams) error {
+	_, err := q.db.Exec(ctx, updateCoinPurchaseStatus, arg.ID, arg.Status)
+	return err
+}
+
+const updateSettlementStatus = `-- name: UpdateSettlementStatus :exec
+UPDATE settlements SET
+    status = $2,
+    paid_at = $3
+WHERE id = $1
+`
+
+type UpdateSettlementStatusParams struct {
+	ID     int64            `json:"id"`
+	Status pgtype.Text      `json:"status"`
+	PaidAt pgtype.Timestamp `json:"paid_at"`
+}
+
+func (q *Queries) UpdateSettlementStatus(ctx context.Context, arg UpdateSettlementStatusParams) error {
+	_, err := q.db.Exec(ctx, updateSettlementStatus, arg.ID, arg.Status, arg.PaidAt)
+	return err
 }
 
 const updateTransactionStatus = `-- name: UpdateTransactionStatus :exec
@@ -153,7 +360,7 @@ WHERE id = $1
 `
 
 type UpdateTransactionStatusParams struct {
-	ID     pgtype.UUID `json:"id"`
+	ID     int64       `json:"id"`
 	Status pgtype.Text `json:"status"`
 }
 
