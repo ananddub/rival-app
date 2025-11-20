@@ -33,11 +33,11 @@ func (s *adminService) GetDashboardStats(ctx context.Context) (*adminpb.GetAdmin
 	pendingApprovals, _ := s.repo.GetPendingMerchantApprovals(ctx)
 
 	return &adminpb.GetAdminDashboardStatsResponse{
-		TotalMerchants:            totalMerchants,
-		ActiveMerchants:           activeMerchants,
-		TotalUsers:                totalUsers,
-		TotalTransactionVolume:    totalVolume,
-		PendingMerchantApprovals:  pendingApprovals,
+		TotalMerchants:           totalMerchants,
+		ActiveMerchants:          activeMerchants,
+		TotalUsers:               totalUsers,
+		TotalTransactionVolume:   totalVolume,
+		PendingMerchantApprovals: pendingApprovals,
 	}, nil
 }
 
@@ -96,9 +96,9 @@ func (s *adminService) GetAllTransactions(ctx context.Context, page, limit int32
 }
 
 func convertToProtoMerchant(merchant schema.Merchant) *schemapb.Merchant {
-	merchantID, _ := merchant.ID.Value()
+
 	return &schemapb.Merchant{
-		Id:                 merchantID.(string),
+		Id:                 merchant.ID,
 		Name:               merchant.Name,
 		Email:              merchant.Email,
 		Phone:              merchant.Phone.String,
@@ -110,9 +110,8 @@ func convertToProtoMerchant(merchant schema.Merchant) *schemapb.Merchant {
 }
 
 func convertToProtoUser(user schema.User) *schemapb.User {
-	userID, _ := user.ID.Value()
 	return &schemapb.User{
-		Id:           userID.(string),
+		Id:           user.ID,
 		Email:        user.Email,
 		Name:         user.Name,
 		Phone:        user.Phone.String,
@@ -124,14 +123,11 @@ func convertToProtoUser(user schema.User) *schemapb.User {
 }
 
 func convertToProtoTransaction(tx schema.Transaction) *schemapb.Transaction {
-	txID, _ := tx.ID.Value()
-	userID, _ := tx.UserID.Value()
-	merchantID, _ := tx.MerchantID.Value()
-	
+
 	return &schemapb.Transaction{
-		Id:              txID.(string),
-		UserId:          userID.(string),
-		MerchantId:      merchantID.(string),
+		Id:              tx.ID,
+		UserId:          tx.UserID.Int64,
+		MerchantId:      tx.MerchantID.Int64,
 		CoinsSpent:      utils.NumericToFloat64(tx.CoinsSpent),
 		OriginalAmount:  utils.NumericToFloat64(tx.OriginalAmount),
 		DiscountAmount:  utils.NumericToFloat64(tx.DiscountAmount),

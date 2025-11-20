@@ -27,19 +27,19 @@ func NewUserHandler() (*UserHandler, error) {
 }
 
 func (h *UserHandler) GetUser(ctx context.Context, req *userspb.GetUserRequest) (*userspb.GetUserResponse, error) {
-	if req.UserId == "" {
+	if req.UserId == 0 {
 		return &userspb.GetUserResponse{User: nil}, nil
 	}
-	return h.service.GetUser(ctx, req.UserId)
+	return h.service.GetUser(ctx, int(req.UserId))
 }
 
 func (h *UserHandler) UpdateUser(ctx context.Context, req *userspb.UpdateUserRequest) (*userspb.UpdateUserResponse, error) {
-	if req.UserId == "" {
+	if req.UserId == 0 {
 		return &userspb.UpdateUserResponse{User: nil}, nil
 	}
 
 	params := service.UpdateUserParams{
-		UserID:     req.UserId,
+		UserID:     int(req.UserId),
 		Name:       req.Name,
 		Phone:      req.Phone,
 		ProfilePic: req.ProfilePic,
@@ -48,19 +48,19 @@ func (h *UserHandler) UpdateUser(ctx context.Context, req *userspb.UpdateUserReq
 }
 
 func (h *UserHandler) GetUploadURL(ctx context.Context, req *userspb.GetUploadURLRequest) (*userspb.GetUploadURLResponse, error) {
-	if req.UserId == "" || req.FileName == "" {
+	if req.UserId == 0 || req.FileName == "" {
 		return &userspb.GetUploadURLResponse{UploadUrl: "", FileUrl: "", ExpiresIn: 0}, nil
 	}
-	return h.service.GetUploadURL(ctx, req.UserId, req.FileName, req.ContentType)
+	return h.service.GetUploadURL(ctx, int(req.UserId), req.FileName, req.ContentType)
 }
 
 func (h *UserHandler) UpdateCoinBalance(ctx context.Context, req *userspb.UpdateCoinBalanceRequest) (*userspb.UpdateCoinBalanceResponse, error) {
-	if req.UserId == "" || req.Amount <= 0 {
+	if req.UserId == 0 || req.Amount <= 0 {
 		return &userspb.UpdateCoinBalanceResponse{NewBalance: 0}, nil
 	}
 
 	params := service.UpdateCoinBalanceParams{
-		UserID:    req.UserId,
+		UserID:    int(req.UserId),
 		Amount:    req.Amount,
 		Operation: req.Operation,
 	}
@@ -68,14 +68,14 @@ func (h *UserHandler) UpdateCoinBalance(ctx context.Context, req *userspb.Update
 }
 
 func (h *UserHandler) GetCoinBalance(ctx context.Context, req *userspb.GetCoinBalanceRequest) (*userspb.GetCoinBalanceResponse, error) {
-	if req.UserId == "" {
+	if req.UserId == 0 {
 		return &userspb.GetCoinBalanceResponse{Balance: 0}, nil
 	}
-	return h.service.GetCoinBalance(ctx, req.UserId)
+	return h.service.GetCoinBalance(ctx, int(req.UserId))
 }
 
 func (h *UserHandler) GetTransactionHistory(ctx context.Context, req *userspb.GetTransactionHistoryRequest) (*userspb.GetTransactionHistoryResponse, error) {
-	if req.UserId == "" {
+	if req.UserId == 0 {
 		return &userspb.GetTransactionHistoryResponse{Transactions: nil, TotalCount: 0}, nil
 	}
 
@@ -88,19 +88,19 @@ func (h *UserHandler) GetTransactionHistory(ctx context.Context, req *userspb.Ge
 		limit = 10
 	}
 
-	return h.service.GetTransactionHistory(ctx, req.UserId, page, limit)
+	return h.service.GetTransactionHistory(ctx, int(req.UserId), page, limit)
 }
 
 func (h *UserHandler) GetReferralCode(ctx context.Context, req *userspb.GetReferralCodeRequest) (*userspb.GetReferralCodeResponse, error) {
-	if req.UserId == "" {
+	if req.UserId == 0 {
 		return &userspb.GetReferralCodeResponse{ReferralCode: ""}, nil
 	}
-	return h.service.GetReferralCode(ctx, req.UserId)
+	return h.service.GetReferralCode(ctx, int(req.UserId))
 }
 
 func (h *UserHandler) ApplyReferralCode(ctx context.Context, req *userspb.ApplyReferralCodeRequest) (*userspb.ApplyReferralCodeResponse, error) {
-	if req.UserId == "" || req.ReferralCode == "" {
+	if req.UserId == 0 || req.ReferralCode == "" {
 		return &userspb.ApplyReferralCodeResponse{Success: false, Message: "User ID and referral code required", RewardAmount: 0}, nil
 	}
-	return h.service.ApplyReferralCode(ctx, req.UserId, req.ReferralCode)
+	return h.service.ApplyReferralCode(ctx, int(req.UserId), req.ReferralCode)
 }

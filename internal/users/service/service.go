@@ -9,35 +9,35 @@ import (
 	schema "rival/gen/sql"
 	"rival/internal/users/repo"
 	"rival/pkg/utils"
-	"github.com/google/uuid"
+
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
 type UpdateUserParams struct {
-	UserID     string
+	UserID     int
 	Name       string
 	Phone      string
 	ProfilePic string
 }
 
 type UpdateCoinBalanceParams struct {
-	UserID    string
+	UserID    int
 	Amount    float64
 	Operation string // add, subtract
 }
 
 type UserService interface {
-	GetUser(ctx context.Context, userID string) (*userspb.GetUserResponse, error)
+	GetUser(ctx context.Context, userID int) (*userspb.GetUserResponse, error)
 	UpdateUser(ctx context.Context, params UpdateUserParams) (*userspb.UpdateUserResponse, error)
-	GetUploadURL(ctx context.Context, userID, fileName, contentType string) (*userspb.GetUploadURLResponse, error)
+	GetUploadURL(ctx context.Context, userID int, fileName, contentType string) (*userspb.GetUploadURLResponse, error)
 	UpdateCoinBalance(ctx context.Context, params UpdateCoinBalanceParams) (*userspb.UpdateCoinBalanceResponse, error)
-	GetCoinBalance(ctx context.Context, userID string) (*userspb.GetCoinBalanceResponse, error)
-	GetTransactionHistory(ctx context.Context, userID string, page, limit int32) (*userspb.GetTransactionHistoryResponse, error)
-	GetCoinPurchaseHistory(ctx context.Context, userID string, page, limit int32) (*userspb.GetTransactionHistoryResponse, error)
-	GetReferralHistory(ctx context.Context, userID string, page, limit int32) (*userspb.GetTransactionHistoryResponse, error)
-	GetUserStats(ctx context.Context, userID string) (*userspb.GetUserResponse, error)
-	GetReferralCode(ctx context.Context, userID string) (*userspb.GetReferralCodeResponse, error)
-	ApplyReferralCode(ctx context.Context, userID, referralCode string) (*userspb.ApplyReferralCodeResponse, error)
+	GetCoinBalance(ctx context.Context, userID int) (*userspb.GetCoinBalanceResponse, error)
+	GetTransactionHistory(ctx context.Context, userID int, page, limit int32) (*userspb.GetTransactionHistoryResponse, error)
+	GetCoinPurchaseHistory(ctx context.Context, userID int, page, limit int32) (*userspb.GetTransactionHistoryResponse, error)
+	GetReferralHistory(ctx context.Context, userID int, page, limit int32) (*userspb.GetTransactionHistoryResponse, error)
+	GetUserStats(ctx context.Context, userID int) (*userspb.GetUserResponse, error)
+	GetReferralCode(ctx context.Context, userID int) (*userspb.GetReferralCodeResponse, error)
+	ApplyReferralCode(ctx context.Context, userID int, referralCode string) (*userspb.ApplyReferralCodeResponse, error)
 }
 
 type userService struct {
@@ -48,22 +48,17 @@ func NewUserService(repo repo.UserRepository) UserService {
 	return &userService{repo: repo}
 }
 
-func (s *userService) GetUser(ctx context.Context, userID string) (*userspb.GetUserResponse, error) {
-	id, err := uuid.Parse(userID)
-	if err != nil {
-		return nil, fmt.Errorf("invalid user ID")
-	}
-
-	user, err := s.repo.GetUserProfile(ctx, id)
+func (s *userService) GetUser(ctx context.Context, userID int) (*userspb.GetUserResponse, error) {
+	user, err := s.repo.GetUserProfile(ctx, userID)
 	if err != nil {
 		return nil, err
 	}
 
 	protoUser := convertToProtoUser(user)
-	
+
 	// Generate signed URL for profile image if exists
 	if user.ProfilePic.Valid && user.ProfilePic.String != "" {
-		signedURL, err := s.generateProfileImageURL(ctx, userID, user.ProfilePic.String)
+		signedURL, err := s.generateProfileImageURL(ctx, fmt.Sprintf("%d", userID), user.ProfilePic.String)
 		if err == nil {
 			protoUser.ProfilePic = signedURL
 		}
@@ -75,26 +70,20 @@ func (s *userService) GetUser(ctx context.Context, userID string) (*userspb.GetU
 }
 
 func (s *userService) UpdateUser(ctx context.Context, params UpdateUserParams) (*userspb.UpdateUserResponse, error) {
-	id, err := uuid.Parse(params.UserID)
-	if err != nil {
-		return nil, fmt.Errorf("invalid user ID")
-	}
-
 	updateParams := schema.UpdateUserProfileParams{
-		ID:         pgtype.UUID{},
+		ID:         int64(params.UserID),
 		Name:       params.Name,
 		Phone:      pgtype.Text{String: params.Phone, Valid: params.Phone != ""},
 		ProfilePic: pgtype.Text{String: params.ProfilePic, Valid: params.ProfilePic != ""},
 	}
-	updateParams.ID.Scan(id)
 
-	err = s.repo.UpdateUserProfile(ctx, updateParams)
+	err := s.repo.UpdateUserProfile(ctx, updateParams)
 	if err != nil {
 		return nil, err
 	}
 
 	// Get updated user
-	user, err := s.repo.GetUserProfile(ctx, id)
+	user, err := s.repo.GetUserProfile(ctx, params.UserID)
 	if err != nil {
 		return nil, err
 	}
@@ -104,8 +93,8 @@ func (s *userService) UpdateUser(ctx context.Context, params UpdateUserParams) (
 	}, nil
 }
 
-func (s *userService) GetUploadURL(ctx context.Context, userID, fileName, contentType string) (*userspb.GetUploadURLResponse, error) {
-	uploadURL, fileURL, err := s.repo.GenerateUploadURL(ctx, userID, fileName, contentType)
+func (s *userService) GetUploadURL(ctx context.Context, userID int, fileName, contentType string) (*userspb.GetUploadURLResponse, error) {
+	uploadURL, fileURL, err := s.repo.GenerateUploadURL(ctx, fmt.Sprintf("%d", userID), fileName, contentType)
 	if err != nil {
 		return nil, err
 	}
@@ -118,14 +107,10 @@ func (s *userService) GetUploadURL(ctx context.Context, userID, fileName, conten
 }
 
 func (s *userService) UpdateCoinBalance(ctx context.Context, params UpdateCoinBalanceParams) (*userspb.UpdateCoinBalanceResponse, error) {
-	id, err := uuid.Parse(params.UserID)
-	if err != nil {
-		return nil, fmt.Errorf("invalid user ID")
-	}
 
 	// Add coins using TigerBeetle service (only add operation supported)
 	if params.Operation == "add" {
-		err = s.repo.AddCoins(ctx, id, params.Amount)
+		err := s.repo.AddCoins(ctx, params.UserID, params.Amount)
 		if err != nil {
 			return nil, err
 		}
@@ -134,7 +119,7 @@ func (s *userService) UpdateCoinBalance(ctx context.Context, params UpdateCoinBa
 	}
 
 	// Get new balance
-	newBalance, err := s.repo.GetCoinBalance(ctx, id)
+	newBalance, err := s.repo.GetCoinBalance(ctx, params.UserID)
 	if err != nil {
 		return nil, err
 	}
@@ -144,14 +129,9 @@ func (s *userService) UpdateCoinBalance(ctx context.Context, params UpdateCoinBa
 	}, nil
 }
 
-func (s *userService) GetCoinBalance(ctx context.Context, userID string) (*userspb.GetCoinBalanceResponse, error) {
-	id, err := uuid.Parse(userID)
-	if err != nil {
-		return nil, fmt.Errorf("invalid user ID")
-	}
-
+func (s *userService) GetCoinBalance(ctx context.Context, userID int) (*userspb.GetCoinBalanceResponse, error) {
 	// Get balance from TigerBeetle
-	balance, err := s.repo.GetCoinBalance(ctx, id)
+	balance, err := s.repo.GetCoinBalance(ctx, userID)
 	if err != nil {
 		return nil, err
 	}
@@ -161,14 +141,10 @@ func (s *userService) GetCoinBalance(ctx context.Context, userID string) (*users
 	}, nil
 }
 
-func (s *userService) GetTransactionHistory(ctx context.Context, userID string, page, limit int32) (*userspb.GetTransactionHistoryResponse, error) {
-	id, err := uuid.Parse(userID)
-	if err != nil {
-		return nil, fmt.Errorf("invalid user ID")
-	}
+func (s *userService) GetTransactionHistory(ctx context.Context, userID int, page, limit int32) (*userspb.GetTransactionHistoryResponse, error) {
 
 	offset := (page - 1) * limit
-	transactions, err := s.repo.GetUserTransactions(ctx, id, limit, offset)
+	transactions, err := s.repo.GetUserTransactions(ctx, userID, limit, offset)
 	if err != nil {
 		return nil, err
 	}
@@ -184,13 +160,9 @@ func (s *userService) GetTransactionHistory(ctx context.Context, userID string, 
 	}, nil
 }
 
-func (s *userService) GetReferralCode(ctx context.Context, userID string) (*userspb.GetReferralCodeResponse, error) {
-	id, err := uuid.Parse(userID)
-	if err != nil {
-		return nil, fmt.Errorf("invalid user ID")
-	}
+func (s *userService) GetReferralCode(ctx context.Context, userID int) (*userspb.GetReferralCodeResponse, error) {
 
-	user, err := s.repo.GetUserProfile(ctx, id)
+	user, err := s.repo.GetUserProfile(ctx, userID)
 	if err != nil {
 		return nil, err
 	}
@@ -200,14 +172,9 @@ func (s *userService) GetReferralCode(ctx context.Context, userID string) (*user
 	}, nil
 }
 
-func (s *userService) ApplyReferralCode(ctx context.Context, userID, referralCode string) (*userspb.ApplyReferralCodeResponse, error) {
-	// Get current user
-	id, err := uuid.Parse(userID)
-	if err != nil {
-		return nil, fmt.Errorf("invalid user ID")
-	}
+func (s *userService) ApplyReferralCode(ctx context.Context, userID int, referralCode string) (*userspb.ApplyReferralCodeResponse, error) {
 
-	currentUser, err := s.repo.GetUserProfile(ctx, id)
+	currentUser, err := s.repo.GetUserProfile(ctx, userID)
 	if err != nil {
 		return nil, err
 	}
@@ -230,8 +197,7 @@ func (s *userService) ApplyReferralCode(ctx context.Context, userID, referralCod
 	}
 
 	// Can't refer yourself
-	referrerID, _ := referrer.ID.Value()
-	if referrerID.(string) == userID {
+	if referrer.ID == int64(userID) {
 		return &userspb.ApplyReferralCodeResponse{
 			Success: false,
 			Message: "You cannot use your own referral code",
@@ -240,8 +206,8 @@ func (s *userService) ApplyReferralCode(ctx context.Context, userID, referralCod
 
 	// Create referral reward for referrer (signup bonus)
 	createRewardParams := schema.CreateReferralRewardParams{
-		ReferrerID:   referrer.ID,
-		ReferredID:   currentUser.ID,
+		ReferrerID:   pgtype.Int8{Int64: referrer.ID, Valid: true},
+		ReferredID:   pgtype.Int8{Int64: currentUser.ID, Valid: true},
 		RewardAmount: utils.Float64ToNumeric(5.0), // $5 referral bonus
 		RewardType:   pgtype.Text{String: "signup", Valid: true},
 		Status:       pgtype.Text{String: "pending", Valid: true},
@@ -254,12 +220,11 @@ func (s *userService) ApplyReferralCode(ctx context.Context, userID, referralCod
 
 	// Update current user's referred_by field
 	updateParams := schema.UpdateUserProfileParams{
-		ID:         pgtype.UUID{},
+		ID:         currentUser.ID,
 		Name:       currentUser.Name,
 		Phone:      currentUser.Phone,
 		ProfilePic: currentUser.ProfilePic,
 	}
-	updateParams.ID.Scan(id)
 
 	err = s.repo.UpdateUserProfile(ctx, updateParams)
 	if err != nil {
@@ -273,14 +238,9 @@ func (s *userService) ApplyReferralCode(ctx context.Context, userID, referralCod
 	}, nil
 }
 
-func (s *userService) GetReferralRewards(ctx context.Context, userID string, page, limit int32) (*userspb.GetReferralRewardsResponse, error) {
-	id, err := uuid.Parse(userID)
-	if err != nil {
-		return nil, fmt.Errorf("invalid user ID")
-	}
-
+func (s *userService) GetReferralRewards(ctx context.Context, userID int, page, limit int32) (*userspb.GetReferralRewardsResponse, error) {
 	offset := (page - 1) * limit
-	rewards, err := s.repo.GetUserReferralRewards(ctx, id, limit, offset)
+	rewards, err := s.repo.GetUserReferralRewards(ctx, userID, limit, offset)
 	if err != nil {
 		return nil, err
 	}
@@ -291,7 +251,7 @@ func (s *userService) GetReferralRewards(ctx context.Context, userID string, pag
 	for _, reward := range rewards {
 		protoReward := convertToProtoReferralReward(reward)
 		protoRewards = append(protoRewards, protoReward)
-		
+
 		// Add to total if credited
 		if reward.Status.String == "credited" {
 			if reward.RewardAmount.Valid {
@@ -311,8 +271,6 @@ func (s *userService) GetReferralRewards(ctx context.Context, userID string, pag
 }
 
 func convertToProtoUser(user schema.User) *schemapb.User {
-	userID, _ := user.ID.Value()
-	
 	var coinBalance float64
 	if user.CoinBalance.Valid {
 		val, _ := user.CoinBalance.Value()
@@ -320,22 +278,21 @@ func convertToProtoUser(user schema.User) *schemapb.User {
 			coinBalance = val.(float64)
 		}
 	}
-	
+
 	var role schemapb.UserRole
 	if user.Role.Valid {
 		if val, ok := schemapb.UserRole_value[string(user.Role.UserRole)]; ok {
 			role = schemapb.UserRole(val)
 		}
 	}
-	
+
 	var referredBy string
 	if user.ReferredBy.Valid {
-		referredByVal, _ := user.ReferredBy.Value()
-		referredBy = referredByVal.(string)
+		referredBy = fmt.Sprintf("%d", user.ReferredBy.Int64)
 	}
-	
+
 	return &schemapb.User{
-		Id:           userID.(string),
+		Id:           user.ID,
 		Email:        user.Email,
 		PasswordHash: user.PasswordHash.String,
 		Phone:        user.Phone.String,
@@ -352,10 +309,10 @@ func convertToProtoUser(user schema.User) *schemapb.User {
 }
 
 func convertToProtoReferralReward(reward schema.ReferralReward) *schemapb.ReferralReward {
-	rewardID, _ := reward.ID.Value()
-	referrerID, _ := reward.ReferrerID.Value()
-	referredID, _ := reward.ReferredID.Value()
-	
+	rewardID := reward.ID
+	referrerID := reward.ReferrerID
+	referredID := reward.ReferredID
+
 	var rewardAmount float64
 	if reward.RewardAmount.Valid {
 		val, _ := reward.RewardAmount.Value()
@@ -363,16 +320,16 @@ func convertToProtoReferralReward(reward schema.ReferralReward) *schemapb.Referr
 			rewardAmount = val.(float64)
 		}
 	}
-	
+
 	var creditedAt int64
 	if reward.CreditedAt.Valid {
 		creditedAt = reward.CreditedAt.Time.Unix()
 	}
-	
+
 	return &schemapb.ReferralReward{
-		Id:           rewardID.(string),
-		ReferrerId:   referrerID.(string),
-		ReferredId:   referredID.(string),
+		Id:           rewardID,
+		ReferrerId:   referrerID.Int64,
+		ReferredId:   referredID.Int64,
 		RewardAmount: rewardAmount,
 		RewardType:   reward.RewardType.String,
 		Status:       reward.Status.String,
@@ -382,10 +339,16 @@ func convertToProtoReferralReward(reward schema.ReferralReward) *schemapb.Referr
 }
 
 func convertToProtoTransaction(tx schema.Transaction) *schemapb.Transaction {
-	txID, _ := tx.ID.Value()
-	userID, _ := tx.UserID.Value()
-	merchantID, _ := tx.MerchantID.Value()
-	
+	var userID int64
+	if tx.UserID.Valid {
+		userID = tx.UserID.Int64
+	}
+
+	var merchantID int64
+	if tx.MerchantID.Valid {
+		merchantID = tx.MerchantID.Int64
+	}
+
 	// Handle numeric fields
 	var coinsSpent, originalAmount, discountAmount, finalAmount float64
 	if tx.CoinsSpent.Valid {
@@ -412,31 +375,23 @@ func convertToProtoTransaction(tx schema.Transaction) *schemapb.Transaction {
 			finalAmount = val.(float64)
 		}
 	}
-	
+
 	return &schemapb.Transaction{
-		Id:               txID.(string),
-		UserId:           userID.(string),
-		MerchantId:       merchantID.(string),
-		CoinsSpent:       coinsSpent,
-		OriginalAmount:   originalAmount,
-		DiscountAmount:   discountAmount,
-		FinalAmount:      finalAmount,
-		TransactionType:  tx.TransactionType.String,
-		Status:           tx.Status.String,
-		CreatedAt:        tx.CreatedAt.Time.Unix(),
+		Id:              tx.ID,
+		UserId:          userID,
+		MerchantId:      merchantID,
+		CoinsSpent:      coinsSpent,
+		OriginalAmount:  originalAmount,
+		DiscountAmount:  discountAmount,
+		FinalAmount:     finalAmount,
+		TransactionType: tx.TransactionType.String,
+		Status:          tx.Status.String,
+		CreatedAt:       tx.CreatedAt.Time.Unix(),
 	}
 }
-func (s *userService) GetCoinPurchaseHistory(ctx context.Context, userID string, page, limit int32) (*userspb.GetTransactionHistoryResponse, error) {
-	id, err := uuid.Parse(userID)
-	if err != nil {
-		return &userspb.GetTransactionHistoryResponse{
-			Transactions: nil,
-			TotalCount:   0,
-		}, nil
-	}
-
+func (s *userService) GetCoinPurchaseHistory(ctx context.Context, userID int, page, limit int32) (*userspb.GetTransactionHistoryResponse, error) {
 	offset := (page - 1) * limit
-	purchases, err := s.repo.GetUserCoinPurchases(ctx, id, limit, offset)
+	purchases, err := s.repo.GetUserCoinPurchases(ctx, userID, limit, offset)
 	if err != nil {
 		return &userspb.GetTransactionHistoryResponse{
 			Transactions: nil,
@@ -456,17 +411,9 @@ func (s *userService) GetCoinPurchaseHistory(ctx context.Context, userID string,
 	}, nil
 }
 
-func (s *userService) GetReferralHistory(ctx context.Context, userID string, page, limit int32) (*userspb.GetTransactionHistoryResponse, error) {
-	id, err := uuid.Parse(userID)
-	if err != nil {
-		return &userspb.GetTransactionHistoryResponse{
-			Transactions: nil,
-			TotalCount:   0,
-		}, nil
-	}
-
+func (s *userService) GetReferralHistory(ctx context.Context, userID int, page, limit int32) (*userspb.GetTransactionHistoryResponse, error) {
 	offset := (page - 1) * limit
-	rewards, err := s.repo.GetUserReferralRewards(ctx, id, limit, offset)
+	rewards, err := s.repo.GetUserReferralRewards(ctx, userID, limit, offset)
 	if err != nil {
 		return &userspb.GetTransactionHistoryResponse{
 			Transactions: nil,
@@ -486,15 +433,8 @@ func (s *userService) GetReferralHistory(ctx context.Context, userID string, pag
 	}, nil
 }
 
-func (s *userService) GetUserStats(ctx context.Context, userID string) (*userspb.GetUserResponse, error) {
-	id, err := uuid.Parse(userID)
-	if err != nil {
-		return &userspb.GetUserResponse{
-			User: nil,
-		}, nil
-	}
-
-	user, err := s.repo.GetUserProfile(ctx, id)
+func (s *userService) GetUserStats(ctx context.Context, userID int) (*userspb.GetUserResponse, error) {
+	user, err := s.repo.GetUserProfile(ctx, userID)
 	if err != nil {
 		return &userspb.GetUserResponse{
 			User: nil,
@@ -502,14 +442,14 @@ func (s *userService) GetUserStats(ctx context.Context, userID string) (*userspb
 	}
 
 	// Get coin balance
-	balance, _ := s.repo.GetCoinBalance(ctx, id)
+	balance, _ := s.repo.GetCoinBalance(ctx, userID)
 
 	protoUser := convertToProtoUser(user)
 	protoUser.CoinBalance = balance
-	
+
 	// Generate signed URL for profile image if exists
 	if user.ProfilePic.Valid && user.ProfilePic.String != "" {
-		signedURL, err := s.generateProfileImageURL(ctx, userID, user.ProfilePic.String)
+		signedURL, err := s.generateProfileImageURL(ctx, fmt.Sprintf("%d", userID), user.ProfilePic.String)
 		if err == nil {
 			protoUser.ProfilePic = signedURL
 		}
@@ -519,14 +459,17 @@ func (s *userService) GetUserStats(ctx context.Context, userID string) (*userspb
 		User: protoUser,
 	}, nil
 }
+
 // Conversion functions
 func convertToCoinPurchase(purchase schema.CoinPurchase) *schemapb.CoinPurchase {
-	purchaseID, _ := purchase.ID.Value()
-	userID, _ := purchase.UserID.Value()
-	
+	var userID int64
+	if purchase.UserID.Valid {
+		userID = purchase.UserID.Int64
+	}
+
 	return &schemapb.CoinPurchase{
-		Id:            purchaseID.(string),
-		UserId:        userID.(string),
+		Id:            purchase.ID,
+		UserId:        userID,
 		Amount:        utils.NumericToFloat64(purchase.Amount),
 		CoinsReceived: utils.NumericToFloat64(purchase.CoinsReceived),
 		PaymentMethod: purchase.PaymentMethod.String,
@@ -536,28 +479,37 @@ func convertToCoinPurchase(purchase schema.CoinPurchase) *schemapb.CoinPurchase 
 }
 
 func convertToReferralReward(reward schema.ReferralReward) *schemapb.ReferralReward {
-	rewardID, _ := reward.ID.Value()
-	referrerID, _ := reward.ReferrerID.Value()
-	referredID, _ := reward.ReferredID.Value()
-	
+	var referrerID int64
+	if reward.ReferrerID.Valid {
+		referrerID = reward.ReferrerID.Int64
+	}
+
+	var referredID int64
+	if reward.ReferredID.Valid {
+		referredID = reward.ReferredID.Int64
+	}
+
 	return &schemapb.ReferralReward{
-		Id:           rewardID.(string),
-		ReferrerId:   referrerID.(string),
-		ReferredId:   referredID.(string),
+		Id:           reward.ID,
+		ReferrerId:   referrerID,
+		ReferredId:   referredID,
 		RewardAmount: utils.NumericToFloat64(reward.RewardAmount),
 		RewardType:   reward.RewardType.String,
 		Status:       reward.Status.String,
 		CreatedAt:    reward.CreatedAt.Time.Unix(),
 	}
 }
+
 func convertPurchaseToTransaction(purchase schema.CoinPurchase) *schemapb.Transaction {
-	purchaseID, _ := purchase.ID.Value()
-	userID, _ := purchase.UserID.Value()
-	
+	var userID int64
+	if purchase.UserID.Valid {
+		userID = purchase.UserID.Int64
+	}
+
 	return &schemapb.Transaction{
-		Id:              purchaseID.(string),
-		UserId:          userID.(string),
-		MerchantId:      "", // No merchant for coin purchases
+		Id:              purchase.ID,
+		UserId:          userID,
+		MerchantId:      0, // No merchant for coin purchases
 		CoinsSpent:      utils.NumericToFloat64(purchase.Amount),
 		OriginalAmount:  utils.NumericToFloat64(purchase.Amount),
 		TransactionType: "coin_purchase",
@@ -567,13 +519,15 @@ func convertPurchaseToTransaction(purchase schema.CoinPurchase) *schemapb.Transa
 }
 
 func convertRewardToTransaction(reward schema.ReferralReward) *schemapb.Transaction {
-	rewardID, _ := reward.ID.Value()
-	referrerID, _ := reward.ReferrerID.Value()
-	
+	var referrerID int64
+	if reward.ReferrerID.Valid {
+		referrerID = reward.ReferrerID.Int64
+	}
+
 	return &schemapb.Transaction{
-		Id:              rewardID.(string),
-		UserId:          referrerID.(string),
-		MerchantId:      "", // No merchant for referral rewards
+		Id:              reward.ID,
+		UserId:          referrerID,
+		MerchantId:      0, // No merchant for referral rewards
 		CoinsSpent:      0,
 		OriginalAmount:  utils.NumericToFloat64(reward.RewardAmount),
 		TransactionType: "referral_reward",
@@ -582,6 +536,5 @@ func convertRewardToTransaction(reward schema.ReferralReward) *schemapb.Transact
 	}
 }
 func (s *userService) generateProfileImageURL(ctx context.Context, userID, fileName string) (string, error) {
-	// Generate signed URL for viewing the profile image
 	return s.repo.GenerateViewURL(ctx, userID, fileName)
 }

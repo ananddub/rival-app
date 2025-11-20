@@ -9,7 +9,6 @@ import (
 	schema "rival/gen/sql"
 	"rival/pkg/tb"
 
-	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/minio/minio-go/v7"
@@ -17,14 +16,14 @@ import (
 )
 
 type UserRepository interface {
-	GetUserProfile(ctx context.Context, userID uuid.UUID) (schema.User, error)
+	GetUserProfile(ctx context.Context, userID int) (schema.User, error)
 	UpdateUserProfile(ctx context.Context, params schema.UpdateUserProfileParams) error
-	GetCoinBalance(ctx context.Context, userID uuid.UUID) (float64, error)
-	AddCoins(ctx context.Context, userID uuid.UUID, amount float64) error
+	GetCoinBalance(ctx context.Context, userID int) (float64, error)
+	AddCoins(ctx context.Context, userID int, amount float64) error
 	GetUserByReferralCode(ctx context.Context, referralCode string) (schema.User, error)
-	GetUserTransactions(ctx context.Context, userID uuid.UUID, limit, offset int32) ([]schema.Transaction, error)
-	GetUserCoinPurchases(ctx context.Context, userID uuid.UUID, limit, offset int32) ([]schema.CoinPurchase, error)
-	GetUserReferralRewards(ctx context.Context, userID uuid.UUID, limit, offset int32) ([]schema.ReferralReward, error)
+	GetUserTransactions(ctx context.Context, userID int, limit, offset int32) ([]schema.Transaction, error)
+	GetUserCoinPurchases(ctx context.Context, userID int, limit, offset int32) ([]schema.CoinPurchase, error)
+	GetUserReferralRewards(ctx context.Context, userID int, limit, offset int32) ([]schema.ReferralReward, error)
 	CreateReferralReward(ctx context.Context, params schema.CreateReferralRewardParams) error
 	UpdateReferralRewardStatus(ctx context.Context, params schema.UpdateReferralRewardStatusParams) error
 	GenerateUploadURL(ctx context.Context, userID, fileName, contentType string) (uploadURL, fileURL string, err error)
@@ -68,21 +67,19 @@ func NewUserRepository() (UserRepository, error) {
 	}, nil
 }
 
-func (r *userRepository) GetUserProfile(ctx context.Context, userID uuid.UUID) (schema.User, error) {
-	pgUUID := pgtype.UUID{}
-	pgUUID.Scan(userID)
-	return r.queries.GetUserProfile(ctx, pgUUID)
+func (r *userRepository) GetUserProfile(ctx context.Context, userID int) (schema.User, error) {
+	return r.queries.GetUserProfile(ctx, int64(userID))
 }
 
 func (r *userRepository) UpdateUserProfile(ctx context.Context, params schema.UpdateUserProfileParams) error {
 	return r.queries.UpdateUserProfile(ctx, params)
 }
 
-func (r *userRepository) GetCoinBalance(ctx context.Context, userID uuid.UUID) (float64, error) {
+func (r *userRepository) GetCoinBalance(ctx context.Context, userID int) (float64, error) {
 	return r.tb.GetBalance(userID)
 }
 
-func (r *userRepository) AddCoins(ctx context.Context, userID uuid.UUID, amount float64) error {
+func (r *userRepository) AddCoins(ctx context.Context, userID int, amount float64) error {
 	return r.tb.AddCoins(userID, amount)
 }
 
@@ -90,31 +87,25 @@ func (r *userRepository) GetUserByReferralCode(ctx context.Context, referralCode
 	return r.queries.GetUserByReferralCode(ctx, pgtype.Text{String: referralCode, Valid: true})
 }
 
-func (r *userRepository) GetUserTransactions(ctx context.Context, userID uuid.UUID, limit, offset int32) ([]schema.Transaction, error) {
-	pgUUID := pgtype.UUID{}
-	pgUUID.Scan(userID)
+func (r *userRepository) GetUserTransactions(ctx context.Context, userID int, limit, offset int32) ([]schema.Transaction, error) {
 	return r.queries.GetUserTransactions(ctx, schema.GetUserTransactionsParams{
-		UserID: pgUUID,
+		UserID: pgtype.Int8{Int64: int64(userID), Valid: true},
 		Limit:  limit,
 		Offset: offset,
 	})
 }
 
-func (r *userRepository) GetUserCoinPurchases(ctx context.Context, userID uuid.UUID, limit, offset int32) ([]schema.CoinPurchase, error) {
-	pgUUID := pgtype.UUID{}
-	pgUUID.Scan(userID)
+func (r *userRepository) GetUserCoinPurchases(ctx context.Context, userID int, limit, offset int32) ([]schema.CoinPurchase, error) {
 	return r.queries.GetUserCoinPurchases(ctx, schema.GetUserCoinPurchasesParams{
-		UserID: pgUUID,
+		UserID: pgtype.Int8{Int64: int64(userID), Valid: true},
 		Limit:  limit,
 		Offset: offset,
 	})
 }
 
-func (r *userRepository) GetUserReferralRewards(ctx context.Context, userID uuid.UUID, limit, offset int32) ([]schema.ReferralReward, error) {
-	pgUUID := pgtype.UUID{}
-	pgUUID.Scan(userID)
+func (r *userRepository) GetUserReferralRewards(ctx context.Context, userID int, limit, offset int32) ([]schema.ReferralReward, error) {
 	return r.queries.GetUserReferralRewards(ctx, schema.GetUserReferralRewardsParams{
-		ReferrerID: pgUUID,
+		ReferrerID: pgtype.Int8{Int64: int64(userID), Valid: true},
 		Limit:      limit,
 		Offset:     offset,
 	})

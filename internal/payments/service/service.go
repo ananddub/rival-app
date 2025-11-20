@@ -47,20 +47,15 @@ func NewPaymentService(repo repo.PaymentRepository) PaymentService {
 
 // Coin Purchase
 func (s *paymentService) InitiateCoinPurchase(ctx context.Context, req *paymentpb.InitiateCoinPurchaseRequest) (*paymentpb.InitiateCoinPurchaseResponse, error) {
-	userID := req.UserId
-
 	paymentID := uuid.New().String()
 	coinsToReceive := req.Amount // 1:1 ratio
 
-	pgUserID := pgtype.UUID{}
-	pgUserID.Scan(userID)
-
 	createParams := schema.CreateCoinPurchaseParams{
-		UserID:          pgtype.Int8{Int64: int64(userID), Valid: true},
-		Amount:          utils.Float64ToNumeric(req.Amount),
-		CoinsReceived:   utils.Float64ToNumeric(coinsToReceive),
-		PaymentMethod:   pgtype.Text{String: req.PaymentMethod, Valid: true},
-		Status:          pgtype.Text{String: "pending", Valid: true},
+		UserID:        pgtype.Int8{Int64: req.UserId, Valid: true},
+		Amount:        utils.Float64ToNumeric(req.Amount),
+		CoinsReceived: utils.Float64ToNumeric(coinsToReceive),
+		PaymentMethod: pgtype.Text{String: req.PaymentMethod, Valid: true},
+		Status:        pgtype.Text{String: "pending", Valid: true},
 	}
 
 	purchase, err := s.repo.CreateCoinPurchase(ctx, createParams)
@@ -80,29 +75,31 @@ func (s *paymentService) InitiateCoinPurchase(ctx context.Context, req *paymentp
 }
 
 func (s *paymentService) VerifyPayment(ctx context.Context, req *paymentpb.VerifyPaymentRequest) (*paymentpb.VerifyPaymentResponse, error) {
-	
+	// Convert paymentID string to int
+	var paymentID int
+	fmt.Sscanf(req.PaymentId, "%d", &paymentID)
 
-	purchase, err := s.repo.GetCoinPurchaseByID(ctx, req.PaymentId)
+	purchase, err := s.repo.GetCoinPurchaseByID(ctx, paymentID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get purchase: %w", err)
 	}
 
-	userID, _ := purchase.UserID.Value()
-	userUUID, _ := uuid.Parse(userID.(string))
+	var userID int
+	if purchase.UserID.Valid {
+		userID = int(purchase.UserID.Int64)
+	}
+
 	coinsToAdd := utils.NumericToFloat64(purchase.CoinsReceived)
 
 	// Add coins to TigerBeetle
-	err = s.repo.AddCoins(ctx, userUUID, coinsToAdd)
+	err = s.repo.AddCoins(ctx, userID, coinsToAdd)
 	if err != nil {
 		return nil, fmt.Errorf("failed to add coins: %w", err)
 	}
 
 	// Update purchase status
-	pgPurchaseID := pgtype.UUID{}
-	pgPurchaseID.Scan(purchaseID)
-
 	err = s.repo.UpdateCoinPurchaseStatus(ctx, schema.UpdateCoinPurchaseStatusParams{
-		ID:     pgPurchaseID,
+		ID:     purchase.ID,
 		Status: pgtype.Text{String: "completed", Valid: true},
 	})
 	if err != nil {
@@ -110,7 +107,7 @@ func (s *paymentService) VerifyPayment(ctx context.Context, req *paymentpb.Verif
 	}
 
 	// Get new balance
-	newBalance, err := s.repo.GetBalance(ctx, userUUID)
+	newBalance, err := s.repo.GetBalance(ctx, userID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get balance: %w", err)
 	}
@@ -124,10 +121,7 @@ func (s *paymentService) VerifyPayment(ctx context.Context, req *paymentpb.Verif
 }
 
 func (s *paymentService) GetPaymentHistory(ctx context.Context, req *paymentpb.GetPaymentHistoryRequest) (*paymentpb.GetPaymentHistoryResponse, error) {
-	userID, err := uuid.Parse(req.UserId)
-	if err != nil {
-		return nil, fmt.Errorf("invalid user ID: %w", err)
-	}
+	userID := int(req.UserId)
 
 	purchases, err := s.repo.GetUserCoinPurchases(ctx, userID, req.Limit, (req.Page-1)*req.Limit)
 	if err != nil {
@@ -146,13 +140,12 @@ func (s *paymentService) GetPaymentHistory(ctx context.Context, req *paymentpb.G
 }
 
 func (s *paymentService) RefundPayment(ctx context.Context, req *paymentpb.RefundPaymentRequest) (*paymentpb.RefundPaymentResponse, error) {
-	purchaseID, err := uuid.Parse(req.PaymentId)
-	if err != nil {
-		return nil, fmt.Errorf("invalid payment ID: %w", err)
-	}
+	// Convert paymentID string to int
+	var paymentID int
+	fmt.Sscanf(req.PaymentId, "%d", &paymentID)
 
 	// Get the original purchase
-	purchase, err := s.repo.GetCoinPurchaseByID(ctx, purchaseID)
+	purchase, err := s.repo.GetCoinPurchaseByID(ctx, paymentID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get purchase: %w", err)
 	}
@@ -166,22 +159,22 @@ func (s *paymentService) RefundPayment(ctx context.Context, req *paymentpb.Refun
 		}, nil
 	}
 
-	userID, _ := purchase.UserID.Value()
-	userUUID, _ := uuid.Parse(userID.(string))
+	var userID int
+	if purchase.UserID.Valid {
+		userID = int(purchase.UserID.Int64)
+	}
+
 	refundAmount := utils.NumericToFloat64(purchase.CoinsReceived)
 
 	// Remove coins from user account (reverse the add operation)
-	err = s.repo.ProcessRefund(ctx, userUUID, uuid.Nil, refundAmount)
+	err = s.repo.ProcessRefund(ctx, userID, 0, refundAmount)
 	if err != nil {
 		return nil, fmt.Errorf("failed to process refund: %w", err)
 	}
 
 	// Update purchase status to refunded
-	pgPurchaseID := pgtype.UUID{}
-	pgPurchaseID.Scan(purchaseID)
-
 	err = s.repo.UpdateCoinPurchaseStatus(ctx, schema.UpdateCoinPurchaseStatusParams{
-		ID:     pgPurchaseID,
+		ID:     purchase.ID,
 		Status: pgtype.Text{String: "refunded", Valid: true},
 	})
 	if err != nil {
@@ -199,15 +192,8 @@ func (s *paymentService) RefundPayment(ctx context.Context, req *paymentpb.Refun
 
 // Payment Transfers
 func (s *paymentService) PayToMerchant(ctx context.Context, req *paymentpb.PayToMerchantRequest) (*paymentpb.PayToMerchantResponse, error) {
-	userID, err := uuid.Parse(req.UserId)
-	if err != nil {
-		return nil, fmt.Errorf("invalid user ID: %w", err)
-	}
-
-	merchantID, err := uuid.Parse(req.MerchantId)
-	if err != nil {
-		return nil, fmt.Errorf("invalid merchant ID: %w", err)
-	}
+	userID := int(req.UserId)
+	merchantID := int(req.MerchantId)
 
 	// Get merchant's discount percentage from database
 	merchant, err := s.repo.GetMerchantByID(ctx, merchantID)
@@ -226,14 +212,9 @@ func (s *paymentService) PayToMerchant(ctx context.Context, req *paymentpb.PayTo
 	}
 
 	// Create transaction record
-	pgUserID := pgtype.UUID{}
-	pgUserID.Scan(userID)
-	pgMerchantID := pgtype.UUID{}
-	pgMerchantID.Scan(merchantID)
-
 	createParams := schema.CreateTransactionParams{
-		UserID:          pgUserID,
-		MerchantID:      pgMerchantID,
+		UserID:          pgtype.Int8{Int64: req.UserId, Valid: true},
+		MerchantID:      pgtype.Int8{Int64: req.MerchantId, Valid: true},
 		CoinsSpent:      utils.Float64ToNumeric(finalAmount),
 		OriginalAmount:  utils.Float64ToNumeric(req.Amount),
 		TransactionType: pgtype.Text{String: "payment", Valid: true},
@@ -251,11 +232,9 @@ func (s *paymentService) PayToMerchant(ctx context.Context, req *paymentpb.PayTo
 		return nil, fmt.Errorf("failed to get balance: %w", err)
 	}
 
-	transactionID, _ := transaction.ID.Value()
-
 	return &paymentpb.PayToMerchantResponse{
 		Success:          true,
-		TransactionId:    transactionID.(string),
+		TransactionId:    fmt.Sprintf("%d", transaction.ID),
 		DiscountAmount:   discountAmount,
 		FinalAmount:      finalAmount,
 		RemainingBalance: remainingBalance,
@@ -264,28 +243,18 @@ func (s *paymentService) PayToMerchant(ctx context.Context, req *paymentpb.PayTo
 }
 
 func (s *paymentService) TransferToUser(ctx context.Context, req *paymentpb.TransferToUserRequest) (*paymentpb.TransferToUserResponse, error) {
-	fromUserID, err := uuid.Parse(req.FromUserId)
-	if err != nil {
-		return nil, fmt.Errorf("invalid from user ID: %w", err)
-	}
-
-	toUserID, err := uuid.Parse(req.ToUserId)
-	if err != nil {
-		return nil, fmt.Errorf("invalid to user ID: %w", err)
-	}
+	fromUserID := int(req.FromUserId)
+	toUserID := int(req.ToUserId)
 
 	// Process transfer in TigerBeetle
-	err = s.repo.ProcessRefund(ctx, fromUserID, toUserID, req.Amount)
+	err := s.repo.ProcessRefund(ctx, fromUserID, toUserID, req.Amount)
 	if err != nil {
 		return nil, fmt.Errorf("failed to process transfer: %w", err)
 	}
 
 	// Create transaction record
-	pgFromUserID := pgtype.UUID{}
-	pgFromUserID.Scan(fromUserID)
-
 	createParams := schema.CreateTransactionParams{
-		UserID:          pgFromUserID,
+		UserID:          pgtype.Int8{Int64: req.FromUserId, Valid: true},
 		CoinsSpent:      utils.Float64ToNumeric(req.Amount),
 		OriginalAmount:  utils.Float64ToNumeric(req.Amount),
 		TransactionType: pgtype.Text{String: "transfer", Valid: true},
@@ -303,21 +272,16 @@ func (s *paymentService) TransferToUser(ctx context.Context, req *paymentpb.Tran
 		return nil, fmt.Errorf("failed to get balance: %w", err)
 	}
 
-	transactionID, _ := transaction.ID.Value()
-
 	return &paymentpb.TransferToUserResponse{
 		Success:          true,
-		TransactionId:    transactionID.(string),
+		TransactionId:    fmt.Sprintf("%d", transaction.ID),
 		RemainingBalance: remainingBalance,
 		Transaction:      convertToProtoTransaction(transaction),
 	}, nil
 }
 
 func (s *paymentService) GetBalance(ctx context.Context, req *paymentpb.GetBalanceRequest) (*paymentpb.GetBalanceResponse, error) {
-	userID, err := uuid.Parse(req.UserId)
-	if err != nil {
-		return nil, fmt.Errorf("invalid user ID: %w", err)
-	}
+	userID := int(req.UserId)
 
 	balance, err := s.repo.GetBalance(ctx, userID)
 	if err != nil {
@@ -331,10 +295,7 @@ func (s *paymentService) GetBalance(ctx context.Context, req *paymentpb.GetBalan
 }
 
 func (s *paymentService) GetTransactionHistory(ctx context.Context, req *paymentpb.GetTransactionHistoryRequest) (*paymentpb.GetTransactionHistoryResponse, error) {
-	userID, err := uuid.Parse(req.UserId)
-	if err != nil {
-		return nil, fmt.Errorf("invalid user ID: %w", err)
-	}
+	userID := int(req.UserId)
 
 	transactions, err := s.repo.GetUserTransactions(ctx, userID, req.Limit, (req.Page-1)*req.Limit)
 	if err != nil {
@@ -353,10 +314,9 @@ func (s *paymentService) GetTransactionHistory(ctx context.Context, req *payment
 }
 
 func (s *paymentService) ProcessRefund(ctx context.Context, req *paymentpb.ProcessRefundRequest) (*paymentpb.ProcessRefundResponse, error) {
-	transactionID, err := uuid.Parse(req.TransactionId)
-	if err != nil {
-		return nil, fmt.Errorf("invalid transaction ID: %w", err)
-	}
+	// Convert transactionID string to int
+	var transactionID int
+	fmt.Sscanf(req.TransactionId, "%d", &transactionID)
 
 	// Get original transaction
 	transaction, err := s.repo.GetTransactionByID(ctx, transactionID)
@@ -364,21 +324,20 @@ func (s *paymentService) ProcessRefund(ctx context.Context, req *paymentpb.Proce
 		return nil, fmt.Errorf("failed to get transaction: %w", err)
 	}
 
-	userID, _ := transaction.UserID.Value()
-	userUUID, _ := uuid.Parse(userID.(string))
+	var userID int
+	if transaction.UserID.Valid {
+		userID = int(transaction.UserID.Int64)
+	}
 
 	// Process refund in TigerBeetle (add coins back to user)
-	err = s.repo.AddCoins(ctx, userUUID, req.Amount)
+	err = s.repo.AddCoins(ctx, userID, req.Amount)
 	if err != nil {
 		return nil, fmt.Errorf("failed to process refund: %w", err)
 	}
 
 	// Create refund transaction
-	pgUserID := pgtype.UUID{}
-	pgUserID.Scan(userUUID)
-
 	createParams := schema.CreateTransactionParams{
-		UserID:          pgUserID,
+		UserID:          pgtype.Int8{Int64: int64(userID), Valid: true},
 		CoinsSpent:      utils.Float64ToNumeric(-req.Amount), // Negative for refund
 		OriginalAmount:  utils.Float64ToNumeric(req.Amount),
 		TransactionType: pgtype.Text{String: "refund", Valid: true},
@@ -390,11 +349,9 @@ func (s *paymentService) ProcessRefund(ctx context.Context, req *paymentpb.Proce
 		return nil, fmt.Errorf("failed to create refund transaction: %w", err)
 	}
 
-	refundTransactionID, _ := refundTransaction.ID.Value()
-
 	return &paymentpb.ProcessRefundResponse{
 		Success:             true,
-		RefundTransactionId: refundTransactionID.(string),
+		RefundTransactionId: fmt.Sprintf("%d", refundTransaction.ID),
 		RefundedAmount:      req.Amount,
 		RefundTransaction:   convertToProtoTransaction(refundTransaction),
 	}, nil
@@ -402,19 +359,11 @@ func (s *paymentService) ProcessRefund(ctx context.Context, req *paymentpb.Proce
 
 // Merchant Settlements
 func (s *paymentService) InitiateSettlement(ctx context.Context, req *paymentpb.InitiateSettlementRequest) (*paymentpb.InitiateSettlementResponse, error) {
-	merchantID, err := uuid.Parse(req.MerchantId)
-	if err != nil {
-		return nil, fmt.Errorf("invalid merchant ID: %w", err)
-	}
-
-	pgMerchantID := pgtype.UUID{}
-	pgMerchantID.Scan(merchantID)
-
 	now := time.Now()
 	periodStart := now.AddDate(0, 0, -30) // Last 30 days
 
 	createParams := schema.CreateSettlementParams{
-		MerchantID:          pgMerchantID,
+		MerchantID:          pgtype.Int8{Int64: req.MerchantId, Valid: true},
 		PeriodStart:         pgtype.Date{Time: periodStart, Valid: true},
 		PeriodEnd:           pgtype.Date{Time: now, Valid: true},
 		TotalTransactions:   pgtype.Int4{Int32: 0, Valid: true},
@@ -428,21 +377,16 @@ func (s *paymentService) InitiateSettlement(ctx context.Context, req *paymentpb.
 		return nil, fmt.Errorf("failed to create settlement: %w", err)
 	}
 
-	settlementID, _ := settlement.ID.Value()
-
 	return &paymentpb.InitiateSettlementResponse{
 		Success:          true,
-		SettlementId:     settlementID.(string),
+		SettlementId:     fmt.Sprintf("%d", settlement.ID),
 		SettlementAmount: req.Amount,
 		Settlement:       convertToProtoSettlement(settlement),
 	}, nil
 }
 
 func (s *paymentService) GetSettlements(ctx context.Context, req *paymentpb.GetSettlementsRequest) (*paymentpb.GetSettlementsResponse, error) {
-	merchantID, err := uuid.Parse(req.MerchantId)
-	if err != nil {
-		return nil, fmt.Errorf("invalid merchant ID: %w", err)
-	}
+	merchantID := int(req.MerchantId)
 
 	settlements, err := s.repo.GetMerchantSettlements(ctx, merchantID, req.Limit, (req.Page-1)*req.Limit)
 	if err != nil {
@@ -462,12 +406,14 @@ func (s *paymentService) GetSettlements(ctx context.Context, req *paymentpb.GetS
 
 // Conversion functions
 func convertToProtoCoinPurchase(purchase schema.CoinPurchase) *schemapb.CoinPurchase {
-	purchaseID, _ := purchase.ID.Value()
-	userID, _ := purchase.UserID.Value()
+	var userID int64
+	if purchase.UserID.Valid {
+		userID = purchase.UserID.Int64
+	}
 
 	return &schemapb.CoinPurchase{
-		Id:            purchaseID.(string),
-		UserId:        userID.(string),
+		Id:            purchase.ID,
+		UserId:        userID,
 		Amount:        utils.NumericToFloat64(purchase.Amount),
 		CoinsReceived: utils.NumericToFloat64(purchase.CoinsReceived),
 		PaymentMethod: purchase.PaymentMethod.String,
@@ -477,18 +423,19 @@ func convertToProtoCoinPurchase(purchase schema.CoinPurchase) *schemapb.CoinPurc
 }
 
 func convertToProtoTransaction(tx schema.Transaction) *schemapb.Transaction {
-	txID, _ := tx.ID.Value()
-	userID, _ := tx.UserID.Value()
+	var userID int64
+	if tx.UserID.Valid {
+		userID = tx.UserID.Int64
+	}
 
-	var merchantID string
+	var merchantID int64
 	if tx.MerchantID.Valid {
-		merchantIDVal, _ := tx.MerchantID.Value()
-		merchantID = merchantIDVal.(string)
+		merchantID = tx.MerchantID.Int64
 	}
 
 	return &schemapb.Transaction{
-		Id:             txID.(string),
-		UserId:         userID.(string),
+		Id:             tx.ID,
+		UserId:         userID,
 		MerchantId:     merchantID,
 		CoinsSpent:     utils.NumericToFloat64(tx.CoinsSpent),
 		OriginalAmount: utils.NumericToFloat64(tx.OriginalAmount),
@@ -499,12 +446,14 @@ func convertToProtoTransaction(tx schema.Transaction) *schemapb.Transaction {
 }
 
 func convertToProtoSettlement(settlement schema.Settlement) *schemapb.Settlement {
-	settlementID, _ := settlement.ID.Value()
-	merchantID, _ := settlement.MerchantID.Value()
+	var merchantID int64
+	if settlement.MerchantID.Valid {
+		merchantID = settlement.MerchantID.Int64
+	}
 
 	return &schemapb.Settlement{
-		Id:                  settlementID.(string),
-		MerchantId:          merchantID.(string),
+		Id:                  settlement.ID,
+		MerchantId:          merchantID,
 		PeriodStart:         settlement.PeriodStart.Time.Format("2006-01-02"),
 		PeriodEnd:           settlement.PeriodEnd.Time.Format("2006-01-02"),
 		TotalTransactions:   settlement.TotalTransactions.Int32,

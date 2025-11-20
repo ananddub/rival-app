@@ -2,6 +2,7 @@ package handler
 
 import (
 	"context"
+	"fmt"
 
 	paymentpb "rival/gen/proto/proto/api"
 	"rival/internal/payments/repo"
@@ -45,7 +46,7 @@ func (h *PaymentHandler) VerifyPayment(ctx context.Context, req *paymentpb.Verif
 }
 
 func (h *PaymentHandler) GetPaymentHistory(ctx context.Context, req *paymentpb.GetPaymentHistoryRequest) (*paymentpb.GetPaymentHistoryResponse, error) {
-	if req.UserId == "" {
+	if req.UserId == 0 {
 		return &paymentpb.GetPaymentHistoryResponse{}, nil
 	}
 
@@ -137,7 +138,7 @@ func (h *PaymentHandler) GetSettlements(ctx context.Context, req *paymentpb.GetS
 
 // Streaming methods
 func (h *PaymentHandler) StreamPaymentUpdates(req *paymentpb.StreamPaymentUpdatesRequest, stream paymentpb.PaymentService_StreamPaymentUpdatesServer) error {
-	ch := h.pubsub.SubscribePaymentUpdates(req.UserId)
+	ch := h.pubsub.SubscribePaymentUpdates(fmt.Sprintf("%d", req.UserId))
 	defer ch.Close()
 
 	for data := range ch.Receive() {
@@ -151,7 +152,7 @@ func (h *PaymentHandler) StreamPaymentUpdates(req *paymentpb.StreamPaymentUpdate
 }
 
 func (h *PaymentHandler) StreamTransactionUpdates(req *paymentpb.StreamTransactionUpdatesRequest, stream paymentpb.PaymentService_StreamTransactionUpdatesServer) error {
-	ch := h.pubsub.SubscribeTransactionUpdates(req.UserId)
+	ch := h.pubsub.SubscribeTransactionUpdates(fmt.Sprintf("%d", req.UserId))
 	defer ch.Close()
 
 	for data := range ch.Receive() {
