@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"time"
 
-	"encore.app/config"
+	"rival/config"
 	"github.com/redis/go-redis/v9"
 )
 

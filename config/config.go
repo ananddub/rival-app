@@ -8,10 +8,41 @@ import (
 )
 
 type Config struct {
-	Database DatabaseConfig `yaml:"database"`
-	Redis    RedisConfig    `yaml:"redis"`
-	JWT      JWTConfig      `yaml:"jwt"`
-	Server   ServerConfig   `yaml:"server"`
+	Database       DatabaseConfig       `yaml:"database"`
+	Redis          RedisConfig          `yaml:"redis"`
+	JWT            JWTConfig            `yaml:"jwt"`
+	Server         ServerConfig         `yaml:"server"`
+	Tb             TbConfig             `yaml:"tb"`
+	S3             S3Config             `yaml:"s3"`
+	MailHog        MailHogConfig        `yaml:"mail"`
+	Firebase       FirebaseConfig       `yaml:"firebase"`
+	PaymentGateway PaymentGatewayConfig `yaml:"payment_gateway"`
+}
+
+type PaymentGatewayConfig struct {
+	BaseURL string `yaml:"base_url"`
+	APIKey  string `yaml:"api_key"`
+}
+
+type FirebaseConfig struct {
+	CredentialsPath string `yaml:"credentials_path"`
+	ProjectID       string `yaml:"project_id"`
+}
+type TbConfig struct {
+	Addr string `yaml:"addr"`
+}
+type S3Config struct {
+	Endpoint   string `yaml:"endpoint"`
+	AccessKey  string `yaml:"access_key"`
+	SecretKey  string `yaml:"secret_key"`
+	BucketName string `yaml:"bucket_name"`
+	SSLMode    bool   `yaml:"sslmode"`
+}
+
+type MailHogConfig struct {
+	SMTPServer string `yaml:"smtp_server"`
+	SMTPPort   int    `yaml:"smtp_port"`
+	WebUIPort  int    `yaml:"web_ui_port"`
 }
 
 type DatabaseConfig struct {
@@ -58,7 +89,7 @@ func Load(path string) *Config {
 
 func GetConfig() *Config {
 	if appConfig == nil {
-		return Load("config.yaml")
+		return Load("/media/sf_Devloper/rival/rival/config.yaml")
 	}
 	return appConfig
 }

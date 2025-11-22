@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"time"
 
-	"encore.app/config"
+	"rival/config"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 

@@ -1,0 +1,71 @@
+syntax = "proto3";
+
+package rival.api.v1;
+
+option go_package = "rival/gen/proto/proto/api";
+
+import "proto/schema/schema.proto";
+
+service OfferService {
+  rpc GetNearbyOffers(GetNearbyOffersRequest) returns (GetNearbyOffersResponse);
+  rpc GetOfferDetails(GetOfferDetailsRequest) returns (GetOfferDetailsResponse);
+  rpc RedeemOffer(RedeemOfferRequest) returns (RedeemOfferResponse);
+  rpc GetUserOffers(GetUserOffersRequest) returns (GetUserOffersResponse);
+  rpc StreamNewOffers(StreamNewOffersRequest) returns (stream StreamNewOffersResponse);
+}
+
+message GetNearbyOffersRequest {
+  int64 user_id = 1;
+  double latitude = 2;
+  double longitude = 3;
+  double radius_km = 4;
+}
+
+message GetNearbyOffersResponse {
+  repeated rival.schema.v1.Offer offers = 1;
+}
+
+message GetOfferDetailsRequest {
+  int64 offer_id = 1;
+}
+
+message GetOfferDetailsResponse {
+  rival.schema.v1.Offer offer = 1;
+  rival.schema.v1.Merchant merchant = 2;
+}
+
+message RedeemOfferRequest {
+  int64 user_id = 1;
+  int64 offer_id = 2;
+  double order_amount = 3;
+}
+
+message RedeemOfferResponse {
+  bool success = 1;
+  double discount_amount = 2;
+  double final_amount = 3;
+  string order_id = 4;
+}
+
+message GetUserOffersRequest {
+  int64 user_id = 1;
+  int32 page = 2;
+  int32 limit = 3;
+}
+
+message GetUserOffersResponse {
+  repeated rival.schema.v1.Offer offers = 1;
+  int32 total_count = 2;
+}
+
+message StreamNewOffersRequest {
+  int64 user_id = 1;
+  double latitude = 2;
+  double longitude = 3;
+}
+
+message StreamNewOffersResponse {
+  rival.schema.v1.Offer offer = 1;
+  rival.schema.v1.Merchant merchant = 2;
+  string event_type = 3; // new_offer, updated_offer
+}
