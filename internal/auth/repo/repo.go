@@ -2,6 +2,7 @@ package repo
 
 import (
 	"context"
+	"fmt"
 	"math/rand"
 	"strings"
 	"time"
@@ -27,7 +28,7 @@ type AuthRepository interface {
 	GetSession(ctx context.Context, tokenHash string) (schema.JwtSession, error)
 	RevokeSession(ctx context.Context, tokenHash string) error
 	StoreOTP(ctx context.Context, email, otp string, expiry time.Duration) error
-	VerifyOTP(ctx context.Context, email, otp string) (bool, error)
+	VerifyOTP(ctx context.Context, email, otp string) (bool, string, error)
 }
 
 type authRepository struct {
@@ -121,19 +122,23 @@ func (r *authRepository) StoreOTP(ctx context.Context, email, otp string, expiry
 	return r.redis.Set(ctx, key, otp, expiry).Err()
 }
 
-func (r *authRepository) VerifyOTP(ctx context.Context, email, otp string) (bool, error) {
+func (r *authRepository) VerifyOTP(ctx context.Context, email, otp string) (bool, string, error) {
 	key := "otp:" + email
-	storedOTP, err := r.redis.Get(ctx, key).Result()
+	b, err := r.redis.Exists(ctx, key).Result()
 	if err != nil {
-		return false, err
+		return false, "", err
 	}
+	if b == 0 {
+		return false, "", fmt.Errorf("OTP expired or does not exist")
+	}
+	storedOTP := r.redis.Get(ctx, key).String()
 
-	if storedOTP == otp {
+	if strings.TrimSpace(storedOTP) == strings.TrimSpace(otp) {
 		r.redis.Del(ctx, key)
-		return true, nil
+		return true, "", nil
 	}
 
-	return false, nil
+	return false, storedOTP, nil
 }
 
 func generateUserFriendlyReferralCode(userName string) string {

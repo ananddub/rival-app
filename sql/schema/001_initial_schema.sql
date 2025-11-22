@@ -22,8 +22,8 @@ CREATE TABLE users (
 -- Referral rewards table
 CREATE TABLE referral_rewards (
     id BIGINT PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
-    referrer_id BIGINT REFERENCES users (id),
-    referred_id BIGINT REFERENCES users (id),
+    referrer_id BIGINT REFERENCES users (id) ON DELETE CASCADE,
+    referred_id BIGINT REFERENCES users (id) ON DELETE CASCADE,
     reward_amount DECIMAL(10, 2) NOT NULL,
     reward_type VARCHAR(20) DEFAULT 'signup',
     status VARCHAR(20) DEFAULT 'pending',
@@ -64,7 +64,7 @@ CREATE TABLE merchant_addresses (
 -- Coin purchases
 CREATE TABLE coin_purchases (
     id BIGINT PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
-    user_id BIGINT REFERENCES users (id),
+    user_id BIGINT REFERENCES users (id) ON DELETE CASCADE,
     amount DECIMAL(10, 2) NOT NULL,
     coins_received DECIMAL(10, 2) NOT NULL,
     payment_method VARCHAR(50),
@@ -76,7 +76,7 @@ CREATE TABLE coin_purchases (
 -- JWT Sessions
 CREATE TABLE jwt_sessions (
     id BIGINT PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
-    user_id BIGINT REFERENCES users (id),
+    user_id BIGINT REFERENCES users (id) ON DELETE CASCADE,
     token_hash VARCHAR(255) NOT NULL,
     refresh_token_hash VARCHAR(255),
     expires_at TIMESTAMP NOT NULL,
@@ -87,8 +87,8 @@ CREATE TABLE jwt_sessions (
 -- Transactions
 CREATE TABLE transactions (
     id BIGINT PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
-    user_id BIGINT REFERENCES users (id),
-    merchant_id BIGINT REFERENCES merchants (id),
+    user_id BIGINT REFERENCES users (id) ON DELETE CASCADE,
+    merchant_id BIGINT REFERENCES merchants (id) ON DELETE CASCADE,
     coins_spent DECIMAL(10, 2) NOT NULL,
     original_amount DECIMAL(10, 2) NOT NULL,
     discount_amount DECIMAL(10, 2) NOT NULL,
@@ -101,7 +101,7 @@ CREATE TABLE transactions (
 -- Settlement records
 CREATE TABLE settlements (
     id BIGINT PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
-    merchant_id BIGINT REFERENCES merchants (id),
+    merchant_id BIGINT REFERENCES merchants (id) ON DELETE CASCADE,
     period_start DATE NOT NULL,
     period_end DATE NOT NULL,
     total_transactions INTEGER DEFAULT 0,
@@ -115,7 +115,7 @@ CREATE TABLE settlements (
 -- Offers table
 CREATE TABLE offers (
     id BIGINT PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
-    merchant_id BIGINT REFERENCES merchants (id),
+    merchant_id BIGINT REFERENCES merchants (id) ON DELETE CASCADE,
     title VARCHAR(255) NOT NULL,
     description TEXT,
     discount_percentage DECIMAL(5, 2) NOT NULL,
@@ -131,9 +131,9 @@ CREATE TABLE offers (
 -- Orders table
 CREATE TABLE orders (
     id BIGINT PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
-    merchant_id BIGINT REFERENCES merchants (id),
-    user_id BIGINT REFERENCES users (id),
-    offer_id BIGINT REFERENCES offers (id),
+    merchant_id BIGINT REFERENCES merchants (id) ON DELETE CASCADE,
+    user_id BIGINT REFERENCES users (id) ON DELETE CASCADE,
+    offer_id BIGINT REFERENCES offers (id) ON DELETE CASCADE,
     order_number VARCHAR(50) UNIQUE NOT NULL,
     items JSONB NOT NULL,
     subtotal DECIMAL(10, 2) NOT NULL,

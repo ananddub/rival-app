@@ -1,4 +1,4 @@
-.PHONY: proto-gen proto-clean
+.PHONY: proto-gen proto-clean test testfunc
 
 # Generate protobuf files
 proto-gen:
@@ -41,3 +41,20 @@ gen-all: proto-gen sqlc-gen
 run:
 	@echo "Starting the application..."
 	go run cmd/grpc/main.go
+testfunc:
+	@unbuffer richgo test ./... -run $(FUNC) -v \
+	| grep -v "no test" | grep -v "^?"
+
+test:
+	@unbuffer richgo test ./... -v 2>&1 | grep -v "no test" | grep -v "^?"
+
+# Watch specific test when files change
+watchfunc:
+	@echo "Watching for changes to run test $(FUNC)..."
+	@reflex -r '\.go$$' -- sh -c "unbuffer richgo test ./... -run $(FUNC) -v \
+	| grep -v 'no test' | grep -v '^?'"
+# Watch all tests when files change
+watch:
+	@echo "Watching for changes to run all tests..."
+	@reflex -r '\.go$$' -- sh -c "unbuffer richgo test ./... -v \
+	| grep -v 'no test' | grep -v '^?'"

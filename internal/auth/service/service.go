@@ -69,10 +69,7 @@ type authService struct {
 }
 
 func NewAuthService(authRepo repo.AuthRepository, jwt util.JWTUtil, email util.Service, firebase *util.FirebaseService) AuthService {
-	// Initialize TigerBeetle service
 	tbService, _ := tb.NewService()
-
-	// Initialize referral service
 	cfg := config.GetConfig()
 	db, _ := connection.GetPgConnection(&cfg.Database)
 	referralService := referral.NewService(db, tbService)
@@ -155,19 +152,16 @@ func (s *authService) Signup(ctx context.Context, params SignupParams) (*authpb.
 }
 
 func (s *authService) VerifyOTP(ctx context.Context, params VerifyOTPParams) (*authpb.VerifyOTPResponse, error) {
-	// Verify OTP
-	valid, err := s.repo.VerifyOTP(ctx, params.Email, params.OTP)
+	valid, otp, err := s.repo.VerifyOTP(ctx, params.Email, params.OTP)
 	if err != nil || !valid {
-		return nil, fmt.Errorf("invalid OTP")
+		return nil, fmt.Errorf("invalid OTP %v", otp)
 	}
 
-	// Get user
 	user, err := s.repo.GetUserByEmail(ctx, params.Email)
 	if err != nil {
 		return nil, err
 	}
 
-	// Generate tokens
 	protoUser := convertToProtoUser(user)
 	accessToken, refreshToken, err := s.jwt.GenerateTokens(protoUser)
 	if err != nil {
@@ -205,7 +199,6 @@ func (s *authService) ResendOTP(ctx context.Context, email string) (*authpb.Rese
 		}, nil
 	}
 
-	// Generate and send new OTP
 	otp := generateOTP()
 	err = s.repo.StoreOTP(ctx, email, otp, 10*time.Minute)
 	if err != nil {
@@ -351,7 +344,7 @@ func (s *authService) ForgotPassword(ctx context.Context, email string) (*authpb
 
 func (s *authService) ResetPassword(ctx context.Context, params ResetPasswordParams) (*authpb.ResetPasswordResponse, error) {
 	// Verify reset OTP
-	valid, err := s.repo.VerifyOTP(ctx, "reset:"+params.Email, params.OTP)
+	valid, _, err := s.repo.VerifyOTP(ctx, "reset:"+params.Email, params.OTP)
 	if err != nil || !valid {
 		return &authpb.ResetPasswordResponse{
 			Message: "Invalid OTP",
