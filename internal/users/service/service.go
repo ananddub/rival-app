@@ -54,18 +54,8 @@ func (s *userService) GetUser(ctx context.Context, userID int) (*userspb.GetUser
 		return nil, err
 	}
 
-	protoUser := convertToProtoUser(user)
-
-	// Generate signed URL for profile image if exists
-	if user.ProfilePic.Valid && user.ProfilePic.String != "" {
-		signedURL, err := s.generateProfileImageURL(ctx, fmt.Sprintf("%d", userID), user.ProfilePic.String)
-		if err == nil {
-			protoUser.ProfilePic = signedURL
-		}
-	}
-
 	return &userspb.GetUserResponse{
-		User: protoUser,
+		User: convertToProtoUser(user),
 	}, nil
 }
 
@@ -280,8 +270,8 @@ func convertToProtoUser(user schema.User) *schemapb.User {
 	}
 
 	var role schemapb.UserRole
-	if user.Role.Valid {
-		if val, ok := schemapb.UserRole_value[string(user.Role.UserRole)]; ok {
+	if user.Role != "" {
+		if val, ok := schemapb.UserRole_value[user.Role]; ok {
 			role = schemapb.UserRole(val)
 		}
 	}
@@ -297,7 +287,7 @@ func convertToProtoUser(user schema.User) *schemapb.User {
 		PasswordHash: user.PasswordHash.String,
 		Phone:        user.Phone.String,
 		Name:         user.Name,
-		ProfilePic:   user.ProfilePic.String,
+		ProfilePic:   repo.GenerateViewURL(fmt.Sprintf("%d", user.ID), "profile.jpg"),
 		FirebaseUid:  user.FirebaseUid.String,
 		CoinBalance:  coinBalance,
 		Role:         role,

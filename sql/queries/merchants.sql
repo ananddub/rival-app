@@ -91,3 +91,6 @@ UPDATE offers SET
     is_active = $9,
     updated_at = NOW()
 WHERE id = $1;
+
+-- name: DeleteMerchant :exec
+DELETE FROM merchants WHERE id = $1;

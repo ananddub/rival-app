@@ -95,10 +95,10 @@ func (q *Queries) CreateSettlement(ctx context.Context, arg CreateSettlementPara
 
 const createTransaction = `-- name: CreateTransaction :one
 INSERT INTO transactions (
-    user_id, merchant_id, coins_spent, original_amount, 
+    user_id, merchant_id, coins_spent, original_amount, discount_amount, final_amount,
     transaction_type, status
 ) VALUES (
-    $1, $2, $3, $4, $5, $6
+    $1, $2, $3, $4, $5, $6, $7, $8
 ) RETURNING id, user_id, merchant_id, coins_spent, original_amount, discount_amount, final_amount, transaction_type, status, created_at
 `
 
@@ -107,6 +107,8 @@ type CreateTransactionParams struct {
 	MerchantID      pgtype.Int8    `json:"merchant_id"`
 	CoinsSpent      pgtype.Numeric `json:"coins_spent"`
 	OriginalAmount  pgtype.Numeric `json:"original_amount"`
+	DiscountAmount  pgtype.Numeric `json:"discount_amount"`
+	FinalAmount     pgtype.Numeric `json:"final_amount"`
 	TransactionType pgtype.Text    `json:"transaction_type"`
 	Status          pgtype.Text    `json:"status"`
 }
@@ -117,6 +119,8 @@ func (q *Queries) CreateTransaction(ctx context.Context, arg CreateTransactionPa
 		arg.MerchantID,
 		arg.CoinsSpent,
 		arg.OriginalAmount,
+		arg.DiscountAmount,
+		arg.FinalAmount,
 		arg.TransactionType,
 		arg.Status,
 	)
@@ -319,8 +323,7 @@ func (q *Queries) GetUserMonthlySpending(ctx context.Context, userID pgtype.Int8
 
 const updateCoinPurchaseStatus = `-- name: UpdateCoinPurchaseStatus :exec
 UPDATE coin_purchases SET
-    status = $2,
-    updated_at = NOW()
+    status = $2
 WHERE id = $1
 `
 

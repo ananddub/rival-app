@@ -30,6 +30,7 @@ func (h *UserHandler) GetUser(ctx context.Context, req *userspb.GetUserRequest) 
 	if req.UserId == 0 {
 		return &userspb.GetUserResponse{User: nil}, nil
 	}
+
 	return h.service.GetUser(ctx, int(req.UserId))
 }
 

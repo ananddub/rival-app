@@ -90,6 +90,7 @@ func Load(path string) *Config {
 func GetConfig() *Config {
 	if appConfig == nil {
 		return Load("/media/sf_Devloper/rival/rival/config.yaml")
+		// return Load("D:\\Devloper\\rival\\rival\\config.yaml")
 	}
 	return appConfig
 }

@@ -217,6 +217,8 @@ func (s *paymentService) PayToMerchant(ctx context.Context, req *paymentpb.PayTo
 		MerchantID:      pgtype.Int8{Int64: req.MerchantId, Valid: true},
 		CoinsSpent:      utils.Float64ToNumeric(finalAmount),
 		OriginalAmount:  utils.Float64ToNumeric(req.Amount),
+		DiscountAmount:  utils.Float64ToNumeric(discountAmount),
+		FinalAmount:     utils.Float64ToNumeric(finalAmount),
 		TransactionType: pgtype.Text{String: "payment", Valid: true},
 		Status:          pgtype.Text{String: "completed", Valid: true},
 	}
@@ -257,6 +259,8 @@ func (s *paymentService) TransferToUser(ctx context.Context, req *paymentpb.Tran
 		UserID:          pgtype.Int8{Int64: req.FromUserId, Valid: true},
 		CoinsSpent:      utils.Float64ToNumeric(req.Amount),
 		OriginalAmount:  utils.Float64ToNumeric(req.Amount),
+		DiscountAmount:  utils.Float64ToNumeric(0),
+		FinalAmount:     utils.Float64ToNumeric(req.Amount),
 		TransactionType: pgtype.Text{String: "transfer", Valid: true},
 		Status:          pgtype.Text{String: "completed", Valid: true},
 	}
@@ -340,6 +344,8 @@ func (s *paymentService) ProcessRefund(ctx context.Context, req *paymentpb.Proce
 		UserID:          pgtype.Int8{Int64: int64(userID), Valid: true},
 		CoinsSpent:      utils.Float64ToNumeric(-req.Amount), // Negative for refund
 		OriginalAmount:  utils.Float64ToNumeric(req.Amount),
+		DiscountAmount:  utils.Float64ToNumeric(0),
+		FinalAmount:     utils.Float64ToNumeric(req.Amount),
 		TransactionType: pgtype.Text{String: "refund", Valid: true},
 		Status:          pgtype.Text{String: "completed", Valid: true},
 	}

@@ -77,7 +77,7 @@ type CreateUserParams struct {
 	ProfilePic   pgtype.Text    `json:"profile_pic"`
 	FirebaseUid  pgtype.Text    `json:"firebase_uid"`
 	CoinBalance  pgtype.Numeric `json:"coin_balance"`
-	Role         NullUserRole   `json:"role"`
+	Role         string    `json:"role"`
 	ReferralCode pgtype.Text    `json:"referral_code"`
 	ReferredBy   pgtype.Int8    `json:"referred_by"`
 }

@@ -106,7 +106,7 @@ func (s *authService) Signup(ctx context.Context, params SignupParams) (*authpb.
 		PasswordHash: pgtype.Text{String: string(hashedPassword), Valid: true},
 		Phone:        pgtype.Text{String: params.Phone, Valid: params.Phone != ""},
 		Name:         params.Name,
-		Role:         schema.NullUserRole{UserRole: schema.UserRole(params.Role.String()), Valid: true},
+		Role:         params.Role.String(),
 	}
 
 	user, err := s.repo.CreateUser(ctx, createParams)
@@ -137,13 +137,13 @@ func (s *authService) Signup(ctx context.Context, params SignupParams) (*authpb.
 		return nil, err
 	}
 
+	s.email.SendWelcomeEmail(params.Email, user.Name)
 	err = s.email.SendOTP(params.Email, otp)
 	if err != nil {
 		return nil, err
 	}
 
 	// Send welcome email
-	s.email.SendWelcomeEmail(params.Email, user.Name)
 
 	return &authpb.SignupResponse{
 		Message: "OTP sent to your email",
@@ -274,7 +274,7 @@ func (s *authService) FirebaseLogin(ctx context.Context, firebaseToken string) (
 			ProfilePic:  pgtype.Text{String: firebaseUser.Picture, Valid: firebaseUser.Picture != ""},
 			Phone:       pgtype.Text{String: firebaseUser.PhoneNumber, Valid: firebaseUser.PhoneNumber != ""},
 			FirebaseUid: pgtype.Text{String: firebaseUser.UID, Valid: true},
-			Role:        schema.NullUserRole{UserRole: schema.UserRoleCustomer, Valid: true},
+			Role:        "customer",
 		}
 
 		user, err = s.repo.CreateUser(ctx, createParams)
@@ -440,8 +440,8 @@ func convertToProtoUser(user schema.User) *schemapb.User {
 
 	// Handle role
 	var role schemapb.UserRole
-	if user.Role.Valid {
-		if val, ok := schemapb.UserRole_value[string(user.Role.UserRole)]; ok {
+	if user.Role != "" {
+		if val, ok := schemapb.UserRole_value[user.Role]; ok {
 			role = schemapb.UserRole(val)
 		}
 	}

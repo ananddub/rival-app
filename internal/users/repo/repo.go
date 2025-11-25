@@ -53,6 +53,25 @@ func NewUserRepository() (UserRepository, error) {
 		return nil, err
 	}
 
+	// Auto-create bucket if not exists
+	ctx := context.Background()
+	exists, _ := minioClient.BucketExists(ctx, cfg.S3.BucketName)
+	if !exists {
+		minioClient.MakeBucket(ctx, cfg.S3.BucketName, minio.MakeBucketOptions{})
+
+		// Set public read policy
+		policy := `{
+			"Version": "2012-10-17",
+			"Statement": [{
+				"Effect": "Allow",
+				"Principal": {"AWS": ["*"]},
+				"Action": ["s3:GetObject"],
+				"Resource": ["arn:aws:s3:::` + cfg.S3.BucketName + `/profiles/*"]
+			}]
+		}`
+		minioClient.SetBucketPolicy(ctx, cfg.S3.BucketName, policy)
+	}
+
 	tbService, err := tb.NewService()
 	if err != nil {
 		return nil, err
@@ -124,26 +143,25 @@ func (r *userRepository) GenerateUploadURL(ctx context.Context, userID, fileName
 	cfg := config.GetConfig()
 	objectName := "profiles/" + userID + "/" + fileName
 
-	// Generate presigned URL for upload
 	url, err := r.minio.PresignedPutObject(ctx, cfg.S3.BucketName, objectName, time.Hour)
 	if err != nil {
 		return "", "", err
 	}
 
 	uploadURL = url.String()
-	fileURL = "https://" + cfg.S3.Endpoint + "/" + cfg.S3.BucketName + "/" + objectName
+	fileURL = "http://" + cfg.S3.Endpoint + "/" + cfg.S3.BucketName + "/" + objectName
 
 	return uploadURL, fileURL, nil
+}
+func GenerateViewURL(userID, fileName string) string {
+	cfg := config.GetConfig()
+	objectName := "profiles/" + userID + "/" + fileName
+	fileURL := "http://" + cfg.S3.Endpoint + "/" + cfg.S3.BucketName + "/" + objectName
+	return fileURL
 }
 func (r *userRepository) GenerateViewURL(ctx context.Context, userID, fileName string) (string, error) {
 	cfg := config.GetConfig()
 	objectName := "profiles/" + userID + "/" + fileName
-
-	// Generate presigned URL for viewing (GET request)
-	url, err := r.minio.PresignedGetObject(ctx, cfg.S3.BucketName, objectName, time.Hour*24, nil)
-	if err != nil {
-		return "", err
-	}
-
-	return url.String(), nil
+	fileURL := "http://" + cfg.S3.Endpoint + "/" + cfg.S3.BucketName + "/" + objectName
+	return fileURL, nil
 }

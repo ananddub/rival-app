@@ -75,9 +75,8 @@ func (r *authRepository) CreateUser(ctx context.Context, params schema.CreateUse
 	}
 
 	var role string
-	if dbUser.Role.Valid {
-		role = string(dbUser.Role.UserRole)
-	} else {
+	role = dbUser.Role
+	if role == "" {
 		role = "customer"
 	}
 

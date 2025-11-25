@@ -173,6 +173,15 @@ func (q *Queries) CreateOffer(ctx context.Context, arg CreateOfferParams) (Offer
 	return i, err
 }
 
+const deleteMerchant = `-- name: DeleteMerchant :exec
+DELETE FROM merchants WHERE id = $1
+`
+
+func (q *Queries) DeleteMerchant(ctx context.Context, id int64) error {
+	_, err := q.db.Exec(ctx, deleteMerchant, id)
+	return err
+}
+
 const getAllMerchants = `-- name: GetAllMerchants :many
 SELECT id, name, email, password_hash, phone, category, discount_percentage, is_active, created_at, updated_at FROM merchants 
 ORDER BY created_at DESC 

@@ -64,7 +64,7 @@ func (s *TbService) CreateMerchantAccount(merchantID int) error {
 	account := types.Account{
 		ID:     accountID,
 		Ledger: 1,
-		Code:   2, // Merchant account
+		Code:   2,
 	}
 	_, err := s.client.CreateAccounts([]types.Account{account})
 	return err
@@ -79,8 +79,12 @@ func (s *TbService) GetBalance(accountID int) (float64, error) {
 	if len(accounts) == 0 {
 		return 0, nil
 	}
-	balanceUint64 := uint64(accounts[0].CreditsPosted[0])
-	return float64(balanceUint64) / 100, nil
+	creditsBigInt := accounts[0].CreditsPosted.BigInt()
+	debitsBigInt := accounts[0].DebitsPosted.BigInt()
+	credits := creditsBigInt.Uint64()
+	debits := debitsBigInt.Uint64()
+	balance := credits - debits
+	return float64(balance) / 100, nil
 }
 
 func (s *TbService) AddCoins(userID int, amount float64) error {
@@ -88,10 +92,10 @@ func (s *TbService) AddCoins(userID int, amount float64) error {
 	transfer := types.Transfer{
 		ID:              generateTransferID(),
 		CreditAccountID: accountID,
-		DebitAccountID:  types.ToUint128(1), // System account
+		DebitAccountID:  types.ToUint128(1),
 		Amount:          types.ToUint128(uint64(amount * 100)),
 		Ledger:          1,
-		Code:            1, // Add coins
+		Code:            1,
 	}
 	_, err := s.client.CreateTransfers([]types.Transfer{transfer})
 	return err
@@ -106,7 +110,7 @@ func (s *TbService) ProcessPayment(userID, merchantID int, amount float64) error
 		CreditAccountID: merchantAccountID,
 		Amount:          types.ToUint128(uint64(amount * 100)),
 		Ledger:          1,
-		Code:            2, // Payment to merchant
+		Code:            2,
 	}
 	_, err := s.client.CreateTransfers([]types.Transfer{transfer})
 	return err
@@ -121,7 +125,7 @@ func (s *TbService) Transfer(fromID, toID int, amount float64) error {
 		CreditAccountID: toAccountID,
 		Amount:          types.ToUint128(uint64(amount * 100)),
 		Ledger:          1,
-		Code:            3, // Transfer
+		Code:            3,
 	}
 	_, err := s.client.CreateTransfers([]types.Transfer{transfer})
 	return err
@@ -144,32 +148,30 @@ func generateTransferID() types.Uint128 {
 func (s *TbService) CreateAccountByRole(accountID int, role string) error {
 	id := types.ToUint128(uint64(accountID))
 	var account types.Account
-
 	switch role {
 	case "customer":
 		account = types.Account{
 			ID:     id,
 			Ledger: 1,
-			Code:   1, // Customer account
+			Code:   1,
 		}
 	case "merchant":
 		account = types.Account{
 			ID:     id,
 			Ledger: 1,
-			Code:   2, // Merchant account
+			Code:   2,
 		}
 	case "admin":
 		account = types.Account{
 			ID:     id,
 			Ledger: 1,
-			Code:   3, // Admin account
+			Code:   3,
 		}
 	default:
-		// Default to customer
 		account = types.Account{
 			ID:     id,
 			Ledger: 1,
-			Code:   1, // Customer account
+			Code:   1,
 		}
 	}
 

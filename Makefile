@@ -40,7 +40,7 @@ gen-all: proto-gen sqlc-gen
 
 run:
 	@echo "Starting the application..."
-	go run cmd/grpc/main.go
+	TB_NO_IO_URING=1 go run cmd/grpc/main.go
 testfunc:
 	@unbuffer richgo test ./... -run $(FUNC) -v \
 	| grep -v "no test" | grep -v "^?"

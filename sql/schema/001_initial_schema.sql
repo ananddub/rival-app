@@ -1,6 +1,10 @@
 -- +goose Up
 -- Create enum for user roles
-CREATE TYPE  user_role AS ENUM ('customer', 'merchant', 'admin');
+DO $$ BEGIN
+    CREATE TYPE user_role AS ENUM ('customer', 'merchant', 'admin');
+EXCEPTION
+    WHEN duplicate_object THEN null;
+END $$;
 
 -- Users table
 CREATE TABLE users (

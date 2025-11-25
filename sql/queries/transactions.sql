@@ -1,9 +1,9 @@
 -- name: CreateTransaction :one
 INSERT INTO transactions (
-    user_id, merchant_id, coins_spent, original_amount, 
+    user_id, merchant_id, coins_spent, original_amount, discount_amount, final_amount,
     transaction_type, status
 ) VALUES (
-    $1, $2, $3, $4, $5, $6
+    $1, $2, $3, $4, $5, $6, $7, $8
 ) RETURNING *;
 
 -- name: CreateCoinPurchase :one
@@ -47,8 +47,7 @@ SELECT * FROM coin_purchases WHERE id = $1;
 
 -- name: UpdateCoinPurchaseStatus :exec
 UPDATE coin_purchases SET
-    status = $2,
-    updated_at = NOW()
+    status = $2
 WHERE id = $1;
 
 -- name: CreateSettlement :one
