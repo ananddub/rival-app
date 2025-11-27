@@ -19,6 +19,7 @@ service PaymentService {
   rpc GetBalance(GetBalanceRequest) returns (GetBalanceResponse);
   rpc GetTransactionHistory(GetTransactionHistoryRequest) returns (GetTransactionHistoryResponse);
   rpc ProcessRefund(ProcessRefundRequest) returns (ProcessRefundResponse);
+  rpc GetFinancialHistory(GetFinancialHistoryRequest) returns (GetFinancialHistoryResponse);
 
   // Merchant Settlements
   rpc InitiateSettlement(InitiateSettlementRequest) returns (InitiateSettlementResponse);
@@ -41,6 +42,7 @@ message InitiateCoinPurchaseResponse {
   string payment_url = 2;
   double coins_to_receive = 3;
   string status = 4;
+  double new_balance = 5;
 }
 
 message VerifyPaymentRequest {
@@ -192,4 +194,31 @@ message StreamTransactionUpdatesResponse {
   double amount = 3;
   rival.schema.v1.Transaction transaction = 4;
   string event_type = 5; // created, completed, failed, refunded
+}
+
+// Financial History (Combined)
+message GetFinancialHistoryRequest {
+  int64 user_id = 1;
+  int32 page = 2;
+  int32 limit = 3;
+  string type = 4; // all, purchase, transaction
+}
+
+message FinancialHistoryItem {
+  string id = 1;
+  string type = 2; // purchase, payment, transfer, refund
+  double amount = 3;
+  double coins = 4;
+  string description = 5;
+  string status = 6;
+  int64 created_at = 7;
+  string payment_method = 8; // for purchases
+  int64 merchant_id = 9; // for payments
+  double discount_amount = 10; // for payments
+}
+
+message GetFinancialHistoryResponse {
+  repeated FinancialHistoryItem items = 1;
+  int32 total_count = 2;
+  double current_balance = 3;
 }

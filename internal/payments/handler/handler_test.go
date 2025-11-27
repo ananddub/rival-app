@@ -2,6 +2,7 @@ package handler
 
 import (
 	"context"
+	"fmt"
 	"rival/config"
 	"rival/connection"
 	authpb "rival/gen/proto/proto/api"
@@ -90,9 +91,20 @@ func TestInitiateCoinPurchase(t *testing.T) {
 	defer repo.DleteUser(ctx, user.ID)
 
 	h, _ := NewPaymentHandler()
+
+	// Get initial balance
+	balanceResp1, err := h.GetBalance(ctx, &paymentpb.GetBalanceRequest{UserId: int64(user.ID)})
+	if err != nil {
+		t.Fatalf("Failed to get initial balance: %v", err)
+	}
+	initialBalance := balanceResp1.Balance
+	t.Logf("Initial balance: %.2f", initialBalance)
+
+	// Initiate coin purchase
+	purchaseAmount := 100.0
 	req := &paymentpb.InitiateCoinPurchaseRequest{
 		UserId:        int64(user.ID),
-		Amount:        100.0,
+		Amount:        purchaseAmount,
 		PaymentMethod: "stripe",
 	}
 	resp, err := h.InitiateCoinPurchase(ctx, req)
@@ -102,7 +114,70 @@ func TestInitiateCoinPurchase(t *testing.T) {
 	if resp == nil {
 		t.Fatalf("InitiateCoinPurchase returned nil response")
 	}
-	t.Logf("Initiated coin purchase: %+v", resp)
+
+	// Verify response
+	t.Logf("Purchase Response: PaymentID=%s, Status=%s, CoinsToReceive=%.2f, NewBalance=%.2f",
+		resp.PaymentId, resp.Status, resp.CoinsToReceive, resp.NewBalance)
+
+	if resp.Status != "completed" {
+		t.Fatalf("Expected status 'completed', got '%s'", resp.Status)
+	}
+
+	if resp.CoinsToReceive != purchaseAmount {
+		t.Fatalf("Expected coins %.2f, got %.2f", purchaseAmount, resp.CoinsToReceive)
+	}
+
+	// Verify DB record
+	var purchaseID int64
+	if _, err := fmt.Sscanf(resp.PaymentId, "%d", &purchaseID); err != nil {
+		t.Fatalf("Failed to parse payment ID: %v", err)
+	}
+
+	purchase, err := repo.GetCoinPurchaseByID(ctx, purchaseID)
+	if err != nil {
+		t.Fatalf("Failed to get purchase from DB: %v", err)
+	}
+
+	if purchase.Status.String != "completed" {
+		t.Fatalf("DB status should be 'completed', got '%s'", purchase.Status.String)
+	}
+	t.Logf("✓ DB record verified: Status=%s", purchase.Status.String)
+
+	// Verify TigerBeetle balance
+	balanceResp2, err := h.GetBalance(ctx, &paymentpb.GetBalanceRequest{UserId: int64(user.ID)})
+	if err != nil {
+		t.Fatalf("Failed to get balance after purchase: %v", err)
+	}
+	finalBalance := balanceResp2.Balance
+	t.Logf("Final balance: %.2f", finalBalance)
+
+	expectedBalance := initialBalance + purchaseAmount
+	if finalBalance != expectedBalance {
+		t.Fatalf("Balance mismatch. Expected: %.2f, Got: %.2f", expectedBalance, finalBalance)
+	}
+	t.Logf("✓ TigerBeetle balance verified: %.2f", finalBalance)
+
+	// Verify payment history
+	historyResp, err := h.GetPaymentHistory(ctx, &paymentpb.GetPaymentHistoryRequest{
+		UserId: int64(user.ID),
+		Page:   1,
+		Limit:  10,
+	})
+	if err != nil {
+		t.Fatalf("Failed to get payment history: %v", err)
+	}
+
+	if len(historyResp.Purchases) == 0 {
+		t.Fatalf("No purchases found in history")
+	}
+
+	lastPurchase := historyResp.Purchases[0]
+	if lastPurchase.Status != "completed" {
+		t.Fatalf("History status should be 'completed', got '%s'", lastPurchase.Status)
+	}
+	t.Logf("✓ Payment history verified: %d purchases, last status=%s", len(historyResp.Purchases), lastPurchase.Status)
+
+	t.Logf("✓✓✓ All checks passed! Purchase completed successfully.")
 }
 
 func TestGetPaymentHistory(t *testing.T) {
@@ -111,6 +186,20 @@ func TestGetPaymentHistory(t *testing.T) {
 	defer repo.DleteUser(ctx, user.ID)
 
 	h, _ := NewPaymentHandler()
+
+	// First make a purchase
+	purchaseReq := &paymentpb.InitiateCoinPurchaseRequest{
+		UserId:        int64(user.ID),
+		Amount:        50.0,
+		PaymentMethod: "stripe",
+	}
+	purchaseResp, err := h.InitiateCoinPurchase(ctx, purchaseReq)
+	if err != nil {
+		t.Fatalf("Failed to create purchase: %v", err)
+	}
+	t.Logf("Created purchase: ID=%s, Status=%s", purchaseResp.PaymentId, purchaseResp.Status)
+
+	// Now get history
 	req := &paymentpb.GetPaymentHistoryRequest{
 		UserId: int64(user.ID),
 		Page:   1,
@@ -123,7 +212,26 @@ func TestGetPaymentHistory(t *testing.T) {
 	if resp == nil {
 		t.Fatalf("GetPaymentHistory returned nil response")
 	}
+
 	t.Logf("Payment history: purchases=%d, total=%d", len(resp.GetPurchases()), resp.GetTotalCount())
+
+	if len(resp.Purchases) == 0 {
+		t.Fatalf("Expected at least 1 purchase in history, got 0")
+	}
+
+	lastPurchase := resp.Purchases[0]
+	t.Logf("Last purchase: ID=%d, Amount=%.2f, Coins=%.2f, Status=%s",
+		lastPurchase.Id, lastPurchase.Amount, lastPurchase.CoinsReceived, lastPurchase.Status)
+
+	if lastPurchase.Status != "completed" {
+		t.Fatalf("Expected status 'completed', got '%s'", lastPurchase.Status)
+	}
+
+	if lastPurchase.Amount != 50.0 {
+		t.Fatalf("Expected amount 50.0, got %.2f", lastPurchase.Amount)
+	}
+
+	t.Logf("✓ Payment history working correctly!")
 }
 
 func TestGetTransactionHistory(t *testing.T) {

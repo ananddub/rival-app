@@ -39,6 +39,7 @@ type PaymentRepository interface {
 	AddCoins(ctx context.Context, userID int, amount float64) error
 	ProcessPayment(ctx context.Context, userID, merchantID int, amount float64) error
 	ProcessRefund(ctx context.Context, fromID, toID int, amount float64) error
+	GetAccountTransfers(ctx context.Context, accountID int) ([]map[string]interface{}, error)
 }
 
 type paymentRepository struct {
@@ -150,4 +151,69 @@ func (r *paymentRepository) ProcessPayment(ctx context.Context, userID, merchant
 
 func (r *paymentRepository) ProcessRefund(ctx context.Context, fromID, toID int, amount float64) error {
 	return r.tb.Transfer(fromID, toID, amount)
+}
+
+func (r *paymentRepository) GetAccountTransfers(ctx context.Context, accountID int) ([]map[string]interface{}, error) {
+	transfers, err := r.tb.GetAccountTransfers(accountID)
+	if err != nil {
+		return nil, err
+	}
+
+	var result []map[string]interface{}
+	for _, t := range transfers {
+		creditID := t.CreditAccountID.BigInt()
+		debitID := t.DebitAccountID.BigInt()
+		amount := t.Amount.BigInt()
+
+		isDebit := debitID.Uint64() == uint64(accountID)
+		
+		// Map code to transaction type
+		var txType, desc string
+		switch t.Code {
+		case 1: // Coin purchase/add
+			if isDebit {
+				txType = "debit"
+				desc = "Coin purchase fee"
+			} else {
+				txType = "credit"
+				desc = "Coin purchase"
+			}
+		case 2: // Payment to merchant
+			if isDebit {
+				txType = "debit"
+				desc = "Payment to merchant"
+			} else {
+				txType = "credit"
+				desc = "Payment received"
+			}
+		case 3: // Transfer
+			if isDebit {
+				txType = "debit"
+				desc = "Transfer sent"
+			} else {
+				txType = "credit"
+				desc = "Transfer received"
+			}
+		default:
+			if isDebit {
+				txType = "debit"
+				desc = "Debit transaction"
+			} else {
+				txType = "credit"
+				desc = "Credit transaction"
+			}
+		}
+
+		result = append(result, map[string]interface{}{
+			"id":          t.ID.String(),
+			"type":        txType,
+			"amount":      float64(amount.Uint64()) / 100,
+			"credit_id":   creditID.Uint64(),
+			"debit_id":    debitID.Uint64(),
+			"code":        t.Code,
+			"timestamp":   t.Timestamp,
+			"description": desc,
+		})
+	}
+	return result, nil
 }

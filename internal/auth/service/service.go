@@ -5,6 +5,7 @@ import (
 	"crypto/rand"
 	"fmt"
 	"math/big"
+	"strconv"
 	"time"
 
 	"rival/config"
@@ -13,6 +14,8 @@ import (
 	schemapb "rival/gen/proto/proto/schema"
 	schema "rival/gen/sql"
 	"rival/internal/auth/repo"
+	userrepo "rival/internal/users/repo"
+
 	"rival/internal/auth/util"
 	"rival/pkg/referral"
 	"rival/pkg/tb"
@@ -417,7 +420,29 @@ func (s *authService) WhoAmI(ctx context.Context, userID int) (*authpb.WhoAmIRes
 }
 
 func (s *authService) giveInitialCoins(userID int, amount float64) error {
-	return s.tb.AddCoins(userID, amount)
+	// Add coins to TigerBeetle
+	err := s.tb.AddCoins(userID, amount)
+	if err != nil {
+		return err
+	}
+
+	// Create coin purchase record
+	cfg := config.GetConfig()
+	db, err := connection.GetPgConnection(&cfg.Database)
+	if err != nil {
+		return err
+	}
+	queries := schema.New(db)
+
+	_, err = queries.CreateCoinPurchase(context.Background(), schema.CreateCoinPurchaseParams{
+		UserID:        pgtype.Int8{Int64: int64(userID), Valid: true},
+		Amount:        pgtype.Numeric{Int: big.NewInt(int64(amount * 100)), Exp: -2, Valid: true},
+		CoinsReceived: pgtype.Numeric{Int: big.NewInt(int64(amount * 100)), Exp: -2, Valid: true},
+		PaymentMethod: pgtype.Text{String: "signup_bonus", Valid: true},
+		Status:        pgtype.Text{String: "completed", Valid: true},
+	})
+
+	return err
 }
 
 func generateOTP() string {
@@ -459,7 +484,7 @@ func convertToProtoUser(user schema.User) *schemapb.User {
 		PasswordHash: user.PasswordHash.String,
 		Phone:        user.Phone.String,
 		Name:         user.Name,
-		ProfilePic:   user.ProfilePic.String,
+		ProfilePic:   userrepo.GenerateViewURL(strconv.Itoa(userID), "profile.jpg"),
 		FirebaseUid:  user.FirebaseUid.String,
 		CoinBalance:  coinBalance,
 		Role:         role,

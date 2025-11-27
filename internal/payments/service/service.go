@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"time"
 
-	"rival/config"
 	paymentpb "rival/gen/proto/proto/api"
 	schemapb "rival/gen/proto/proto/schema"
 	schema "rival/gen/sql"
@@ -29,6 +28,7 @@ type PaymentService interface {
 	GetBalance(ctx context.Context, req *paymentpb.GetBalanceRequest) (*paymentpb.GetBalanceResponse, error)
 	GetTransactionHistory(ctx context.Context, req *paymentpb.GetTransactionHistoryRequest) (*paymentpb.GetTransactionHistoryResponse, error)
 	ProcessRefund(ctx context.Context, req *paymentpb.ProcessRefundRequest) (*paymentpb.ProcessRefundResponse, error)
+	GetFinancialHistory(ctx context.Context, req *paymentpb.GetFinancialHistoryRequest) (*paymentpb.GetFinancialHistoryResponse, error)
 
 	// Merchant Settlements
 	InitiateSettlement(ctx context.Context, req *paymentpb.InitiateSettlementRequest) (*paymentpb.InitiateSettlementResponse, error)
@@ -47,7 +47,6 @@ func NewPaymentService(repo repo.PaymentRepository) PaymentService {
 
 // Coin Purchase
 func (s *paymentService) InitiateCoinPurchase(ctx context.Context, req *paymentpb.InitiateCoinPurchaseRequest) (*paymentpb.InitiateCoinPurchaseResponse, error) {
-	paymentID := uuid.New().String()
 	coinsToReceive := req.Amount // 1:1 ratio
 
 	createParams := schema.CreateCoinPurchaseParams{
@@ -55,7 +54,7 @@ func (s *paymentService) InitiateCoinPurchase(ctx context.Context, req *paymentp
 		Amount:        utils.Float64ToNumeric(req.Amount),
 		CoinsReceived: utils.Float64ToNumeric(coinsToReceive),
 		PaymentMethod: pgtype.Text{String: req.PaymentMethod, Valid: true},
-		Status:        pgtype.Text{String: "pending", Valid: true},
+		Status:        pgtype.Text{String: "completed", Valid: true},
 	}
 
 	purchase, err := s.repo.CreateCoinPurchase(ctx, createParams)
@@ -63,14 +62,24 @@ func (s *paymentService) InitiateCoinPurchase(ctx context.Context, req *paymentp
 		return nil, fmt.Errorf("failed to create coin purchase: %w", err)
 	}
 
-	cfg := config.GetConfig()
-	paymentURL := fmt.Sprintf("%s/pay/%s", cfg.PaymentGateway.BaseURL, paymentID)
+	// Add coins to TigerBeetle
+	err = s.repo.AddCoins(ctx, int(req.UserId), coinsToReceive)
+	if err != nil {
+		return nil, fmt.Errorf("failed to add coins: %w", err)
+	}
+
+	// Get new balance
+	newBalance, err := s.repo.GetBalance(ctx, int(req.UserId))
+	if err != nil {
+		return nil, fmt.Errorf("failed to get balance: %w", err)
+	}
 
 	return &paymentpb.InitiateCoinPurchaseResponse{
 		PaymentId:      fmt.Sprintf("%d", purchase.ID),
-		PaymentUrl:     paymentURL,
+		PaymentUrl:     "",
 		CoinsToReceive: coinsToReceive,
-		Status:         "pending",
+		Status:         "completed",
+		NewBalance:     newBalance,
 	}, nil
 }
 
@@ -254,20 +263,32 @@ func (s *paymentService) TransferToUser(ctx context.Context, req *paymentpb.Tran
 		return nil, fmt.Errorf("failed to process transfer: %w", err)
 	}
 
-	// Create transaction record
-	createParams := schema.CreateTransactionParams{
+	// Create transaction record for sender (debit)
+	senderTx, err := s.repo.CreateTransaction(ctx, schema.CreateTransactionParams{
 		UserID:          pgtype.Int8{Int64: req.FromUserId, Valid: true},
 		CoinsSpent:      utils.Float64ToNumeric(req.Amount),
 		OriginalAmount:  utils.Float64ToNumeric(req.Amount),
 		DiscountAmount:  utils.Float64ToNumeric(0),
 		FinalAmount:     utils.Float64ToNumeric(req.Amount),
-		TransactionType: pgtype.Text{String: "transfer", Valid: true},
+		TransactionType: pgtype.Text{String: "transfer_out", Valid: true},
 		Status:          pgtype.Text{String: "completed", Valid: true},
+	})
+	if err != nil {
+		return nil, fmt.Errorf("failed to create sender transaction: %w", err)
 	}
 
-	transaction, err := s.repo.CreateTransaction(ctx, createParams)
+	// Create transaction record for receiver (credit)
+	_, err = s.repo.CreateTransaction(ctx, schema.CreateTransactionParams{
+		UserID:          pgtype.Int8{Int64: req.ToUserId, Valid: true},
+		CoinsSpent:      utils.Float64ToNumeric(-req.Amount), // Negative for credit
+		OriginalAmount:  utils.Float64ToNumeric(req.Amount),
+		DiscountAmount:  utils.Float64ToNumeric(0),
+		FinalAmount:     utils.Float64ToNumeric(req.Amount),
+		TransactionType: pgtype.Text{String: "transfer_in", Valid: true},
+		Status:          pgtype.Text{String: "completed", Valid: true},
+	})
 	if err != nil {
-		return nil, fmt.Errorf("failed to create transaction: %w", err)
+		return nil, fmt.Errorf("failed to create receiver transaction: %w", err)
 	}
 
 	// Get remaining balance
@@ -278,9 +299,9 @@ func (s *paymentService) TransferToUser(ctx context.Context, req *paymentpb.Tran
 
 	return &paymentpb.TransferToUserResponse{
 		Success:          true,
-		TransactionId:    fmt.Sprintf("%d", transaction.ID),
+		TransactionId:    fmt.Sprintf("%d", senderTx.ID),
 		RemainingBalance: remainingBalance,
-		Transaction:      convertToProtoTransaction(transaction),
+		Transaction:      convertToProtoTransaction(senderTx),
 	}, nil
 }
 
@@ -407,6 +428,46 @@ func (s *paymentService) GetSettlements(ctx context.Context, req *paymentpb.GetS
 	return &paymentpb.GetSettlementsResponse{
 		Settlements: protoSettlements,
 		TotalCount:  int32(len(protoSettlements)),
+	}, nil
+}
+
+func (s *paymentService) GetFinancialHistory(ctx context.Context, req *paymentpb.GetFinancialHistoryRequest) (*paymentpb.GetFinancialHistoryResponse, error) {
+	userID := int(req.UserId)
+	var items []*paymentpb.FinancialHistoryItem
+
+	// Get all transfers from TigerBeetle
+	tbTransfers, err := s.repo.GetAccountTransfers(ctx, userID)
+	if err != nil {
+		fmt.Printf("Error getting TB transfers: %v\n", err)
+	} else {
+		fmt.Printf("Got %d TB transfers\n", len(tbTransfers))
+		for _, t := range tbTransfers {
+			txType := t["type"].(string)
+			if req.Type != "" && req.Type != "all" && txType != req.Type {
+				continue
+			}
+
+			amount := t["amount"].(float64)
+			desc := t["description"].(string)
+			
+			items = append(items, &paymentpb.FinancialHistoryItem{
+				Id:          t["id"].(string),
+				Type:        txType,
+				Amount:      amount,
+				Coins:       amount,
+				Description: desc,
+				Status:      "completed",
+				CreatedAt:   int64(t["timestamp"].(uint64)),
+			})
+		}
+	}
+
+	balance, _ := s.repo.GetBalance(ctx, userID)
+
+	return &paymentpb.GetFinancialHistoryResponse{
+		Items:          items,
+		TotalCount:     int32(len(items)),
+		CurrentBalance: balance,
 	}, nil
 }
 

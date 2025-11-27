@@ -3,6 +3,7 @@ package tb
 import (
 	"crypto/rand"
 	"encoding/binary"
+	"fmt"
 	"time"
 
 	"rival/connection"
@@ -20,6 +21,7 @@ type Service interface {
 	GetUser(userID int) (*[]types.Account, error)
 	ProcessPayment(userID, merchantID int, amount float64) error
 	Transfer(fromID, toID int, amount float64) error
+	GetAccountTransfers(accountID int) ([]types.Transfer, error)
 	Close()
 }
 
@@ -129,6 +131,22 @@ func (s *TbService) Transfer(fromID, toID int, amount float64) error {
 	}
 	_, err := s.client.CreateTransfers([]types.Transfer{transfer})
 	return err
+}
+
+func (s *TbService) GetAccountTransfers(accountID int) ([]types.Transfer, error) {
+	id := types.ToUint128(uint64(accountID))
+	filter := types.AccountFilter{
+		AccountID: id,
+		Limit:     8190,
+		Flags:     types.AccountFilterFlags{Debits: true, Credits: true}.ToUint32(),
+	}
+	transfers, err := s.client.GetAccountTransfers(filter)
+	if err != nil {
+		fmt.Printf("TB GetAccountTransfers error for account %d: %v\n", accountID, err)
+		return nil, err
+	}
+	fmt.Printf("TB GetAccountTransfers for account %d: found %d transfers\n", accountID, len(transfers))
+	return transfers, nil
 }
 
 func generateTransferID() types.Uint128 {

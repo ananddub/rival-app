@@ -28,6 +28,7 @@ const (
 	PaymentService_GetBalance_FullMethodName               = "/rival.api.v1.PaymentService/GetBalance"
 	PaymentService_GetTransactionHistory_FullMethodName    = "/rival.api.v1.PaymentService/GetTransactionHistory"
 	PaymentService_ProcessRefund_FullMethodName            = "/rival.api.v1.PaymentService/ProcessRefund"
+	PaymentService_GetFinancialHistory_FullMethodName      = "/rival.api.v1.PaymentService/GetFinancialHistory"
 	PaymentService_InitiateSettlement_FullMethodName       = "/rival.api.v1.PaymentService/InitiateSettlement"
 	PaymentService_GetSettlements_FullMethodName           = "/rival.api.v1.PaymentService/GetSettlements"
 	PaymentService_StreamPaymentUpdates_FullMethodName     = "/rival.api.v1.PaymentService/StreamPaymentUpdates"
@@ -49,6 +50,7 @@ type PaymentServiceClient interface {
 	GetBalance(ctx context.Context, in *GetBalanceRequest, opts ...grpc.CallOption) (*GetBalanceResponse, error)
 	GetTransactionHistory(ctx context.Context, in *GetTransactionHistoryRequest, opts ...grpc.CallOption) (*GetTransactionHistoryResponse, error)
 	ProcessRefund(ctx context.Context, in *ProcessRefundRequest, opts ...grpc.CallOption) (*ProcessRefundResponse, error)
+	GetFinancialHistory(ctx context.Context, in *GetFinancialHistoryRequest, opts ...grpc.CallOption) (*GetFinancialHistoryResponse, error)
 	// Merchant Settlements
 	InitiateSettlement(ctx context.Context, in *InitiateSettlementRequest, opts ...grpc.CallOption) (*InitiateSettlementResponse, error)
 	GetSettlements(ctx context.Context, in *GetSettlementsRequest, opts ...grpc.CallOption) (*GetSettlementsResponse, error)
@@ -155,6 +157,16 @@ func (c *paymentServiceClient) ProcessRefund(ctx context.Context, in *ProcessRef
 	return out, nil
 }
 
+func (c *paymentServiceClient) GetFinancialHistory(ctx context.Context, in *GetFinancialHistoryRequest, opts ...grpc.CallOption) (*GetFinancialHistoryResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(GetFinancialHistoryResponse)
+	err := c.cc.Invoke(ctx, PaymentService_GetFinancialHistory_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *paymentServiceClient) InitiateSettlement(ctx context.Context, in *InitiateSettlementRequest, opts ...grpc.CallOption) (*InitiateSettlementResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(InitiateSettlementResponse)
@@ -228,6 +240,7 @@ type PaymentServiceServer interface {
 	GetBalance(context.Context, *GetBalanceRequest) (*GetBalanceResponse, error)
 	GetTransactionHistory(context.Context, *GetTransactionHistoryRequest) (*GetTransactionHistoryResponse, error)
 	ProcessRefund(context.Context, *ProcessRefundRequest) (*ProcessRefundResponse, error)
+	GetFinancialHistory(context.Context, *GetFinancialHistoryRequest) (*GetFinancialHistoryResponse, error)
 	// Merchant Settlements
 	InitiateSettlement(context.Context, *InitiateSettlementRequest) (*InitiateSettlementResponse, error)
 	GetSettlements(context.Context, *GetSettlementsRequest) (*GetSettlementsResponse, error)
@@ -270,6 +283,9 @@ func (UnimplementedPaymentServiceServer) GetTransactionHistory(context.Context, 
 }
 func (UnimplementedPaymentServiceServer) ProcessRefund(context.Context, *ProcessRefundRequest) (*ProcessRefundResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ProcessRefund not implemented")
+}
+func (UnimplementedPaymentServiceServer) GetFinancialHistory(context.Context, *GetFinancialHistoryRequest) (*GetFinancialHistoryResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetFinancialHistory not implemented")
 }
 func (UnimplementedPaymentServiceServer) InitiateSettlement(context.Context, *InitiateSettlementRequest) (*InitiateSettlementResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method InitiateSettlement not implemented")
@@ -466,6 +482,24 @@ func _PaymentService_ProcessRefund_Handler(srv interface{}, ctx context.Context,
 	return interceptor(ctx, in, info, handler)
 }
 
+func _PaymentService_GetFinancialHistory_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetFinancialHistoryRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(PaymentServiceServer).GetFinancialHistory(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: PaymentService_GetFinancialHistory_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(PaymentServiceServer).GetFinancialHistory(ctx, req.(*GetFinancialHistoryRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _PaymentService_InitiateSettlement_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(InitiateSettlementRequest)
 	if err := dec(in); err != nil {
@@ -566,6 +600,10 @@ var PaymentService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "ProcessRefund",
 			Handler:    _PaymentService_ProcessRefund_Handler,
+		},
+		{
+			MethodName: "GetFinancialHistory",
+			Handler:    _PaymentService_GetFinancialHistory_Handler,
 		},
 		{
 			MethodName: "InitiateSettlement",

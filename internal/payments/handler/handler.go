@@ -114,6 +114,21 @@ func (h *PaymentHandler) ProcessRefund(ctx context.Context, req *paymentpb.Proce
 	return h.service.ProcessRefund(ctx, req)
 }
 
+func (h *PaymentHandler) GetFinancialHistory(ctx context.Context, req *paymentpb.GetFinancialHistoryRequest) (*paymentpb.GetFinancialHistoryResponse, error) {
+	if req.UserId == 0 {
+		return &paymentpb.GetFinancialHistoryResponse{}, nil
+	}
+
+	if req.Limit <= 0 {
+		req.Limit = 20
+	}
+	if req.Page <= 0 {
+		req.Page = 1
+	}
+
+	return h.service.GetFinancialHistory(ctx, req)
+}
+
 // Merchant Settlements
 func (h *PaymentHandler) InitiateSettlement(ctx context.Context, req *paymentpb.InitiateSettlementRequest) (*paymentpb.InitiateSettlementResponse, error) {
 

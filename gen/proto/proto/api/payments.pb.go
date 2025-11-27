@@ -89,6 +89,7 @@ type InitiateCoinPurchaseResponse struct {
 	PaymentUrl     string                 `protobuf:"bytes,2,opt,name=payment_url,json=paymentUrl,proto3" json:"payment_url,omitempty"`
 	CoinsToReceive float64                `protobuf:"fixed64,3,opt,name=coins_to_receive,json=coinsToReceive,proto3" json:"coins_to_receive,omitempty"`
 	Status         string                 `protobuf:"bytes,4,opt,name=status,proto3" json:"status,omitempty"`
+	NewBalance     float64                `protobuf:"fixed64,5,opt,name=new_balance,json=newBalance,proto3" json:"new_balance,omitempty"`
 	unknownFields  protoimpl.UnknownFields
 	sizeCache      protoimpl.SizeCache
 }
@@ -149,6 +150,13 @@ func (x *InitiateCoinPurchaseResponse) GetStatus() string {
 		return x.Status
 	}
 	return ""
+}
+
+func (x *InitiateCoinPurchaseResponse) GetNewBalance() float64 {
+	if x != nil {
+		return x.NewBalance
+	}
+	return 0
 }
 
 type VerifyPaymentRequest struct {
@@ -1626,6 +1634,251 @@ func (x *StreamTransactionUpdatesResponse) GetEventType() string {
 	return ""
 }
 
+// Financial History (Combined)
+type GetFinancialHistoryRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	UserId        int64                  `protobuf:"varint,1,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
+	Page          int32                  `protobuf:"varint,2,opt,name=page,proto3" json:"page,omitempty"`
+	Limit         int32                  `protobuf:"varint,3,opt,name=limit,proto3" json:"limit,omitempty"`
+	Type          string                 `protobuf:"bytes,4,opt,name=type,proto3" json:"type,omitempty"` // all, purchase, transaction
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *GetFinancialHistoryRequest) Reset() {
+	*x = GetFinancialHistoryRequest{}
+	mi := &file_proto_api_payments_proto_msgTypes[26]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *GetFinancialHistoryRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GetFinancialHistoryRequest) ProtoMessage() {}
+
+func (x *GetFinancialHistoryRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_proto_api_payments_proto_msgTypes[26]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GetFinancialHistoryRequest.ProtoReflect.Descriptor instead.
+func (*GetFinancialHistoryRequest) Descriptor() ([]byte, []int) {
+	return file_proto_api_payments_proto_rawDescGZIP(), []int{26}
+}
+
+func (x *GetFinancialHistoryRequest) GetUserId() int64 {
+	if x != nil {
+		return x.UserId
+	}
+	return 0
+}
+
+func (x *GetFinancialHistoryRequest) GetPage() int32 {
+	if x != nil {
+		return x.Page
+	}
+	return 0
+}
+
+func (x *GetFinancialHistoryRequest) GetLimit() int32 {
+	if x != nil {
+		return x.Limit
+	}
+	return 0
+}
+
+func (x *GetFinancialHistoryRequest) GetType() string {
+	if x != nil {
+		return x.Type
+	}
+	return ""
+}
+
+type FinancialHistoryItem struct {
+	state          protoimpl.MessageState `protogen:"open.v1"`
+	Id             string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
+	Type           string                 `protobuf:"bytes,2,opt,name=type,proto3" json:"type,omitempty"` // purchase, payment, transfer, refund
+	Amount         float64                `protobuf:"fixed64,3,opt,name=amount,proto3" json:"amount,omitempty"`
+	Coins          float64                `protobuf:"fixed64,4,opt,name=coins,proto3" json:"coins,omitempty"`
+	Description    string                 `protobuf:"bytes,5,opt,name=description,proto3" json:"description,omitempty"`
+	Status         string                 `protobuf:"bytes,6,opt,name=status,proto3" json:"status,omitempty"`
+	CreatedAt      int64                  `protobuf:"varint,7,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`
+	PaymentMethod  string                 `protobuf:"bytes,8,opt,name=payment_method,json=paymentMethod,proto3" json:"payment_method,omitempty"`       // for purchases
+	MerchantId     int64                  `protobuf:"varint,9,opt,name=merchant_id,json=merchantId,proto3" json:"merchant_id,omitempty"`               // for payments
+	DiscountAmount float64                `protobuf:"fixed64,10,opt,name=discount_amount,json=discountAmount,proto3" json:"discount_amount,omitempty"` // for payments
+	unknownFields  protoimpl.UnknownFields
+	sizeCache      protoimpl.SizeCache
+}
+
+func (x *FinancialHistoryItem) Reset() {
+	*x = FinancialHistoryItem{}
+	mi := &file_proto_api_payments_proto_msgTypes[27]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *FinancialHistoryItem) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*FinancialHistoryItem) ProtoMessage() {}
+
+func (x *FinancialHistoryItem) ProtoReflect() protoreflect.Message {
+	mi := &file_proto_api_payments_proto_msgTypes[27]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use FinancialHistoryItem.ProtoReflect.Descriptor instead.
+func (*FinancialHistoryItem) Descriptor() ([]byte, []int) {
+	return file_proto_api_payments_proto_rawDescGZIP(), []int{27}
+}
+
+func (x *FinancialHistoryItem) GetId() string {
+	if x != nil {
+		return x.Id
+	}
+	return ""
+}
+
+func (x *FinancialHistoryItem) GetType() string {
+	if x != nil {
+		return x.Type
+	}
+	return ""
+}
+
+func (x *FinancialHistoryItem) GetAmount() float64 {
+	if x != nil {
+		return x.Amount
+	}
+	return 0
+}
+
+func (x *FinancialHistoryItem) GetCoins() float64 {
+	if x != nil {
+		return x.Coins
+	}
+	return 0
+}
+
+func (x *FinancialHistoryItem) GetDescription() string {
+	if x != nil {
+		return x.Description
+	}
+	return ""
+}
+
+func (x *FinancialHistoryItem) GetStatus() string {
+	if x != nil {
+		return x.Status
+	}
+	return ""
+}
+
+func (x *FinancialHistoryItem) GetCreatedAt() int64 {
+	if x != nil {
+		return x.CreatedAt
+	}
+	return 0
+}
+
+func (x *FinancialHistoryItem) GetPaymentMethod() string {
+	if x != nil {
+		return x.PaymentMethod
+	}
+	return ""
+}
+
+func (x *FinancialHistoryItem) GetMerchantId() int64 {
+	if x != nil {
+		return x.MerchantId
+	}
+	return 0
+}
+
+func (x *FinancialHistoryItem) GetDiscountAmount() float64 {
+	if x != nil {
+		return x.DiscountAmount
+	}
+	return 0
+}
+
+type GetFinancialHistoryResponse struct {
+	state          protoimpl.MessageState  `protogen:"open.v1"`
+	Items          []*FinancialHistoryItem `protobuf:"bytes,1,rep,name=items,proto3" json:"items,omitempty"`
+	TotalCount     int32                   `protobuf:"varint,2,opt,name=total_count,json=totalCount,proto3" json:"total_count,omitempty"`
+	CurrentBalance float64                 `protobuf:"fixed64,3,opt,name=current_balance,json=currentBalance,proto3" json:"current_balance,omitempty"`
+	unknownFields  protoimpl.UnknownFields
+	sizeCache      protoimpl.SizeCache
+}
+
+func (x *GetFinancialHistoryResponse) Reset() {
+	*x = GetFinancialHistoryResponse{}
+	mi := &file_proto_api_payments_proto_msgTypes[28]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *GetFinancialHistoryResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GetFinancialHistoryResponse) ProtoMessage() {}
+
+func (x *GetFinancialHistoryResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_proto_api_payments_proto_msgTypes[28]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GetFinancialHistoryResponse.ProtoReflect.Descriptor instead.
+func (*GetFinancialHistoryResponse) Descriptor() ([]byte, []int) {
+	return file_proto_api_payments_proto_rawDescGZIP(), []int{28}
+}
+
+func (x *GetFinancialHistoryResponse) GetItems() []*FinancialHistoryItem {
+	if x != nil {
+		return x.Items
+	}
+	return nil
+}
+
+func (x *GetFinancialHistoryResponse) GetTotalCount() int32 {
+	if x != nil {
+		return x.TotalCount
+	}
+	return 0
+}
+
+func (x *GetFinancialHistoryResponse) GetCurrentBalance() float64 {
+	if x != nil {
+		return x.CurrentBalance
+	}
+	return 0
+}
+
 var File_proto_api_payments_proto protoreflect.FileDescriptor
 
 const file_proto_api_payments_proto_rawDesc = "" +
@@ -1634,14 +1887,16 @@ const file_proto_api_payments_proto_rawDesc = "" +
 	"\x1bInitiateCoinPurchaseRequest\x12\x17\n" +
 	"\auser_id\x18\x01 \x01(\x03R\x06userId\x12\x16\n" +
 	"\x06amount\x18\x02 \x01(\x01R\x06amount\x12%\n" +
-	"\x0epayment_method\x18\x03 \x01(\tR\rpaymentMethod\"\xa0\x01\n" +
+	"\x0epayment_method\x18\x03 \x01(\tR\rpaymentMethod\"\xc1\x01\n" +
 	"\x1cInitiateCoinPurchaseResponse\x12\x1d\n" +
 	"\n" +
 	"payment_id\x18\x01 \x01(\tR\tpaymentId\x12\x1f\n" +
 	"\vpayment_url\x18\x02 \x01(\tR\n" +
 	"paymentUrl\x12(\n" +
 	"\x10coins_to_receive\x18\x03 \x01(\x01R\x0ecoinsToReceive\x12\x16\n" +
-	"\x06status\x18\x04 \x01(\tR\x06status\"\\\n" +
+	"\x06status\x18\x04 \x01(\tR\x06status\x12\x1f\n" +
+	"\vnew_balance\x18\x05 \x01(\x01R\n" +
+	"newBalance\"\\\n" +
 	"\x14VerifyPaymentRequest\x12\x1d\n" +
 	"\n" +
 	"payment_id\x18\x01 \x01(\tR\tpaymentId\x12%\n" +
@@ -1759,8 +2014,31 @@ const file_proto_api_payments_proto_rawDesc = "" +
 	"\x06amount\x18\x03 \x01(\x01R\x06amount\x12>\n" +
 	"\vtransaction\x18\x04 \x01(\v2\x1c.rival.schema.v1.TransactionR\vtransaction\x12\x1d\n" +
 	"\n" +
-	"event_type\x18\x05 \x01(\tR\teventType2\xa1\n" +
+	"event_type\x18\x05 \x01(\tR\teventType\"s\n" +
+	"\x1aGetFinancialHistoryRequest\x12\x17\n" +
+	"\auser_id\x18\x01 \x01(\x03R\x06userId\x12\x12\n" +
+	"\x04page\x18\x02 \x01(\x05R\x04page\x12\x14\n" +
+	"\x05limit\x18\x03 \x01(\x05R\x05limit\x12\x12\n" +
+	"\x04type\x18\x04 \x01(\tR\x04type\"\xb2\x02\n" +
+	"\x14FinancialHistoryItem\x12\x0e\n" +
+	"\x02id\x18\x01 \x01(\tR\x02id\x12\x12\n" +
+	"\x04type\x18\x02 \x01(\tR\x04type\x12\x16\n" +
+	"\x06amount\x18\x03 \x01(\x01R\x06amount\x12\x14\n" +
+	"\x05coins\x18\x04 \x01(\x01R\x05coins\x12 \n" +
+	"\vdescription\x18\x05 \x01(\tR\vdescription\x12\x16\n" +
+	"\x06status\x18\x06 \x01(\tR\x06status\x12\x1d\n" +
 	"\n" +
+	"created_at\x18\a \x01(\x03R\tcreatedAt\x12%\n" +
+	"\x0epayment_method\x18\b \x01(\tR\rpaymentMethod\x12\x1f\n" +
+	"\vmerchant_id\x18\t \x01(\x03R\n" +
+	"merchantId\x12'\n" +
+	"\x0fdiscount_amount\x18\n" +
+	" \x01(\x01R\x0ediscountAmount\"\xa1\x01\n" +
+	"\x1bGetFinancialHistoryResponse\x128\n" +
+	"\x05items\x18\x01 \x03(\v2\".rival.api.v1.FinancialHistoryItemR\x05items\x12\x1f\n" +
+	"\vtotal_count\x18\x02 \x01(\x05R\n" +
+	"totalCount\x12'\n" +
+	"\x0fcurrent_balance\x18\x03 \x01(\x01R\x0ecurrentBalance2\x8d\v\n" +
 	"\x0ePaymentService\x12m\n" +
 	"\x14InitiateCoinPurchase\x12).rival.api.v1.InitiateCoinPurchaseRequest\x1a*.rival.api.v1.InitiateCoinPurchaseResponse\x12X\n" +
 	"\rVerifyPayment\x12\".rival.api.v1.VerifyPaymentRequest\x1a#.rival.api.v1.VerifyPaymentResponse\x12d\n" +
@@ -1771,7 +2049,8 @@ const file_proto_api_payments_proto_rawDesc = "" +
 	"\n" +
 	"GetBalance\x12\x1f.rival.api.v1.GetBalanceRequest\x1a .rival.api.v1.GetBalanceResponse\x12p\n" +
 	"\x15GetTransactionHistory\x12*.rival.api.v1.GetTransactionHistoryRequest\x1a+.rival.api.v1.GetTransactionHistoryResponse\x12X\n" +
-	"\rProcessRefund\x12\".rival.api.v1.ProcessRefundRequest\x1a#.rival.api.v1.ProcessRefundResponse\x12g\n" +
+	"\rProcessRefund\x12\".rival.api.v1.ProcessRefundRequest\x1a#.rival.api.v1.ProcessRefundResponse\x12j\n" +
+	"\x13GetFinancialHistory\x12(.rival.api.v1.GetFinancialHistoryRequest\x1a).rival.api.v1.GetFinancialHistoryResponse\x12g\n" +
 	"\x12InitiateSettlement\x12'.rival.api.v1.InitiateSettlementRequest\x1a(.rival.api.v1.InitiateSettlementResponse\x12[\n" +
 	"\x0eGetSettlements\x12#.rival.api.v1.GetSettlementsRequest\x1a$.rival.api.v1.GetSettlementsResponse\x12o\n" +
 	"\x14StreamPaymentUpdates\x12).rival.api.v1.StreamPaymentUpdatesRequest\x1a*.rival.api.v1.StreamPaymentUpdatesResponse0\x01\x12{\n" +
@@ -1789,7 +2068,7 @@ func file_proto_api_payments_proto_rawDescGZIP() []byte {
 	return file_proto_api_payments_proto_rawDescData
 }
 
-var file_proto_api_payments_proto_msgTypes = make([]protoimpl.MessageInfo, 26)
+var file_proto_api_payments_proto_msgTypes = make([]protoimpl.MessageInfo, 29)
 var file_proto_api_payments_proto_goTypes = []any{
 	(*InitiateCoinPurchaseRequest)(nil),      // 0: rival.api.v1.InitiateCoinPurchaseRequest
 	(*InitiateCoinPurchaseResponse)(nil),     // 1: rival.api.v1.InitiateCoinPurchaseResponse
@@ -1817,52 +2096,58 @@ var file_proto_api_payments_proto_goTypes = []any{
 	(*StreamPaymentUpdatesResponse)(nil),     // 23: rival.api.v1.StreamPaymentUpdatesResponse
 	(*StreamTransactionUpdatesRequest)(nil),  // 24: rival.api.v1.StreamTransactionUpdatesRequest
 	(*StreamTransactionUpdatesResponse)(nil), // 25: rival.api.v1.StreamTransactionUpdatesResponse
-	(*schema.CoinPurchase)(nil),              // 26: rival.schema.v1.CoinPurchase
-	(*schema.Transaction)(nil),               // 27: rival.schema.v1.Transaction
-	(*schema.Settlement)(nil),                // 28: rival.schema.v1.Settlement
+	(*GetFinancialHistoryRequest)(nil),       // 26: rival.api.v1.GetFinancialHistoryRequest
+	(*FinancialHistoryItem)(nil),             // 27: rival.api.v1.FinancialHistoryItem
+	(*GetFinancialHistoryResponse)(nil),      // 28: rival.api.v1.GetFinancialHistoryResponse
+	(*schema.CoinPurchase)(nil),              // 29: rival.schema.v1.CoinPurchase
+	(*schema.Transaction)(nil),               // 30: rival.schema.v1.Transaction
+	(*schema.Settlement)(nil),                // 31: rival.schema.v1.Settlement
 }
 var file_proto_api_payments_proto_depIdxs = []int32{
-	26, // 0: rival.api.v1.VerifyPaymentResponse.purchase:type_name -> rival.schema.v1.CoinPurchase
-	26, // 1: rival.api.v1.GetPaymentHistoryResponse.purchases:type_name -> rival.schema.v1.CoinPurchase
-	27, // 2: rival.api.v1.PayToMerchantResponse.transaction:type_name -> rival.schema.v1.Transaction
-	27, // 3: rival.api.v1.TransferToUserResponse.transaction:type_name -> rival.schema.v1.Transaction
-	27, // 4: rival.api.v1.GetTransactionHistoryResponse.transactions:type_name -> rival.schema.v1.Transaction
-	27, // 5: rival.api.v1.ProcessRefundResponse.refund_transaction:type_name -> rival.schema.v1.Transaction
-	28, // 6: rival.api.v1.InitiateSettlementResponse.settlement:type_name -> rival.schema.v1.Settlement
-	28, // 7: rival.api.v1.GetSettlementsResponse.settlements:type_name -> rival.schema.v1.Settlement
-	26, // 8: rival.api.v1.StreamPaymentUpdatesResponse.purchase:type_name -> rival.schema.v1.CoinPurchase
-	27, // 9: rival.api.v1.StreamTransactionUpdatesResponse.transaction:type_name -> rival.schema.v1.Transaction
-	0,  // 10: rival.api.v1.PaymentService.InitiateCoinPurchase:input_type -> rival.api.v1.InitiateCoinPurchaseRequest
-	2,  // 11: rival.api.v1.PaymentService.VerifyPayment:input_type -> rival.api.v1.VerifyPaymentRequest
-	4,  // 12: rival.api.v1.PaymentService.GetPaymentHistory:input_type -> rival.api.v1.GetPaymentHistoryRequest
-	6,  // 13: rival.api.v1.PaymentService.RefundPayment:input_type -> rival.api.v1.RefundPaymentRequest
-	8,  // 14: rival.api.v1.PaymentService.PayToMerchant:input_type -> rival.api.v1.PayToMerchantRequest
-	10, // 15: rival.api.v1.PaymentService.TransferToUser:input_type -> rival.api.v1.TransferToUserRequest
-	12, // 16: rival.api.v1.PaymentService.GetBalance:input_type -> rival.api.v1.GetBalanceRequest
-	14, // 17: rival.api.v1.PaymentService.GetTransactionHistory:input_type -> rival.api.v1.GetTransactionHistoryRequest
-	16, // 18: rival.api.v1.PaymentService.ProcessRefund:input_type -> rival.api.v1.ProcessRefundRequest
-	18, // 19: rival.api.v1.PaymentService.InitiateSettlement:input_type -> rival.api.v1.InitiateSettlementRequest
-	20, // 20: rival.api.v1.PaymentService.GetSettlements:input_type -> rival.api.v1.GetSettlementsRequest
-	22, // 21: rival.api.v1.PaymentService.StreamPaymentUpdates:input_type -> rival.api.v1.StreamPaymentUpdatesRequest
-	24, // 22: rival.api.v1.PaymentService.StreamTransactionUpdates:input_type -> rival.api.v1.StreamTransactionUpdatesRequest
-	1,  // 23: rival.api.v1.PaymentService.InitiateCoinPurchase:output_type -> rival.api.v1.InitiateCoinPurchaseResponse
-	3,  // 24: rival.api.v1.PaymentService.VerifyPayment:output_type -> rival.api.v1.VerifyPaymentResponse
-	5,  // 25: rival.api.v1.PaymentService.GetPaymentHistory:output_type -> rival.api.v1.GetPaymentHistoryResponse
-	7,  // 26: rival.api.v1.PaymentService.RefundPayment:output_type -> rival.api.v1.RefundPaymentResponse
-	9,  // 27: rival.api.v1.PaymentService.PayToMerchant:output_type -> rival.api.v1.PayToMerchantResponse
-	11, // 28: rival.api.v1.PaymentService.TransferToUser:output_type -> rival.api.v1.TransferToUserResponse
-	13, // 29: rival.api.v1.PaymentService.GetBalance:output_type -> rival.api.v1.GetBalanceResponse
-	15, // 30: rival.api.v1.PaymentService.GetTransactionHistory:output_type -> rival.api.v1.GetTransactionHistoryResponse
-	17, // 31: rival.api.v1.PaymentService.ProcessRefund:output_type -> rival.api.v1.ProcessRefundResponse
-	19, // 32: rival.api.v1.PaymentService.InitiateSettlement:output_type -> rival.api.v1.InitiateSettlementResponse
-	21, // 33: rival.api.v1.PaymentService.GetSettlements:output_type -> rival.api.v1.GetSettlementsResponse
-	23, // 34: rival.api.v1.PaymentService.StreamPaymentUpdates:output_type -> rival.api.v1.StreamPaymentUpdatesResponse
-	25, // 35: rival.api.v1.PaymentService.StreamTransactionUpdates:output_type -> rival.api.v1.StreamTransactionUpdatesResponse
-	23, // [23:36] is the sub-list for method output_type
-	10, // [10:23] is the sub-list for method input_type
-	10, // [10:10] is the sub-list for extension type_name
-	10, // [10:10] is the sub-list for extension extendee
-	0,  // [0:10] is the sub-list for field type_name
+	29, // 0: rival.api.v1.VerifyPaymentResponse.purchase:type_name -> rival.schema.v1.CoinPurchase
+	29, // 1: rival.api.v1.GetPaymentHistoryResponse.purchases:type_name -> rival.schema.v1.CoinPurchase
+	30, // 2: rival.api.v1.PayToMerchantResponse.transaction:type_name -> rival.schema.v1.Transaction
+	30, // 3: rival.api.v1.TransferToUserResponse.transaction:type_name -> rival.schema.v1.Transaction
+	30, // 4: rival.api.v1.GetTransactionHistoryResponse.transactions:type_name -> rival.schema.v1.Transaction
+	30, // 5: rival.api.v1.ProcessRefundResponse.refund_transaction:type_name -> rival.schema.v1.Transaction
+	31, // 6: rival.api.v1.InitiateSettlementResponse.settlement:type_name -> rival.schema.v1.Settlement
+	31, // 7: rival.api.v1.GetSettlementsResponse.settlements:type_name -> rival.schema.v1.Settlement
+	29, // 8: rival.api.v1.StreamPaymentUpdatesResponse.purchase:type_name -> rival.schema.v1.CoinPurchase
+	30, // 9: rival.api.v1.StreamTransactionUpdatesResponse.transaction:type_name -> rival.schema.v1.Transaction
+	27, // 10: rival.api.v1.GetFinancialHistoryResponse.items:type_name -> rival.api.v1.FinancialHistoryItem
+	0,  // 11: rival.api.v1.PaymentService.InitiateCoinPurchase:input_type -> rival.api.v1.InitiateCoinPurchaseRequest
+	2,  // 12: rival.api.v1.PaymentService.VerifyPayment:input_type -> rival.api.v1.VerifyPaymentRequest
+	4,  // 13: rival.api.v1.PaymentService.GetPaymentHistory:input_type -> rival.api.v1.GetPaymentHistoryRequest
+	6,  // 14: rival.api.v1.PaymentService.RefundPayment:input_type -> rival.api.v1.RefundPaymentRequest
+	8,  // 15: rival.api.v1.PaymentService.PayToMerchant:input_type -> rival.api.v1.PayToMerchantRequest
+	10, // 16: rival.api.v1.PaymentService.TransferToUser:input_type -> rival.api.v1.TransferToUserRequest
+	12, // 17: rival.api.v1.PaymentService.GetBalance:input_type -> rival.api.v1.GetBalanceRequest
+	14, // 18: rival.api.v1.PaymentService.GetTransactionHistory:input_type -> rival.api.v1.GetTransactionHistoryRequest
+	16, // 19: rival.api.v1.PaymentService.ProcessRefund:input_type -> rival.api.v1.ProcessRefundRequest
+	26, // 20: rival.api.v1.PaymentService.GetFinancialHistory:input_type -> rival.api.v1.GetFinancialHistoryRequest
+	18, // 21: rival.api.v1.PaymentService.InitiateSettlement:input_type -> rival.api.v1.InitiateSettlementRequest
+	20, // 22: rival.api.v1.PaymentService.GetSettlements:input_type -> rival.api.v1.GetSettlementsRequest
+	22, // 23: rival.api.v1.PaymentService.StreamPaymentUpdates:input_type -> rival.api.v1.StreamPaymentUpdatesRequest
+	24, // 24: rival.api.v1.PaymentService.StreamTransactionUpdates:input_type -> rival.api.v1.StreamTransactionUpdatesRequest
+	1,  // 25: rival.api.v1.PaymentService.InitiateCoinPurchase:output_type -> rival.api.v1.InitiateCoinPurchaseResponse
+	3,  // 26: rival.api.v1.PaymentService.VerifyPayment:output_type -> rival.api.v1.VerifyPaymentResponse
+	5,  // 27: rival.api.v1.PaymentService.GetPaymentHistory:output_type -> rival.api.v1.GetPaymentHistoryResponse
+	7,  // 28: rival.api.v1.PaymentService.RefundPayment:output_type -> rival.api.v1.RefundPaymentResponse
+	9,  // 29: rival.api.v1.PaymentService.PayToMerchant:output_type -> rival.api.v1.PayToMerchantResponse
+	11, // 30: rival.api.v1.PaymentService.TransferToUser:output_type -> rival.api.v1.TransferToUserResponse
+	13, // 31: rival.api.v1.PaymentService.GetBalance:output_type -> rival.api.v1.GetBalanceResponse
+	15, // 32: rival.api.v1.PaymentService.GetTransactionHistory:output_type -> rival.api.v1.GetTransactionHistoryResponse
+	17, // 33: rival.api.v1.PaymentService.ProcessRefund:output_type -> rival.api.v1.ProcessRefundResponse
+	28, // 34: rival.api.v1.PaymentService.GetFinancialHistory:output_type -> rival.api.v1.GetFinancialHistoryResponse
+	19, // 35: rival.api.v1.PaymentService.InitiateSettlement:output_type -> rival.api.v1.InitiateSettlementResponse
+	21, // 36: rival.api.v1.PaymentService.GetSettlements:output_type -> rival.api.v1.GetSettlementsResponse
+	23, // 37: rival.api.v1.PaymentService.StreamPaymentUpdates:output_type -> rival.api.v1.StreamPaymentUpdatesResponse
+	25, // 38: rival.api.v1.PaymentService.StreamTransactionUpdates:output_type -> rival.api.v1.StreamTransactionUpdatesResponse
+	25, // [25:39] is the sub-list for method output_type
+	11, // [11:25] is the sub-list for method input_type
+	11, // [11:11] is the sub-list for extension type_name
+	11, // [11:11] is the sub-list for extension extendee
+	0,  // [0:11] is the sub-list for field type_name
 }
 
 func init() { file_proto_api_payments_proto_init() }
@@ -1876,7 +2161,7 @@ func file_proto_api_payments_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_proto_api_payments_proto_rawDesc), len(file_proto_api_payments_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   26,
+			NumMessages:   29,
 			NumExtensions: 0,
 			NumServices:   1,
 		},
