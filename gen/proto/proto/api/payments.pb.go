@@ -1704,19 +1704,23 @@ func (x *GetFinancialHistoryRequest) GetType() string {
 }
 
 type FinancialHistoryItem struct {
-	state          protoimpl.MessageState `protogen:"open.v1"`
-	Id             string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
-	Type           string                 `protobuf:"bytes,2,opt,name=type,proto3" json:"type,omitempty"` // purchase, payment, transfer, refund
-	Amount         float64                `protobuf:"fixed64,3,opt,name=amount,proto3" json:"amount,omitempty"`
-	Coins          float64                `protobuf:"fixed64,4,opt,name=coins,proto3" json:"coins,omitempty"`
-	Description    string                 `protobuf:"bytes,5,opt,name=description,proto3" json:"description,omitempty"`
-	Status         string                 `protobuf:"bytes,6,opt,name=status,proto3" json:"status,omitempty"`
-	CreatedAt      int64                  `protobuf:"varint,7,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`
-	PaymentMethod  string                 `protobuf:"bytes,8,opt,name=payment_method,json=paymentMethod,proto3" json:"payment_method,omitempty"`       // for purchases
-	MerchantId     int64                  `protobuf:"varint,9,opt,name=merchant_id,json=merchantId,proto3" json:"merchant_id,omitempty"`               // for payments
-	DiscountAmount float64                `protobuf:"fixed64,10,opt,name=discount_amount,json=discountAmount,proto3" json:"discount_amount,omitempty"` // for payments
-	unknownFields  protoimpl.UnknownFields
-	sizeCache      protoimpl.SizeCache
+	state                  protoimpl.MessageState `protogen:"open.v1"`
+	Id                     string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
+	Type                   string                 `protobuf:"bytes,2,opt,name=type,proto3" json:"type,omitempty"` // purchase, payment, transfer, refund
+	Amount                 float64                `protobuf:"fixed64,3,opt,name=amount,proto3" json:"amount,omitempty"`
+	Coins                  float64                `protobuf:"fixed64,4,opt,name=coins,proto3" json:"coins,omitempty"`
+	Description            string                 `protobuf:"bytes,5,opt,name=description,proto3" json:"description,omitempty"`
+	Status                 string                 `protobuf:"bytes,6,opt,name=status,proto3" json:"status,omitempty"`
+	CreatedAt              int64                  `protobuf:"varint,7,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`
+	PaymentMethod          string                 `protobuf:"bytes,8,opt,name=payment_method,json=paymentMethod,proto3" json:"payment_method,omitempty"`                                 // for purchases
+	MerchantId             int64                  `protobuf:"varint,9,opt,name=merchant_id,json=merchantId,proto3" json:"merchant_id,omitempty"`                                         // for payments
+	DiscountAmount         float64                `protobuf:"fixed64,10,opt,name=discount_amount,json=discountAmount,proto3" json:"discount_amount,omitempty"`                           // for payments
+	TransferUserId         int64                  `protobuf:"varint,11,opt,name=transfer_user_id,json=transferUserId,proto3" json:"transfer_user_id,omitempty"`                          // for transfers - sender/receiver user id
+	TransferUserName       string                 `protobuf:"bytes,12,opt,name=transfer_user_name,json=transferUserName,proto3" json:"transfer_user_name,omitempty"`                     // for transfers - sender/receiver name
+	TransferUserEmail      string                 `protobuf:"bytes,13,opt,name=transfer_user_email,json=transferUserEmail,proto3" json:"transfer_user_email,omitempty"`                  // for transfers - sender/receiver email
+	TransferUserProfilePic string                 `protobuf:"bytes,14,opt,name=transfer_user_profile_pic,json=transferUserProfilePic,proto3" json:"transfer_user_profile_pic,omitempty"` // for transfers - sender/receiver profile pic
+	unknownFields          protoimpl.UnknownFields
+	sizeCache              protoimpl.SizeCache
 }
 
 func (x *FinancialHistoryItem) Reset() {
@@ -1817,6 +1821,34 @@ func (x *FinancialHistoryItem) GetDiscountAmount() float64 {
 		return x.DiscountAmount
 	}
 	return 0
+}
+
+func (x *FinancialHistoryItem) GetTransferUserId() int64 {
+	if x != nil {
+		return x.TransferUserId
+	}
+	return 0
+}
+
+func (x *FinancialHistoryItem) GetTransferUserName() string {
+	if x != nil {
+		return x.TransferUserName
+	}
+	return ""
+}
+
+func (x *FinancialHistoryItem) GetTransferUserEmail() string {
+	if x != nil {
+		return x.TransferUserEmail
+	}
+	return ""
+}
+
+func (x *FinancialHistoryItem) GetTransferUserProfilePic() string {
+	if x != nil {
+		return x.TransferUserProfilePic
+	}
+	return ""
 }
 
 type GetFinancialHistoryResponse struct {
@@ -2019,7 +2051,7 @@ const file_proto_api_payments_proto_rawDesc = "" +
 	"\auser_id\x18\x01 \x01(\x03R\x06userId\x12\x12\n" +
 	"\x04page\x18\x02 \x01(\x05R\x04page\x12\x14\n" +
 	"\x05limit\x18\x03 \x01(\x05R\x05limit\x12\x12\n" +
-	"\x04type\x18\x04 \x01(\tR\x04type\"\xb2\x02\n" +
+	"\x04type\x18\x04 \x01(\tR\x04type\"\xf5\x03\n" +
 	"\x14FinancialHistoryItem\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12\x12\n" +
 	"\x04type\x18\x02 \x01(\tR\x04type\x12\x16\n" +
@@ -2033,7 +2065,11 @@ const file_proto_api_payments_proto_rawDesc = "" +
 	"\vmerchant_id\x18\t \x01(\x03R\n" +
 	"merchantId\x12'\n" +
 	"\x0fdiscount_amount\x18\n" +
-	" \x01(\x01R\x0ediscountAmount\"\xa1\x01\n" +
+	" \x01(\x01R\x0ediscountAmount\x12(\n" +
+	"\x10transfer_user_id\x18\v \x01(\x03R\x0etransferUserId\x12,\n" +
+	"\x12transfer_user_name\x18\f \x01(\tR\x10transferUserName\x12.\n" +
+	"\x13transfer_user_email\x18\r \x01(\tR\x11transferUserEmail\x129\n" +
+	"\x19transfer_user_profile_pic\x18\x0e \x01(\tR\x16transferUserProfilePic\"\xa1\x01\n" +
 	"\x1bGetFinancialHistoryResponse\x128\n" +
 	"\x05items\x18\x01 \x03(\v2\".rival.api.v1.FinancialHistoryItemR\x05items\x12\x1f\n" +
 	"\vtotal_count\x18\x02 \x01(\x05R\n" +

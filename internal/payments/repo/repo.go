@@ -33,6 +33,7 @@ type PaymentRepository interface {
 
 	// Merchants
 	GetMerchantByID(ctx context.Context, merchantID int) (schema.Merchant, error)
+	GetUserByID(ctx context.Context, userID int64) (schema.User, error)
 
 	// TigerBeetle Operations
 	GetBalance(ctx context.Context, accountID int) (float64, error)
@@ -187,13 +188,29 @@ func (r *paymentRepository) GetAccountTransfers(ctx context.Context, accountID i
 				desc = "Payment received"
 			}
 		case 3: // Transfer
+			var otherUserID uint64
 			if isDebit {
 				txType = "debit"
 				desc = "Transfer sent"
+				otherUserID = creditID.Uint64() // Receiver
 			} else {
 				txType = "credit"
 				desc = "Transfer received"
+				otherUserID = debitID.Uint64() // Sender
 			}
+			
+			result = append(result, map[string]interface{}{
+				"id":            t.ID.String(),
+				"type":          txType,
+				"amount":        float64(amount.Uint64()) / 100,
+				"credit_id":     creditID.Uint64(),
+				"debit_id":      debitID.Uint64(),
+				"code":          t.Code,
+				"timestamp":     t.Timestamp,
+				"description":   desc,
+				"other_user_id": otherUserID,
+			})
+			continue
 		default:
 			if isDebit {
 				txType = "debit"
@@ -216,4 +233,8 @@ func (r *paymentRepository) GetAccountTransfers(ctx context.Context, accountID i
 		})
 	}
 	return result, nil
+}
+
+func (r *paymentRepository) GetUserByID(ctx context.Context, userID int64) (schema.User, error) {
+	return r.queries.GetUserByID(ctx, userID)
 }

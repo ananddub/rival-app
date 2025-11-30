@@ -36,12 +36,6 @@ func NewAuthHandler() (*AuthHandler, error) {
 	// Initialize email service
 	emailService := util.NewEmailService()
 
-	//uInitialize Firebase service
-	//firebaseService, err := util.NewFirebaseService(cfg.Firebase.CredentialsPath)
-	//	if err != nil {
-	//		return nil, err
-	//	}
-
 	// Initialize service
 	authService := service.NewAuthService(repository, jwtUtil, emailService, nil)
 

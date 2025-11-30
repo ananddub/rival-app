@@ -60,11 +60,13 @@ func isPublicEndpoint(method string) bool {
 		"/api.AuthService/VerifyOTP",
 		"/api.AuthService/ResendOTP",
 		"/api.AuthService/ForgotPassword",
+		"/api.AuthService/FirebaseLogin",
 		"/api.AuthService/ResetPassword",
 		"/rival.api.v1.AuthService/Signup",
 		"/rival.api.v1.AuthService/Login",
 		"/rival.api.v1.AuthService/VerifyOTP",
 		"/rival.api.v1.AuthService/ResendOTP",
+		"/rival.api.v1.AuthService/FirebaseLogin",
 		"/rival.api.v1.AuthService/ForgotPassword",
 		"/rival.api.v1.AuthService/ResetPassword",
 	}

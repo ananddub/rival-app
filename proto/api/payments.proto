@@ -215,6 +215,10 @@ message FinancialHistoryItem {
   string payment_method = 8; // for purchases
   int64 merchant_id = 9; // for payments
   double discount_amount = 10; // for payments
+  int64 transfer_user_id = 11; // for transfers - sender/receiver user id
+  string transfer_user_name = 12; // for transfers - sender/receiver name
+  string transfer_user_email = 13; // for transfers - sender/receiver email
+  string transfer_user_profile_pic = 14; // for transfers - sender/receiver profile pic
 }
 
 message GetFinancialHistoryResponse {

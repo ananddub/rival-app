@@ -9,6 +9,7 @@ import (
 	schemapb "rival/gen/proto/proto/schema"
 	schema "rival/gen/sql"
 	"rival/internal/payments/repo"
+	userrepo "rival/internal/users/repo"
 	"rival/pkg/utils"
 
 	"github.com/google/uuid"
@@ -449,8 +450,8 @@ func (s *paymentService) GetFinancialHistory(ctx context.Context, req *paymentpb
 
 			amount := t["amount"].(float64)
 			desc := t["description"].(string)
-			
-			items = append(items, &paymentpb.FinancialHistoryItem{
+
+			item := &paymentpb.FinancialHistoryItem{
 				Id:          t["id"].(string),
 				Type:        txType,
 				Amount:      amount,
@@ -458,7 +459,30 @@ func (s *paymentService) GetFinancialHistory(ctx context.Context, req *paymentpb
 				Description: desc,
 				Status:      "completed",
 				CreatedAt:   int64(t["timestamp"].(uint64)),
-			})
+			}
+
+			// For transfers, add other user details
+			if t["code"].(uint16) == 3 && t["other_user_id"] != nil {
+				otherUserID := int64(t["other_user_id"].(uint64))
+				otherUser, err := s.repo.GetUserByID(ctx, otherUserID)
+				if err == nil {
+					item.TransferUserId = otherUserID
+					item.TransferUserName = otherUser.Name
+					item.TransferUserEmail = otherUser.Email
+					item.TransferUserProfilePic = userrepo.GenerateViewURL(fmt.Sprintf("%d", otherUserID), "profile.jpg")
+				}
+			}
+
+			items = append(items, item)
+		}
+	}
+
+	// Sort by timestamp descending (latest first)
+	for i := 0; i < len(items)-1; i++ {
+		for j := i + 1; j < len(items); j++ {
+			if items[i].CreatedAt < items[j].CreatedAt {
+				items[i], items[j] = items[j], items[i]
+			}
 		}
 	}
 

@@ -3,7 +3,8 @@ package util
 import (
 	"context"
 	"fmt"
-	
+	"rival/config"
+
 	firebase "firebase.google.com/go/v4"
 	"firebase.google.com/go/v4/auth"
 	"google.golang.org/api/option"
@@ -26,20 +27,19 @@ type firebaseService struct {
 	client *auth.Client
 }
 
-func NewFirebaseService(credentialsPath string) (FirebaseService, error) {
-	ctx := context.Background()
-	
-	opt := option.WithCredentialsFile(credentialsPath)
+func NewFirebaseService(ctx context.Context) (FirebaseService, error) {
+	cfg := config.GetConfig()
+	opt := option.WithCredentialsFile(cfg.Firebase.CredentialsPath)
 	app, err := firebase.NewApp(ctx, nil, opt)
 	if err != nil {
 		return nil, fmt.Errorf("error initializing firebase app: %v", err)
 	}
-	
+
 	client, err := app.Auth(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("error getting firebase auth client: %v", err)
 	}
-	
+
 	return &firebaseService{client: client}, nil
 }
 
@@ -48,19 +48,19 @@ func (f *firebaseService) VerifyToken(ctx context.Context, idToken string) (*Fir
 	if err != nil {
 		return nil, fmt.Errorf("error verifying firebase token: %v", err)
 	}
-	
+
 	// Get user record for additional info
 	userRecord, err := f.client.GetUser(ctx, token.UID)
 	if err != nil {
 		return nil, fmt.Errorf("error getting user record: %v", err)
 	}
-	
+
 	// Determine provider
 	provider := "email"
 	if len(userRecord.ProviderUserInfo) > 0 {
 		provider = userRecord.ProviderUserInfo[0].ProviderID
 	}
-	
+
 	return &FirebaseUser{
 		UID:         token.UID,
 		Email:       userRecord.Email,

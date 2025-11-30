@@ -262,7 +262,11 @@ func (s *authService) Login(ctx context.Context, params LoginParams) (*authpb.Lo
 
 func (s *authService) FirebaseLogin(ctx context.Context, firebaseToken string) (*authpb.FirebaseLoginResponse, error) {
 	// Verify Firebase token
-	firebaseUser, err := (*s.firebase).VerifyToken(ctx, firebaseToken)
+	firebase, err := util.NewFirebaseService(context.Background())
+	if err != nil {
+		return nil, fmt.Errorf("error initializing firebase service: %v", err)
+	}
+	firebaseUser, err := firebase.VerifyToken(ctx, firebaseToken)
 	if err != nil {
 		return nil, fmt.Errorf("invalid firebase token: %v", err)
 	}
@@ -285,18 +289,15 @@ func (s *authService) FirebaseLogin(ctx context.Context, firebaseToken string) (
 			return nil, err
 		}
 
-		// Send welcome email
 		s.email.SendWelcomeEmail(firebaseUser.Email, firebaseUser.Name)
 	}
 
-	// Generate tokens
 	protoUser := convertToProtoUser(user)
 	accessToken, refreshToken, err := s.jwt.GenerateTokens(protoUser)
 	if err != nil {
 		return nil, err
 	}
 
-	// Store session
 	sessionParams := schema.CreateJWTSessionParams{
 		UserID:           pgtype.Int8{Int64: user.ID, Valid: true},
 		TokenHash:        s.jwt.HashToken(accessToken),

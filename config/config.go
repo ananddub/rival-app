@@ -3,6 +3,8 @@ package config
 import (
 	"io/ioutil"
 	"log"
+	"os"
+	"path/filepath"
 
 	"gopkg.in/yaml.v3"
 )
@@ -77,20 +79,39 @@ func Load(path string) *Config {
 	if err != nil {
 		log.Fatalf("Error reading config file: %v", err)
 	}
-
 	var config Config
 	err = yaml.Unmarshal(data, &config)
 	if err != nil {
 		log.Fatalf("Error parsing config file: %v", err)
 	}
-	appConfig = &config
+	config.Firebase.CredentialsPath = GetFirebaseConfig()
 	return &config
 }
 
 func GetConfig() *Config {
+	base, err := os.Getwd()
+	file := "config.yml"
+
+	full := filepath.Join(base, file)
+	if err != nil {
+		log.Fatalf("Error getting current working directory: %v", err)
+	}
 	if appConfig == nil {
-		return Load("/media/sf_Devloper/rival/rival/config.yaml")
+		return Load(full)
 		// return Load("D:\\Devloper\\rival\\rival\\config.yaml")
 	}
 	return appConfig
+}
+
+func GetFirebaseConfig() string {
+	base, err := os.Getwd()
+	if err != nil {
+		log.Fatalf("Error getting current working directory: %v", err)
+		return ""
+	}
+	file := "rivl-ae3b5-firebase-adminsdk-fbsvc-3c274e6fa5.json"
+
+	full := filepath.Join(base, file)
+
+	return full
 }
