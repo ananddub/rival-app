@@ -1,0 +1,228 @@
+syntax = "proto3";
+
+package rival.api.v1;
+
+option go_package = "rival/gen/proto/proto/api";
+
+import "proto/schema/schema.proto";
+
+service PaymentService {
+  // Coin Purchase
+  rpc InitiateCoinPurchase(InitiateCoinPurchaseRequest) returns (InitiateCoinPurchaseResponse);
+  rpc VerifyPayment(VerifyPaymentRequest) returns (VerifyPaymentResponse);
+  rpc GetPaymentHistory(GetPaymentHistoryRequest) returns (GetPaymentHistoryResponse);
+  rpc RefundPayment(RefundPaymentRequest) returns (RefundPaymentResponse);
+
+  // Payment Transfers
+  rpc PayToMerchant(PayToMerchantRequest) returns (PayToMerchantResponse);
+  rpc TransferToUser(TransferToUserRequest) returns (TransferToUserResponse);
+  rpc GetBalance(GetBalanceRequest) returns (GetBalanceResponse);
+  rpc GetTransactionHistory(GetTransactionHistoryRequest) returns (GetTransactionHistoryResponse);
+  rpc ProcessRefund(ProcessRefundRequest) returns (ProcessRefundResponse);
+  rpc GetFinancialHistory(GetFinancialHistoryRequest) returns (GetFinancialHistoryResponse);
+
+  // Merchant Settlements
+  rpc InitiateSettlement(InitiateSettlementRequest) returns (InitiateSettlementResponse);
+  rpc GetSettlements(GetSettlementsRequest) returns (GetSettlementsResponse);
+
+  // Streaming
+  rpc StreamPaymentUpdates(StreamPaymentUpdatesRequest) returns (stream StreamPaymentUpdatesResponse);
+  rpc StreamTransactionUpdates(StreamTransactionUpdatesRequest) returns (stream StreamTransactionUpdatesResponse);
+}
+
+// Coin Purchase Messages
+message InitiateCoinPurchaseRequest {
+  int64 user_id = 1;
+  double amount = 2;
+  string payment_method = 3; // stripe, razorpay, upi
+}
+
+message InitiateCoinPurchaseResponse {
+  string payment_id = 1;
+  string payment_url = 2;
+  double coins_to_receive = 3;
+  string status = 4;
+  double new_balance = 5;
+}
+
+message VerifyPaymentRequest {
+  string payment_id = 1;
+  string transaction_id = 2;
+}
+
+message VerifyPaymentResponse {
+  bool success = 1;
+  double coins_added = 2;
+  double new_balance = 3;
+  rival.schema.v1.CoinPurchase purchase = 4;
+}
+
+message GetPaymentHistoryRequest {
+  int64 user_id = 1;
+  int32 page = 2;
+  int32 limit = 3;
+}
+
+message GetPaymentHistoryResponse {
+  repeated rival.schema.v1.CoinPurchase purchases = 1;
+  int32 total_count = 2;
+}
+
+message RefundPaymentRequest {
+  string payment_id = 1;
+  string reason = 2;
+}
+
+message RefundPaymentResponse {
+  bool success = 1;
+  string refund_id = 2;
+  double refunded_amount = 3;
+}
+
+// Payment Transfer Messages
+message PayToMerchantRequest {
+  int64 user_id = 1;
+  int64 merchant_id = 2;
+  double amount = 3;
+  string order_id = 4;
+  string description = 5;
+}
+
+message PayToMerchantResponse {
+  bool success = 1;
+  string transaction_id = 2;
+  double discount_amount = 3;
+  double final_amount = 4;
+  double remaining_balance = 5;
+  rival.schema.v1.Transaction transaction = 6;
+}
+
+message TransferToUserRequest {
+  int64 from_user_id = 1;
+  int64 to_user_id = 2;
+  double amount = 3;
+  string description = 4;
+}
+
+message TransferToUserResponse {
+  bool success = 1;
+  string transaction_id = 2;
+  double remaining_balance = 3;
+  rival.schema.v1.Transaction transaction = 4;
+}
+
+message GetBalanceRequest {
+  int64 user_id = 1;
+}
+
+message GetBalanceResponse {
+  double balance = 1;
+  int64 user_id = 2;
+}
+
+message GetTransactionHistoryRequest {
+  int64 user_id = 1;
+  int32 page = 2;
+  int32 limit = 3;
+  string transaction_type = 4; // all, payment, transfer, refund
+}
+
+message GetTransactionHistoryResponse {
+  repeated rival.schema.v1.Transaction transactions = 1;
+  int32 total_count = 2;
+}
+
+message ProcessRefundRequest {
+  string transaction_id = 1;
+  double amount = 2;
+  string reason = 3;
+}
+
+message ProcessRefundResponse {
+  bool success = 1;
+  string refund_transaction_id = 2;
+  double refunded_amount = 3;
+  rival.schema.v1.Transaction refund_transaction = 4;
+}
+
+// Settlement Messages
+message InitiateSettlementRequest {
+  int64 merchant_id = 1;
+  double amount = 2;
+  string bank_account = 3;
+}
+
+message InitiateSettlementResponse {
+  bool success = 1;
+  string settlement_id = 2;
+  double settlement_amount = 3;
+  rival.schema.v1.Settlement settlement = 4;
+}
+
+message GetSettlementsRequest {
+  int64 merchant_id = 1;
+  int32 page = 2;
+  int32 limit = 3;
+  string status = 4; // all, pending, completed, failed
+}
+
+message GetSettlementsResponse {
+  repeated rival.schema.v1.Settlement settlements = 1;
+  int32 total_count = 2;
+}
+
+// Streaming Messages
+message StreamPaymentUpdatesRequest {
+  int64 user_id = 1;
+}
+
+message StreamPaymentUpdatesResponse {
+  string payment_id = 1;
+  string status = 2; // pending, completed, failed, refunded
+  double coins_added = 3;
+  rival.schema.v1.CoinPurchase purchase = 4;
+  string event_type = 5; // initiated, completed, failed, refunded
+}
+
+message StreamTransactionUpdatesRequest {
+  int64 user_id = 1;
+}
+
+message StreamTransactionUpdatesResponse {
+  string transaction_id = 1;
+  string status = 2; // pending, completed, failed, refunded
+  double amount = 3;
+  rival.schema.v1.Transaction transaction = 4;
+  string event_type = 5; // created, completed, failed, refunded
+}
+
+// Financial History (Combined)
+message GetFinancialHistoryRequest {
+  int64 user_id = 1;
+  int32 page = 2;
+  int32 limit = 3;
+  string type = 4; // all, purchase, transaction
+}
+
+message FinancialHistoryItem {
+  string id = 1;
+  string type = 2; // purchase, payment, transfer, refund
+  double amount = 3;
+  double coins = 4;
+  string description = 5;
+  string status = 6;
+  int64 created_at = 7;
+  string payment_method = 8; // for purchases
+  int64 merchant_id = 9; // for payments
+  double discount_amount = 10; // for payments
+  int64 transfer_user_id = 11; // for transfers - sender/receiver user id
+  string transfer_user_name = 12; // for transfers - sender/receiver name
+  string transfer_user_email = 13; // for transfers - sender/receiver email
+  string transfer_user_profile_pic = 14; // for transfers - sender/receiver profile pic
+}
+
+message GetFinancialHistoryResponse {
+  repeated FinancialHistoryItem items = 1;
+  int32 total_count = 2;
+  double current_balance = 3;
+}

@@ -1,0 +1,134 @@
+syntax = "proto3";
+
+package rival.api.v1;
+
+option go_package = "rival/gen/proto/proto/api";
+
+import "proto/schema/schema.proto";
+
+service UserService {
+  rpc GetUser(GetUserRequest) returns (GetUserResponse);
+  rpc UpdateUser(UpdateUserRequest) returns (UpdateUserResponse);
+  rpc GetUploadURL(GetUploadURLRequest) returns (GetUploadURLResponse);
+  rpc UpdateCoinBalance(UpdateCoinBalanceRequest) returns (UpdateCoinBalanceResponse);
+  rpc GetCoinBalance(GetCoinBalanceRequest) returns (GetCoinBalanceResponse);
+  rpc GetUserTransactionHistory(GetUserTransactionHistoryRequest) returns (GetUserTransactionHistoryResponse);
+  rpc GetReferralCode(GetReferralCodeRequest) returns (GetReferralCodeResponse);
+  rpc ApplyReferralCode(ApplyReferralCodeRequest) returns (ApplyReferralCodeResponse);
+  rpc GetReferralRewards(GetReferralRewardsRequest) returns (GetReferralRewardsResponse);
+  rpc StreamWalletUpdates(StreamWalletUpdatesRequest) returns (stream StreamWalletUpdatesResponse);
+  rpc StreamUserNotifications(StreamUserNotificationsRequest) returns (stream StreamUserNotificationsResponse);
+}
+
+message GetUserRequest {
+  int64 user_id = 1;
+}
+
+message GetUserResponse {
+  rival.schema.v1.User user = 1;
+}
+
+message UpdateUserRequest {
+  int64 user_id = 1;
+  string name = 2;
+  string phone = 3;
+  string profile_pic = 4;
+}
+
+message UpdateUserResponse {
+  rival.schema.v1.User user = 1;
+}
+
+message GetUploadURLRequest {
+  int64 user_id = 1;
+  string file_name = 2;
+  string content_type = 3;
+}
+
+message GetUploadURLResponse {
+  string upload_url = 1;
+  string file_url = 2;
+  int64 expires_in = 3;
+}
+
+message UpdateCoinBalanceRequest {
+  int64 user_id = 1;
+  double amount = 2;
+  string operation = 3; // add, subtract
+}
+
+message UpdateCoinBalanceResponse {
+  double new_balance = 1;
+}
+
+message GetCoinBalanceRequest {
+  int64 user_id = 1;
+}
+
+message GetCoinBalanceResponse {
+  double balance = 1;
+}
+
+message GetUserTransactionHistoryRequest {
+  int64 user_id = 1;
+  int32 page = 2;
+  int32 limit = 3;
+}
+
+message GetUserTransactionHistoryResponse {
+  repeated rival.schema.v1.Transaction transactions = 1;
+  int32 total_count = 2;
+}
+
+message StreamWalletUpdatesRequest {
+  int64 user_id = 1;
+}
+
+message StreamWalletUpdatesResponse {
+  double new_balance = 1;
+  rival.schema.v1.Transaction transaction = 2;
+  string event_type = 3; // purchase, spend, refund
+}
+
+message StreamUserNotificationsRequest {
+  int64 user_id = 1;
+}
+
+message StreamUserNotificationsResponse {
+  string id = 1;
+  string title = 2;
+  string message = 3;
+  string type = 4; // offer, transaction, system
+  int64 timestamp = 5;
+}
+
+message GetReferralCodeRequest {
+  int64 user_id = 1;
+}
+
+message GetReferralCodeResponse {
+  string referral_code = 1;
+}
+
+message ApplyReferralCodeRequest {
+  int64 user_id = 1;
+  string referral_code = 2;
+}
+
+message ApplyReferralCodeResponse {
+  bool success = 1;
+  string message = 2;
+  double reward_amount = 3;
+}
+
+message GetReferralRewardsRequest {
+  int64 user_id = 1;
+  int32 page = 2;
+  int32 limit = 3;
+}
+
+message GetReferralRewardsResponse {
+  repeated rival.schema.v1.ReferralReward rewards = 1;
+  int32 total_count = 2;
+  double total_earned = 3;
+}

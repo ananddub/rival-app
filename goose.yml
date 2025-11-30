@@ -1,0 +1,9 @@
+env: test
+# postgres://user:pass@69.62.75.204:5432/test
+dev:
+  driver: postgres
+  dsn: "user=user password=pass host=69.62.75.204 dbname=mydb sslmode=disable"
+
+test:
+  driver: postgres
+  dsn: "user=user password=pass host=69.62.75.204 dbname=test sslmode=disable"

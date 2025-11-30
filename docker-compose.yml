@@ -1,0 +1,13 @@
+version: '3.8'
+
+services:
+  envoy:
+    image: envoyproxy/envoy:v1.28-latest
+    container_name: rival_envoy
+    ports:
+      - "8080:8080"
+      - "9901:9901"
+    volumes:
+      - ./envoy.yaml:/etc/envoy/envoy.yaml
+      - ./proto.pb:/etc/envoy/proto.pb
+    command: /usr/local/bin/envoy -c /etc/envoy/envoy.yaml
